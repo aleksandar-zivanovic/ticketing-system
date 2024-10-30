@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Oct 23, 2024 at 06:57 AM
+-- Generation Time: Oct 30, 2024 at 03:36 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -28,9 +28,16 @@ SET time_zone = "+00:00";
 --
 
 CREATE TABLE `departments` (
-  `id` tinyint NOT NULL,
+  `id` tinyint(4) NOT NULL,
   `name` varchar(255) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `departments`
+--
+
+INSERT INTO `departments` (`id`, `name`) VALUES
+(1, 'none');
 
 -- --------------------------------------------------------
 
@@ -39,9 +46,9 @@ CREATE TABLE `departments` (
 --
 
 CREATE TABLE `messages` (
-  `id` int NOT NULL,
-  `ticket` int NOT NULL,
-  `user` int NOT NULL,
+  `id` int(11) NOT NULL,
+  `ticket` int(11) NOT NULL,
+  `user` int(11) NOT NULL,
   `body` text NOT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -53,9 +60,9 @@ CREATE TABLE `messages` (
 --
 
 CREATE TABLE `message_attachments` (
-  `id` int NOT NULL,
+  `id` int(11) NOT NULL,
   `file_name` varchar(255) NOT NULL,
-  `message` int NOT NULL
+  `message` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -65,7 +72,7 @@ CREATE TABLE `message_attachments` (
 --
 
 CREATE TABLE `priorities` (
-  `id` tinyint NOT NULL,
+  `id` tinyint(4) NOT NULL,
   `name` varchar(6) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -86,9 +93,20 @@ INSERT INTO `priorities` (`id`, `name`) VALUES
 --
 
 CREATE TABLE `roles` (
-  `id` tinyint NOT NULL,
+  `id` tinyint(4) NOT NULL,
   `role_name` varchar(10) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `roles`
+--
+
+INSERT INTO `roles` (`id`, `role_name`) VALUES
+(1, 'user'),
+(2, 'moderator'),
+(3, 'admin'),
+(4, 'unverified'),
+(5, 'blocked');
 
 -- --------------------------------------------------------
 
@@ -97,9 +115,9 @@ CREATE TABLE `roles` (
 --
 
 CREATE TABLE `splited_tickets` (
-  `id` int NOT NULL,
-  `old_ticket` int NOT NULL,
-  `new_ticket` int NOT NULL
+  `id` int(11) NOT NULL,
+  `old_ticket` int(11) NOT NULL,
+  `new_ticket` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -109,7 +127,7 @@ CREATE TABLE `splited_tickets` (
 --
 
 CREATE TABLE `statuses` (
-  `id` tinyint NOT NULL,
+  `id` tinyint(4) NOT NULL,
   `name` varchar(12) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -130,20 +148,20 @@ INSERT INTO `statuses` (`id`, `name`) VALUES
 --
 
 CREATE TABLE `tickets` (
-  `id` int NOT NULL,
+  `id` int(11) NOT NULL,
   `created_date` timestamp NOT NULL DEFAULT current_timestamp(),
   `created_year` smallint(4) NOT NULL,
-  `created_month` tinyint NOT NULL,
-  `created_day` tinyint NOT NULL,
+  `created_month` tinyint(4) NOT NULL,
+  `created_day` tinyint(4) NOT NULL,
   `closed_date` timestamp NULL DEFAULT NULL,
   `closed_year` smallint(4) DEFAULT NULL,
-  `closed_month` tinyint DEFAULT NULL,
-  `closed_day` tinyint DEFAULT NULL,
-  `department` tinyint NOT NULL,
-  `created_by` int NOT NULL,
-  `handled_by` int NOT NULL,
-  `priority` tinyint NOT NULL,
-  `status` tinyint NOT NULL,
+  `closed_month` tinyint(4) DEFAULT NULL,
+  `closed_day` tinyint(4) DEFAULT NULL,
+  `department` tinyint(4) NOT NULL,
+  `created_by` int(11) NOT NULL,
+  `handled_by` int(11) NOT NULL,
+  `priority` tinyint(4) NOT NULL,
+  `status` tinyint(4) NOT NULL,
   `title` varchar(255) NOT NULL,
   `body` text NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -155,9 +173,9 @@ CREATE TABLE `tickets` (
 --
 
 CREATE TABLE `ticket_attachments` (
-  `id` int NOT NULL,
+  `id` int(11) NOT NULL,
   `file_name` varchar(255) NOT NULL,
-  `ticket` int NOT NULL
+  `ticket` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -167,13 +185,16 @@ CREATE TABLE `ticket_attachments` (
 --
 
 CREATE TABLE `users` (
-  `id` int NOT NULL,
+  `id` int(11) NOT NULL,
   `email` varchar(255) NOT NULL,
   `password` varchar(255) NOT NULL,
   `name` varchar(255) NOT NULL,
   `surname` varchar(255) NOT NULL,
-  `role_id` tinyint NOT NULL,
-  `phone` varchar(10) NOT NULL
+  `role_id` tinyint(4) NOT NULL,
+  `phone` varchar(10) NOT NULL,
+  `department_id` tinyint(4) DEFAULT NULL,
+  `verification_code` varchar(40) DEFAULT NULL,
+  `verified` tinyint(1) NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -250,7 +271,8 @@ ALTER TABLE `ticket_attachments`
 --
 ALTER TABLE `users`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `fk_users_roleid_roles_id` (`role_id`);
+  ADD KEY `fk_users_roleid_roles_id` (`role_id`),
+  ADD KEY `fk_users_departmentid_departments_id` (`department_id`);
 
 --
 -- AUTO_INCREMENT for dumped tables
@@ -260,61 +282,61 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `departments`
 --
 ALTER TABLE `departments`
-  MODIFY `id` tinyint NOT NULL AUTO_INCREMENT;
+  MODIFY `id` tinyint(4) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `messages`
 --
 ALTER TABLE `messages`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `message_attachments`
 --
 ALTER TABLE `message_attachments`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `priorities`
 --
 ALTER TABLE `priorities`
-  MODIFY `id` tinyint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` tinyint(4) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `roles`
 --
 ALTER TABLE `roles`
-  MODIFY `id` tinyint NOT NULL AUTO_INCREMENT;
+  MODIFY `id` tinyint(4) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT for table `splited_tickets`
 --
 ALTER TABLE `splited_tickets`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `statuses`
 --
 ALTER TABLE `statuses`
-  MODIFY `id` tinyint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` tinyint(4) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `tickets`
 --
 ALTER TABLE `tickets`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `ticket_attachments`
 --
 ALTER TABLE `ticket_attachments`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- Constraints for dumped tables
@@ -360,6 +382,7 @@ ALTER TABLE `ticket_attachments`
 -- Constraints for table `users`
 --
 ALTER TABLE `users`
+  ADD CONSTRAINT `fk_users_departmentid_departments_id` FOREIGN KEY (`department_id`) REFERENCES `departments` (`id`),
   ADD CONSTRAINT `fk_users_roleid_roles_id` FOREIGN KEY (`role_id`) REFERENCES `roles` (`id`);
 COMMIT;
 

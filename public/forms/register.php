@@ -1,6 +1,6 @@
-<?php 
+<?php
+    session_start();
     require_once('../../helpers/functions.php');
-    session_start(); 
 ?>
 
 <!DOCTYPE html>
@@ -16,10 +16,18 @@
 <body>
     <div class="form_wrapper">
         <?php
+        var_dump($_SESSION);
+            // TODO create $_SESSION messages reading function
             // handling registration error message
             if (isset($_SESSION['error_message'])) {
                 echo $_SESSION['error_message'];
                 unset($_SESSION['error_message']);
+            }
+
+            // handling email verification error message
+            if (isset($_SESSION['verification_status'])) {
+                echo $_SESSION['verification_status'];
+                unset($_SESSION['verification_status']);
             }
         ?>
         <div class="form_container">
