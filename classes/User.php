@@ -144,7 +144,7 @@ class User
 
         try {
             //Server settings
-            $mail->SMTPDebug = SMTP::DEBUG_SERVER;                      //Enable verbose debug output
+            $mail->SMTPDebug = 0;                                       //Enable verbose debug output
             $mail->isSMTP();                                            //Send using SMTP
             $mail->Host       = SMTP_SERVER;                            //Set the SMTP server to send through
             $mail->SMTPAuth   = true;                                   //Enable SMTP authentication
@@ -165,8 +165,12 @@ class User
             $mail->AltBody = 'Copy this URL in your broswer navigation bar and click enter to finsih registration proccess by confirming your email address: href="' . $verificationUrl .'?email=' . $this->email . '&verification_code=' . $this->verificationCode . '">'. $verificationUrl . '?email=' . $this->email . '&verification_code=' . $this->verificationCode;
 
             $mail->send();
-            echo 'Message has been sent';
+
+            $_SESSION['verification_status'] = "There is a problem with your verification code.";
+            header('Location: ../login.php');
         } catch (Exception $e) {
+            // TODO: add to error log once an error log function is made
+            // make a $_SESSION message for the failed senging email process
             echo "Message could not be sent. Mailer Error: {$mail->ErrorInfo}";
         }
     }
