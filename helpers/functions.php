@@ -20,3 +20,14 @@ function saveFormValuesToSession(array $exceptions): void
         }
     }
 }
+
+// handling session messages
+function handleSessionMessages(string $name, bool $div = false, string $class = ""): void
+{
+    if (isset($_SESSION[$name])) {
+        $cleanMessage = htmlspecialchars(trim($_SESSION[$name]));
+        $messageClass =  !empty($class) ? 'class="' . htmlspecialchars(trim($class)) . '"' : "";
+        echo $div ? "<div " . $messageClass . ">" . $cleanMessage .  "</div>" : $cleanMessage;
+        unset($_SESSION[$name]);
+    }
+}

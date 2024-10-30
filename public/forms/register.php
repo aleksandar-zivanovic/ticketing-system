@@ -16,19 +16,11 @@
 <body>
     <div class="form_wrapper">
         <?php
-        var_dump($_SESSION);
-            // TODO create $_SESSION messages reading function
             // handling registration error message
-            if (isset($_SESSION['error_message'])) {
-                echo $_SESSION['error_message'];
-                unset($_SESSION['error_message']);
-            }
+            handleSessionMessages('error_message', true);
 
             // handling email verification error message
-            if (isset($_SESSION['verification_status'])) {
-                echo $_SESSION['verification_status'];
-                unset($_SESSION['verification_status']);
-            }
+            handleSessionMessages('verification_status', true);
         ?>
         <div class="form_container">
             <div class="title_container">

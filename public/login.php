@@ -1,8 +1,6 @@
 <?php
 session_start();
+require_once '../helpers/functions.php';
 
 // handling successful verification message
-if (isset($_SESSION['verification_status'])) {
-    echo $_SESSION['verification_status'];
-    unset($_SESSION['verification_status']);
-}
+handleSessionMessages('verification_status', true);
