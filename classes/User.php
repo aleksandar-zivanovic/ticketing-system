@@ -84,13 +84,13 @@ class User
     // checking if there is a use with the entered email
     public function isEmailOccupied(): void
     {
-        $queryLookForEmail = "SELECT email FROM users WHERE email = :email";
-        $query = $this->db->prepare($queryLookForEmail);
-        $query->bindValue(':email', $this->email, PDO::PARAM_STR);
-        $query->execute();
-        if ($query->rowCount() >= 1) {
-            $this->registrationErrorHandling("Email is already in use!");
-        }
+            $queryLookForEmail = "SELECT email FROM users WHERE email = :email";
+            $query = $this->db->prepare($queryLookForEmail);
+            $query->bindValue(':email', $this->email, PDO::PARAM_STR);
+            $query->execute();
+            if ($query->rowCount() >= 1) {
+                $this->registrationErrorHandling("Email is already in use!");
+            }
     }
 
     // hashing password
@@ -166,12 +166,15 @@ class User
 
             $mail->send();
 
-            $_SESSION['verification_status'] = "There is a problem with your verification code.";
+            $_SESSION['verification_status'] = "Verificaton code is sent to your email. Go to email to verify your account.";
             header('Location: ../login.php');
+            die();
         } catch (Exception $e) {
-            // TODO: add to error log once an error log function is made
-            // make a $_SESSION message for the failed senging email process
-            echo "Message could not be sent. Mailer Error: {$mail->ErrorInfo}";
+            logError("Verification email couldn't be sent. Mailer Error: {$mail->ErrorInfo}");
+            // TODO: make resend verification code page and add it to the session message
+            $_SESSION['error_message'] = "Verification email couldn't be sent. Ask for a new verification code.";
+            header('Location: resend-confirmation-email.php');
+            die();
         }
     }
 
@@ -190,7 +193,6 @@ class User
                 $_SESSION['verification_status'] = "You are verified successfully.<br>Login in, please.";
                 return true;
             } else {
-                // TODO: create error log to store error information
                 $_SESSION['verification_status'] = "There is a problem with the verification process. Try again and if this notification continue appearing, contact administrator, please.";
                 return false;
             }

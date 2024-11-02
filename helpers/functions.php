@@ -31,3 +31,23 @@ function handleSessionMessages(string $name, bool $div = false, string $class = 
         unset($_SESSION[$name]);
     }
 }
+
+// writting down error log
+function logError(string $message, array|string|null $errorInfo = null): void
+{
+    // check if the directory exists and create if not
+    $logDirectory = __DIR__ . '../../logs';
+    if (!file_exists($logDirectory)) {
+        mkdir($logDirectory, 0755, true);
+    }
+
+    // preparing final message
+    if (!empty($errorInfo)) {
+        $message .= is_array($errorInfo) ? " | PDO error: " . implode(", ", $errorInfo) : $message;
+    }
+
+    // writting down an error to the log file
+    $logFile = $logDirectory . '/php_errors.log';
+    $timestamp = date("Y-m-d H:i:s");
+    error_log("[$timestamp]: $message" .  PHP_EOL, 3, $logFile);
+}
