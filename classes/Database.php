@@ -16,6 +16,8 @@ class Database
             $this->conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
             echo "Connected!";
           } catch(PDOException $e) {
+            require_once __DIR__ . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'helpers' . DIRECTORY_SEPARATOR . 'functions.php';
+            logError("Database connection failed: ", [$e->getMessage()]);
             echo "Connection failed: " . $e->getMessage();
           }
 
