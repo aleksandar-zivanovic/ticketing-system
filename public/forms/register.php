@@ -31,7 +31,7 @@
                     <form action="../actions/process_registration.php" method="POST">
                         <!-- email input -->
                         <div class="input_field"> <span><i aria-hidden="true" class="fa fa-envelope"></i></span>
-                            <input type="text" name="email" placeholder="Email" value="<?php persist_input('email'); ?>" required />
+                            <input type="email" name="email" placeholder="Email" value="<?php persist_input('email'); ?>" required />
                         </div>
                         <!-- password input -->
                         <div class="input_field"> <span><i aria-hidden="true" class="fa fa-lock"></i></span>

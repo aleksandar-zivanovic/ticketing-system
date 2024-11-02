@@ -1,3 +1,2 @@
 config/email-config.php
 logs/php_errors.log
-public/actions/resend-confirmation-email.php

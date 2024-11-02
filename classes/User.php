@@ -171,7 +171,6 @@ class User
             die();
         } catch (Exception $e) {
             logError("Verification email couldn't be sent. Mailer Error: {$mail->ErrorInfo}");
-            // TODO: make resend verification code page and add it to the session message
             $_SESSION['error_message'] = "Verification email couldn't be sent. Ask for a new verification code.";
             header('Location: resend-confirmation-email.php');
             die();
@@ -212,5 +211,72 @@ class User
         $query->bindValue(':em', $this->email, PDO::PARAM_STR);
         $query->execute();
         return $query->rowCount() >= 1 ? $query->fetchColumn() : null;
+    }
+
+    // adding a new verification code to a user and sending verification email
+    public function resendVerificatonCode(): void
+    {
+        $this->dbConn();
+
+        if (!empty($_POST['email']))
+        {
+            $emailForVerification = htmlspecialchars(trim(filter_input(INPUT_POST, 'email', FILTER_SANITIZE_EMAIL)), ENT_QUOTES, 'UTF-8');
+
+            if (filter_var($emailForVerification, FILTER_VALIDATE_EMAIL)) {
+                $this->email = $emailForVerification;
+
+                $user = $this->getUserByEmail();
+                if (!$user) 
+                {
+                    $_SESSION['error_message'] = "User with that email doesn't exist. Go to registration page to register with that email address.";
+                    header("Location: ../forms/resend-code.php");
+                    die();
+                }
+
+                $this->name = $user['name'];
+                $this->surname = $user['surname'];
+
+                // creating a new verification code
+                $this->createVerificationCode();
+
+                // if the new verificaton code isn't added notifying user about the error
+                if (!$this->addVerifcationCodeToUser()) {
+                    $_SESSION['error_message'] = "Something went wrong. Try again, please!";
+                    header("Location: ../forms/resend-code.php");
+                    die();
+                }
+
+                // sending the new verification code to the user's email
+                $this->sendingVerificationEmail();
+            } else {
+                $_SESSION['error_message'] = "This is not a valid email address! Please insert a valid email address";
+                header("Location: ../forms/resend-code.php");
+                die();
+            }
+        } else {
+            header("Location: ../forms/resend-code.php");
+            die();
+        }
+    }
+
+    // fetch all user data by email
+    public function getUserByEmail(): array|null
+    {
+        $getUserByEmailQuery = "SELECT * FROM users WHERE email = :em";
+        $query = $this->db->prepare($getUserByEmailQuery);
+        $query->bindValue(":em", $this->email, PDO::PARAM_STR);
+        $query->execute();
+        $result = $query->fetch(PDO::FETCH_ASSOC);
+        return !empty($result) ? $result : null;
+    }
+
+    // add verification code to a user and returns true if is and false if isn't added
+    public function addVerifcationCodeToUser(): bool
+    {
+        $addVerifcationCodeToUserQuery = "UPDATE users SET verification_code = :vc WHERE email = '{$this->email}'";
+        $query = $this->db->prepare($addVerifcationCodeToUserQuery);
+        $query->bindValue(':vc', $this->verificationCode, PDO::PARAM_STR);
+        $query->execute();
+        return $query->rowCount() > 0 ? true : false;
     }
 }
