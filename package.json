@@ -1,0 +1,16 @@
+{
+  "name": "ticketing-system",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "build": "npx tailwindcss -i ./public/css/tailwind.css -o ./public/css/tailwind-output.css",
+    "watch": "npx tailwindcss -i ./public/css/tailwind.css -o ./public/css/tailwind-output.css --watch"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "tailwindcss": "^3.4.14"
+  }
+}
