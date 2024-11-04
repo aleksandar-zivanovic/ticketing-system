@@ -1,10 +1,11 @@
 <?php
-    session_start();
-    require_once('../../helpers/functions.php');
+session_start();
+require_once '../../helpers/functions.php';
 ?>
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -12,64 +13,69 @@
     <title>Registration page</title>
     <link rel="stylesheet" href="../css/form.css">
     <link rel="stylesheet" href="../css/font-awesome.min.css">
+    <link rel="stylesheet" href="../css/tailwind-output.css">
 </head>
+
 <body>
-    <div class="form_wrapper">
+    <div class="max-w-4xl mx-auto font-[sans-serif] p-6">
+        <div class="text-center mb-16">
+            <a href="javascript:void(0)"><img src="https://readymadeui.com/readymadeui.svg" alt="logo" class='w-52 inline-block' />
+            </a>
+            <h4 class="text-gray-800 text-base font-semibold mt-6">Sign up into your account</h4>
+        </div>
+
         <?php
+        if (!empty($_SESSION['error_message']) || isset($_SESSION['verification_status'])):
+        ?>
+        <div class="bg-red-100 m-6 p-2 text-center">
+            <?php
             // handling registration error message
             handleSessionMessages('error_message', true);
 
             // handling email verification error message
             handleSessionMessages('verification_status', true);
-        ?>
-        <div class="form_container">
-            <div class="title_container">
-                <h2>Registration Form</h2>
-            </div>
-            <div class="row clearfix">
-                <div class="">
-                    <form action="../actions/process_registration.php" method="POST">
-                        <!-- email input -->
-                        <div class="input_field"> <span><i aria-hidden="true" class="fa fa-envelope"></i></span>
-                            <input type="email" name="email" placeholder="Email" value="<?php persist_input('email'); ?>" required />
-                        </div>
-                        <!-- password input -->
-                        <div class="input_field"> <span><i aria-hidden="true" class="fa fa-lock"></i></span>
-                            <input type="password" name="password" placeholder="Password" value="<?php persist_input('password') ?>" required />
-                        </div>
-                        <!-- retype password input -->
-                        <div class="input_field"> <span><i aria-hidden="true" class="fa fa-lock"></i></span>
-                            <input type="password" name="rpassword" placeholder="Re-type Password" value="<?php persist_input('rpassword') ?>" required />
-                        </div>
-                        <div class="row clearfix">
-                            <!-- name input -->
-                            <div class="col_half">
-                                <div class="input_field"> <span><i aria-hidden="true" class="fa fa-user"></i></span>
-                                    <input type="text" name="name" placeholder="First Name" value="<?php persist_input('name') ?>" required />
-                                </div>
-                            </div>
-                            <!-- surname input -->
-                            <div class="col_half">
-                                <div class="input_field"> <span><i aria-hidden="true" class="fa fa-user"></i></span>
-                                    <input type="text" name="surname" placeholder="Last Name" value="<?php persist_input('surname') ?>" required />
-                                </div>
-                            </div>
-                        </div>
-                        <!-- phone input -->
-                        <div class="input_field"> <span><i aria-hidden="true" class="fa fa-phone"></i></span>
-                            <input type="text" name="phone" placeholder="Phone number"  value="<?php persist_input('phone') ?>" required />
-                        </div>
-                        <!-- agree checkbox -->
-                        <div class="input_field checkbox_option">
-                            <input type="checkbox" id="cb1" name="agree_terms">
-                            <label for="cb1">I agree with terms and conditions</label>
-                        </div>
-                        <!-- submit button -->
-                        <input class="button" type="submit" name="registration_form" value="Register" />
-                    </form>
+            ?>
+        </div>
+        <?php endif; ?>
+
+        <form action="../actions/process_registration.php" method="POST">
+            <div class="grid sm:grid-cols-2 gap-8">
+
+                <?php
+                // name filed
+                renderingInputField("Name:", "name", "text", "Enter your name");
+
+                // surname field
+                renderingInputField("Surname:", "surname", "text", "Enter your surname");
+
+                // surname field
+                renderingInputField("Email:", "email", "email", "Enter your email address");
+
+                // surname field
+                renderingInputField("Phone number:", "phone", "text", "Enter your phone number");
+
+                // password field
+                renderingInputField("Enter password:", "password", "password", "Enter your password");
+
+                // pasword confirmation field
+                renderingInputField("Confirm Password:", "rpassword", "password", "Repeat the password");
+                ?>
+                <div class="flex items-center">
+                    <?php
+                    // agree checkbox
+                    renderingCheckboxField('agree_terms', null, 'I accept', 'https://www.target.com/c/terms-conditions/-/N-4sr7l', 'Terms and Conditions');
+                    ?>
                 </div>
             </div>
-        </div>
+            <div class="!mt-12">
+            <?php 
+            // submit button
+            renderingSubmitButton('registration_form', 'Submit');
+            ?>
+          </div>
+            <p class="text-gray-800 text-sm mt-6 text-center">Already have an account? <a href="login.php" class="text-blue-600 font-semibold hover:underline ml-1">Login here</a></p>
+        </form>
     </div>
 </body>
+
 </html>

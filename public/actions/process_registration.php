@@ -15,7 +15,7 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
         die(header("Location: ../forms/register.php"));
     }
 
-    if ($_POST['registration_form']) {
+    if ($_POST['registration_form'] && $_POST['registration_form'] == "Submit") {
         $user = new User;
         $user->register();
     } else {
