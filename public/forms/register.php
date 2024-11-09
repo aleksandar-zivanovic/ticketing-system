@@ -38,7 +38,7 @@ require_once '../../helpers/functions.php';
         </div>
         <?php endif; ?>
 
-        <form action="../actions/process_registration.php" method="POST">
+        <form action="../actions/process_user_action.php" method="POST">
             <div class="grid sm:grid-cols-2 gap-8">
 
                 <?php
@@ -70,7 +70,7 @@ require_once '../../helpers/functions.php';
             <div class="!mt-12">
             <?php 
             // submit button
-            renderingSubmitButton('registration_form', 'Submit');
+            renderingSubmitButton('user_action', 'Register');
             ?>
           </div>
             <p class="text-gray-800 text-sm mt-6 text-center">Already have an account? <a href="login.php" class="text-blue-600 font-semibold hover:underline ml-1">Login here</a></p>

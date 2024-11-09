@@ -233,8 +233,8 @@ class User
                     die();
                 }
 
-                $this->name = $user['name'];
-                $this->surname = $user['surname'];
+                $this->name = $user['u_name'];
+                $this->surname = $user['u_surname'];
 
                 // creating a new verification code
                 $this->createVerificationCode();
@@ -262,12 +262,41 @@ class User
     // fetch all user data by email
     public function getUserByEmail(): array|null
     {
-        $getUserByEmailQuery = "SELECT * FROM users WHERE email = :em";
+        $getUserByEmailQuery = "SELECT 
+                                    u.id AS u_id, 
+                                    u.email AS u_email, 
+                                    u.password AS u_password, 
+                                    u.name AS u_name, 
+                                    u.surname AS u_surname, 
+                                    u.role_id  AS u_role_id, 
+                                    u.phone AS u_phone, 
+                                    u.department_id AS u_department_id, 
+                                    u.department_id AS u_department_id, 
+                                    u.verified AS u_verified, 
+                                    d.id AS d_id, 
+                                    d.name AS d_name, 
+                                    r.id AS r_id, 
+                                    r.role_name AS r_name
+                                FROM users as u
+                                LEFT JOIN departments as d ON u.department_id = d.id 
+                                LEFT JOIN roles as r ON u.role_id = r.id 
+                                WHERE email = :em";
+        
         $query = $this->db->prepare($getUserByEmailQuery);
         $query->bindValue(":em", $this->email, PDO::PARAM_STR);
         $query->execute();
         $result = $query->fetch(PDO::FETCH_ASSOC);
         return !empty($result) ? $result : null;
+    }
+
+    public function getPasswordByEmail(): string|null
+    {
+        $getPasswordByEmail = "SELECT password FROM users WHERE email = :em";
+        $query = $this->db->prepare($getPasswordByEmail);
+        $query->bindValue(":em", $this->email, PDO::PARAM_STR);
+        $query->execute();
+        $result = $query->fetch(PDO::FETCH_ASSOC);
+        return !empty($result) ? $result['password'] : null;
     }
 
     // add verification code to a user and returns true if is and false if isn't added
@@ -278,5 +307,62 @@ class User
         $query->bindValue(':vc', $this->verificationCode, PDO::PARAM_STR);
         $query->execute();
         return $query->rowCount() > 0 ? true : false;
+    }
+
+    public function login(): void
+    {
+        $this->email = htmlspecialchars(trim(filter_input(INPUT_POST, 'email', FILTER_SANITIZE_EMAIL)), ENT_QUOTES, 'UTF-8');
+        $this->password = htmlspecialchars(trim(filter_input(INPUT_POST, 'password', FILTER_DEFAULT)), ENT_QUOTES, 'UTF-8');
+
+        // checking if the email address is valid
+        if (!filter_var($this->email, FILTER_VALIDATE_EMAIL)) {
+            $_SESSION['error_message'] = "Invalid email format.";
+            header("Location: ../forms/login.php");
+            die();
+        }
+
+        // checking password length
+        if (strlen($this->password) < 6) {
+            $_SESSION['error_message'] = "Wrong password.";
+            header("Location: ../forms/login.php");
+            die();
+        }
+
+        $this->dbConn();
+        $passwordFromDb = $this->getPasswordByEmail();
+
+        if ($passwordFromDb === null) {
+            $_SESSION['error_message'] = "An account with this email doesn't exist.";
+            header("Location: ../forms/login.php");
+            die();
+        }
+        
+        if (password_verify($this->password, $passwordFromDb)) {
+            // getting all details for the user
+            $user = $this->getUserByEmail();
+
+            // forbidding login to unverified users
+            if ($user['u_verified'] !== 1) {
+                $_SESSION['error_message'] = "Please verify you account before loggin in.";
+                header("Location: ../forms/login.php");
+                die();
+            }
+
+            // initializing session data for the authenticated user
+            $_SESSION['user_email'] = $user['u_email'];
+            $_SESSION['user_name'] = $user['u_name'];
+            $_SESSION['user_surname'] = $user['u_surname'];
+            $_SESSION['user_role'] = $user['r_name'];
+            $_SESSION['user_phone'] = $user['u_phone'];
+            $_SESSION['user_department'] = $user['d_name'];
+            $_SESSION['isVerified'] = true;
+            $_SESSION['info_message'] = "Logged in successfully!";
+            header("Location: ../");
+            die();
+        } else {
+            $_SESSION['error_message'] = "Wrong password.";
+            header("Location: ../forms/login.php");
+            die();
+        }
     }
 }
