@@ -43,8 +43,12 @@ class User
             $this->surname = htmlspecialchars(trim(filter_input(INPUT_POST, 'surname', FILTER_DEFAULT)), ENT_QUOTES, 'UTF-8');
             $this->phone = htmlspecialchars(trim(filter_input(INPUT_POST, 'phone', FILTER_DEFAULT)), ENT_QUOTES, 'UTF-8');
             
-            // checking email data
-            $this->emailRegexCheck();
+            // checks if email format is valid
+            if (!filter_var($this->email, FILTER_VALIDATE_EMAIL)) {
+                $this->registrationErrorHandling("Email address is not valid!");
+            }
+            
+            // checks if the email is already in use
             $this->isEmailOccupied();
 
             // checking password
@@ -69,16 +73,6 @@ class User
             $this->registrationErrorHandling("Fill all fields, please.");
         }
         
-    }
-
-    // regex checking if entered email is a valid email address
-    public function emailRegexCheck(): void
-    {
-        $emailCheck = preg_match('/^[a-z0-9._-]{2,}+@[a-z0-9.-]+\.[a-z]{2,}$/', $this->email);
-
-        if ($emailCheck == 0) {
-            $this->registrationErrorHandling("Email address is not valid!");
-        }
     }
 
     // checking if there is a use with the entered email
