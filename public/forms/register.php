@@ -48,10 +48,10 @@ require_once '../../helpers/functions.php';
                 // surname field
                 renderingInputField("Surname:", "surname", "text", "Enter your surname");
 
-                // surname field
+                // email field
                 renderingInputField("Email:", "email", "email", "Enter your email address");
 
-                // surname field
+                // phone field
                 renderingInputField("Phone number:", "phone", "text", "Enter your phone number");
 
                 // password field
