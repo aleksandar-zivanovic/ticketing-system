@@ -1,3 +1,4 @@
 config/email-config.php
 logs/php_errors.log
 node_modules/
+**/tests/**

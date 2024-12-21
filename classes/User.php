@@ -344,6 +344,7 @@ class User
 
             // initializing session data for the authenticated user
             $_SESSION['user_email'] = $user['u_email'];
+            $_SESSION['user_id'] = $user['u_id'];
             $_SESSION['user_name'] = $user['u_name'];
             $_SESSION['user_surname'] = $user['u_surname'];
             $_SESSION['user_role'] = $user['r_name'];
