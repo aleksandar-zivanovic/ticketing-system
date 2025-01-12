@@ -38,14 +38,19 @@ function handleSessionMessages(string $name, bool $div = false, string $class = 
     }
 }
 
+// Checks if directory exists and create it if doesn't
+function checkAndCreateDirectory($locationDir): void {
+    if (!is_dir($locationDir)) {
+        mkdir($locationDir, 0775, true);
+    }
+}
+
 // writting down error log
 function logError(string $message, array|string|null $errorInfo = null): void
 {
     // check if the directory exists and create if not
     $logDirectory = __DIR__ . '../../logs';
-    if (!file_exists($logDirectory)) {
-        mkdir($logDirectory, 0755, true);
-    }
+    checkAndCreateDirectory($logDirectory);
 
     // preparing final message
     if (!empty($errorInfo)) {
@@ -75,7 +80,8 @@ function renderingInputField(
     string $name, 
     string $type, 
     ?string $placeholder, 
-    string|int|null $value = null
+    string|int|null $value = null, 
+    ?string $image = null
 ): void
 {
     $label = $label ? htmlspecialchars($label) : null;

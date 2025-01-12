@@ -1,4 +1,6 @@
+config/config.php
 config/email-config.php
 logs/php_errors.log
 node_modules/
 **/tests/**
+ticket_images/

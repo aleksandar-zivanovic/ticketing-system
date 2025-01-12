@@ -36,7 +36,7 @@ require_once '../../classes/Ticket.php';
 
         ?>
 
-        <form action="../actions/process_creating_ticket.php" method="POST">
+        <form action="../actions/process_creating_ticket.php" method="POST" enctype="multipart/form-data">
             <div class="grid sm:grid-cols-1 gap-8">
 
             <?php
@@ -58,6 +58,9 @@ require_once '../../classes/Ticket.php';
 
                 // error description
                 renderingTextArea("Describe the issue:", "error_description");
+
+                // error image
+                renderingInputField("Insert error images:", "error_images[]", "file", "");
                 ?>
             </div>
 

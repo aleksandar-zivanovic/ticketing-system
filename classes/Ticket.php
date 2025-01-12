@@ -14,6 +14,7 @@ class Ticket
     public int $priorityId;
     public int $statusId;
     public int $userId;
+    public ?array $images;
 
     /**
      * Sets connection with the database
@@ -45,6 +46,7 @@ class Ticket
      */
     public function collectTicketData(): void 
     {
+        // Validates the URL from the form input.
         $url = cleanString(filter_input(INPUT_POST, "error_page", FILTER_SANITIZE_URL));
         if (!filter_var($url, FILTER_VALIDATE_URL)) {
             throw new RuntimeException('URL is not valid!');
@@ -63,17 +65,138 @@ class Ticket
     }
 
     /**
-     * Creates new ticket
+     * Processes images from the form.
+     * Checks for errors, validates MIME types, and verifies allowed file extensions.
+     * Creates the image folder if it doesn't exist.
+     * Prepares adequate file names for images.
+     * Prepares unique image names and sanitized them.
+     * Inserts image names to the database.
+     * Uploads images to the designated folder.
+     * 
+     * @return bool Returns true on succes otherwise false.
+     */
+    public function processImages(int $ticketId): bool
+    {
+        // Check for errors
+        foreach ($_FILES['error_images']['error'] as $value) {
+            if ($value !== UPLOAD_ERR_OK) {
+                throw new Exception("Upload failed with error code: " . $_FILES['error'][$value]);
+            }
+        }
+
+        // Check MIME type
+        foreach ($_FILES['error_images']['tmp_name'] as $fileLocation) {
+            $finfo = finfo_open(FILEINFO_MIME);
+            $mimeType = finfo_file($finfo, $fileLocation);
+            finfo_close($finfo);
+
+            if (!str_contains($mimeType, "image/jpeg") && !str_contains($mimeType, "image/png")) {
+                throw new Exception("Wrong file format!");
+            }
+        }
+
+        // Check file extension
+        $allowedExtensions = ["jpg", "jpeg", "png",];
+        foreach ($_FILES['error_images']['name'] as $fileName) {
+            $fileExtension = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
+
+            if (!in_array($fileExtension, $allowedExtensions)) {
+                throw new Exception("Wrong file extension!");
+            }
+        }
+
+        $locationDir = ROOT . DS . "public" . DS . "img" . DS . "ticket_images";
+
+        // Checks if the directory exists and creates it if it doesn't exist
+        checkAndCreateDirectory($locationDir);
+
+        // Prepare names and moving files
+        $movingResult = [];
+        $imageNames = [];
+        $iterations = count($_FILES['error_images']['tmp_name']);
+
+        // Initializes the array to store successfully uploaded files.
+        $uploadedFiles = [];
+        
+        for ($i = 0; $i < $iterations; $i++) { 
+            $imageName = uniqid() . "-" . strtolower(str_replace(" ", "-", $_FILES['error_images']['name'][$i]));
+            $imageNames[] = $imageName;
+        
+            $movingSuccess = move_uploaded_file($_FILES['error_images']['tmp_name'][$i], $locationDir . DS . $imageName);
+            $movingResult[] = $movingSuccess;
+
+            if ($movingSuccess) {
+                $uploadedFiles[] = $imageName;
+            }
+        }
+
+        // Rolls back the process by deleting successfully uploaded files if any file fails to upload.
+        if (in_array(false, $movingResult)) {
+            foreach ($uploadedFiles as $file) {
+                unlink($locationDir . DS . $file);
+            }
+
+            throw new Exception("Moving files failed!");
+        }
+
+        // Add images to the database
+        return $this->addImagesToDatabase($imageNames, $ticketId);
+    }
+
+    /**
+     * Inserts image file names into the database.
+     * 
+     * @return bool Returns true on succes otherwise false.
+     */
+    private function addImagesToDatabase(string|array $images, int $ticketId): bool 
+    {
+        try {
+            $query = "INSERT INTO ticket_attachments (file_name, ticket) VALUES (";
+            if (is_array($images)) {
+                $placeholders = [];
+                foreach ($images as $key => $value) {
+                    $placeholders[] = ":fn_{$key}";
+                }
+
+                $query .= implode(",", $placeholders) . ", {$ticketId})";
+            }
+            
+            if (!is_array($images)) {
+                $query .= ":fn, {$ticketId})";
+            }
+
+            $stmt = $this->getConn()->connect()->prepare($query);
+
+            if (is_array($images)) {
+                foreach ($images as $key => $value) {
+                    $stmt->bindValue(":fn_{$key}", $value, PDO::PARAM_STR);
+                }
+            } else {
+                $stmt->bindValue(":fn", $images, PDO::PARAM_STR);
+            }
+
+            $stmt->execute();
+
+            return true;
+        } catch (\PDOException $e) {
+            logError("addImagesToDatabase() metod error: Adding images to the database failed! ", ['message' => $e->getMessage(), 'code' => $e->getCode()]);
+            return false;
+        }
+    }
+
+    /**
+     * Creates a new ticket
      */
     public function createTicket(): void
     {
         $this->collectTicketData();
+        $conn = $this->getConn()->connect();
 
         try {
             $query = "INSERT INTO tickets (created_year, created_month, created_day, department, created_by, priority, statusId, title, body) " .
             "VALUES(:cy, :cm, :cd, :de, :us, :pr, :st, :tt, :bd)";
 
-            $stmt = $this->getConn()->connect()->prepare($query);
+            $stmt = $conn->prepare($query);
             $stmt->bindValue(":cy", $this->year, PDO::PARAM_INT);
             $stmt->bindValue(":cm", $this->month, PDO::PARAM_INT);
             $stmt->bindValue(":cd", $this->day, PDO::PARAM_INT);
@@ -84,7 +207,12 @@ class Ticket
             $stmt->bindValue(":tt", $this->title, PDO::PARAM_STR);
             $stmt->bindValue(":bd", $this->description, PDO::PARAM_STR);
             $stmt->execute();
+            $ticketId = (int) $conn->lastInsertId();
+            $this->processImages($ticketId);
+
             $_SESSION["info_message"] = "The issue is reported! Thank you!";
+
+            // Redirects the user to the reported page after the successful ticket creation.
             header("Location: {$this->url}");
         } catch (\PDOException $e) {
             logError("createTicket error: INSERT query failed!", ["message" => $e->getMessage(), "code" => $e->getCode()]);
