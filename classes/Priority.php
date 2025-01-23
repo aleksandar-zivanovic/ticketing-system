@@ -1,7 +1,7 @@
 <?php
 require_once('Database.php');
 
-class Department
+class Priority
 {
     private ?Database $dbInstance = null;
 
@@ -14,22 +14,22 @@ class Department
         return $this->dbInstance;
     }
 
-    public function getAllDepartments(): array
+    public function getAllPriorities(): array
     {
-        $query = "SELECT * FROM departments";
+        $query = "SELECT * FROM priorities";
         $stmt = $this->getConn()->connect()->prepare($query);
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    public function getAllDepartmentNames(): array
+    public function getAllPriorityNames(): array
     {
-        $departmentNames = [];
-
-        foreach ($this->getAllDepartments() as $value) {
-            $departmentNames[] = $value['name'];
+        $statusNames = [];
+        
+        foreach ($this->getAllPriorities() as $value) {
+            $statusNames[] = $value['name'];
         }
 
-        return $departmentNames;
+        return $statusNames;
     }
 }

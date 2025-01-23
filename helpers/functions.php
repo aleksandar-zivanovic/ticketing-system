@@ -179,3 +179,37 @@ function renderingSubmitButton(string $name, string $value): void
 
     require __DIR__ . '/../partials/input-submit.php';  
 }
+
+/**
+ * Generates a breadcrumb-friendly page name.
+ * Call this function with fileName(__FILE__).
+ *
+ * @param string $currentPage The current file path.
+ * @return string The formatted page name.
+ */
+function fileName($currentPage): string 
+{
+    $pageName = basename($currentPage, '.php');
+    $page = str_replace("-", " ", $pageName);
+    return cleanString(ucwords($page));
+}
+
+/**
+ * Adds the "selected" attribute to a form option based on a $_GET parameter value.
+ *
+ * This function checks if the provided $_GET parameter matches the given form value.
+ * If they match, it returns the "selected" attribute to be used in an <option> element.
+ * If they don't match, or if the parameter is not set, it returns null (no attribute).
+ *
+ * @param string|null $getParam The name of the $_GET parameter to check.
+ * @param string $formValue The value of the option in the form.
+ * @return string|null Returns "selected" if the values match, otherwise null.
+ */
+function addSelectedTag(string $getParam = null, string $formValue): ?string
+{
+    if (isset($_GET[$getParam]) && cleanString($_GET[$getParam]) === $formValue) {
+        return "selected";
+    }
+
+    return null;
+}

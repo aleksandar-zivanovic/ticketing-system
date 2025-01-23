@@ -1,5 +1,5 @@
 <?php
-require_once('Database.php');
+require_once 'Database.php';
 
 class Ticket
 {
@@ -219,6 +219,104 @@ class Ticket
 
             throw new \RuntimeException("createTicket method query execution failed");
         }
+    }
 
+    /**
+     * Fetches ticket data and associated details from related tables.
+     *
+     * This method builds and executes a SQL query to retrieve ticket data.
+     *
+     * @param array $allowedValues An array of allowed values for ordering tickets.
+     * @param string $orderBy The value by which to order the tickets, default is "newest".
+     * @param bool $images A flag to include image attachments in the result, default is true.
+     * 
+     * @return array The result set containing ticket information, including optional image attachments.
+     * 
+     * @throws DomainException If the provided $orderBy value is not in the allowed values.
+     * @throws Exception If there is a PDOException while executing the SQL query.
+     */
+    public function fetchAllTickets(array $allowedValues, string $orderBy = "newest", bool $images = true): array
+    {
+        // Checks if $orderBy value is allowed.
+        $allowed = false;
+        foreach ($allowedValues as $key => $value) {
+            if (in_array($orderBy, $value)) {
+                $allowed = true;
+                $table = $key;
+            }
+        }
+
+        // Throws an exception if the $orderBy value is not allowed
+        if (!$allowed) {
+            throw new DomainException("Invalid ordering value!");
+        }
+
+        try {
+            // Initial query to select ticket data and associated table names for join
+            $query = "SELECT 
+                        t.*, 
+                        d.name AS department_name, 
+                        p.name AS priority_name, 
+                        s.name AS status_name, 
+                        u.name AS admin_name, 
+                        u.surname AS admin_surname
+                    ";
+
+            // If $images = TRUE attachments will be included in result.
+            if ($images) {
+                $query .= " , GROUP_CONCAT(ta.id) AS attachment_id, 
+                            GROUP_CONCAT(ta.file_name) AS file, 
+                            ta.ticket AS from_ticket
+                        ";
+
+                $queryJoin = " LEFT JOIN ticket_attachments ta on t.id = ta.ticket";
+            }
+            
+            $query .= " FROM tickets t";
+
+            // Adding joins for departments, priorities, statuses and users
+            $query .= " LEFT JOIN departments d ON t.department = d.id 
+                        LEFT JOIN priorities p ON t.priority = p.id 
+                        LEFT JOIN statuses s ON t.statusId = s.id 
+                        LEFT JOIN users u ON t.handled_by = u.id 
+                    ";
+        
+            // If $images is true, includes the join for attachments table
+            if ($images) $query .= $queryJoin;
+
+            // Sets WHERE clause
+            if ($table != "date") {
+                switch ($table) {
+                    case 'statuses':
+                        $tableAllias = "s";
+                        break;
+                    case 'priorities':
+                        $tableAllias = "p";
+                        break;
+                    case 'departments':
+                        $tableAllias = "d";
+                }
+
+                $query .= " WHERE " . $tableAllias . ".name = '" . $orderBy . "'";
+            }
+
+            // Adds GROUP BY clause to group results by ticket ID
+            $query .= " GROUP BY t.id";
+
+            // Determines the ordering based on the value of $orderBy
+            $queryOrder = $orderBy === "oldest" ? " ORDER BY t.id ASC" : " ORDER BY t.id DESC";
+            if ($queryOrder) $query .= $queryOrder;
+
+            // Prepares and executes the SQL query
+            $stmt = $this->getConn()->connect()->prepare($query);
+            $stmt->execute();
+
+            // Returns the fetched result set
+            return $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (\PDOException $e) {
+            // Logs the error and throws an exception if a PDOException occurs
+            logError($e->getMessage() . $e->getCode());
+            throw new Exception($e->getMessage() . $e->getCode());
+        }
     }
 }

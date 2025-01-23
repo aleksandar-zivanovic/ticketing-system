@@ -14,7 +14,7 @@
 <div id="app">
 
 <!-- Navigation Menu -->
-<?php include_once '../../partials/_navigation-menu.php'; ?>
+<?php include_once '../../partials/_navigation-bar.php'; ?>
 
 <!-- Side Menu -->
 <?php include_once '../../partials/_side-menu.php'; ?>
