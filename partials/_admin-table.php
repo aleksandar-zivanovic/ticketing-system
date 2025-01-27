@@ -1,38 +1,53 @@
 <section class="is-hero-bar">
     <div class="flex flex-col md:flex-row items-center justify-between space-y-6 md:space-y-0">
-        <h1 class="title">Responsive Tables</h1>
+        <h1 class="title">Tickets listing</h1>
         <div class="flex flex-col md:flex-row items-center justify-between space-y-6 md:space-y-0">
             <form action="">
-                <labelfor="tickets">Sort by:</label>
-                    <select name="tickets" id="tickets" onchange="this.form.submit()">
-                        <optgroup label="date">
-                            <option value="oldest" <?php echo addSelectedTag("tickets", "oldest"); ?>>Oldest first</option>
-                            <option value="newest" <?php echo addSelectedTag("tickets", "newest"); ?>>Newest first</option>
-                        </optgroup>
-                        <optgroup label="status">
+                <button 
+                    type="submit" 
+                    class="button <?php echo $orderBy === "oldest" ? "green" : "light";?>" 
+                    name="order_by" 
+                    value="oldest"
+                >
+                    <i class="fa fa-solid fa-arrow-up"></i>
+                </button>
+
+                <button 
+                    type="submit" 
+                    class="button 
+                    <?php echo $orderBy === "newest" ? "green" : "light"; ?>" 
+                    name="order_by" 
+                    value="newest"
+                >
+                    <i class="fa fa-solid fa-arrow-down"></i>
+                </button>
+
+                <select name="sort" id="sort" onchange="this.form.submit()">
+                    <option value="all" <?php echo addSelectedTag("sort", "newest"); ?>>All</option>
+                    <optgroup label="status">
+                        <?php
+                        foreach ($statuses as $singleStatus) {
+                            echo "<option value='{$singleStatus}' " . addSelectedTag("sort", $singleStatus) . ">" . ucfirst($singleStatus) . "</option>";
+                        }
+                        ?>
+                    </optgroup>
+                    <optgroup label="priority">
+                        <?php
+                        foreach ($priorities as $singlePriority) {
+                            echo "<option value='{$singlePriority}' " . addSelectedTag("sort", $singlePriority) . ">" . ucfirst($singlePriority) . "</option>";
+                        }
+                        ?>
+                    </optgroup>
+                    <?php if ($departments) : ?>
+                        <optgroup label="department">
                             <?php
-                            foreach ($statuses as $singleStatus) {
-                                echo "<option value='{$singleStatus}' " . addSelectedTag("tickets", $singleStatus) . ">" . ucfirst($singleStatus) . "</option>";
+                            foreach ($departments as $singleDepartment) {
+                                echo "<option value='{$singleDepartment}' " . addSelectedTag("sort", $singleDepartment) . ">" . ucfirst($singleDepartment) . "</option>";
                             }
                             ?>
                         </optgroup>
-                        <optgroup label="priority">
-                            <?php
-                            foreach ($priorities as $singlePriority) {
-                                echo "<option value='{$singlePriority}' " . addSelectedTag("tickets", $singlePriority) . ">" . ucfirst($singlePriority) . "</option>";
-                            }
-                            ?>
-                        </optgroup>
-                        <?php if ($departments) : ?>
-                            <optgroup label="department">
-                                <?php
-                                foreach ($departments as $singleDepartment) {
-                                    echo "<option value='{$singleDepartment}' " . addSelectedTag("tickets", $singleDepartment) . ">" . ucfirst($singleDepartment) . "</option>";
-                                }
-                                ?>
-                            </optgroup>
-                        <?php endif; ?>
-                    </select>
+                    <?php endif; ?>
+                </select>
             </form>
         </div>
     </div>
@@ -67,7 +82,7 @@
                             <th>Handling</th>
                             <th>Priority</th>
                             <th>Status</th>
-                            <th>Att</th>
+                            <th>Files</th>
                         </tr>
                     </thead>
                     <tbody>

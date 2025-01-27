@@ -10,6 +10,7 @@ require_once '../../classes/Status.php';
 $page = fileName(__FILE__);
 $data = true;
 
+// Initialize allowed filter values for tickets
 $status = new Status();
 $statuses = $status->getAllStatusNames();
 
@@ -21,15 +22,26 @@ $departments = $department->getAllDepartmentNames();
 
 // Set allowed values list for fetchAllTickets() method
 $allowedValues = array_merge(
-  ["date" => ["newest", "oldest"]], 
   ["statuses" => $statuses], 
   ["priorities" => $priorities], 
   ["departments" => $departments],
 );
 
+// Get sorting and ordering parameters
+if (isset($_GET['order_by'])) {
+  $orderBy = cleanString(filter_input(INPUT_GET, 'order_by', FILTER_DEFAULT));
+  $_SESSION['order_by'] = $orderBy;
+} elseif (!isset($_GET['order_by']) && isset($_SESSION['order_by'])) {
+  $orderBy = $_SESSION['order_by'];
+} else {
+  $orderBy = "newest";
+}
+
+$sortBy = isset($_GET['sort']) ? filter_input(INPUT_GET, 'sort', FILTER_DEFAULT) : null;
+
 // Call fetchAllTickets() method
 $ticket = new Ticket();
-$data = $ticket->fetchAllTickets($allowedValues, isset($_GET['tickets']) ? filter_input(INPUT_GET, 'tickets', FILTER_DEFAULT) : "oldest");
+$data = $ticket->fetchAllTickets(allowedValues: $allowedValues, orderBy: $orderBy, sortBy: $sortBy);
 ?>
 
 <!DOCTYPE html>
@@ -42,6 +54,7 @@ $data = $ticket->fetchAllTickets($allowedValues, isset($_GET['tickets']) ? filte
 
   <!-- Tailwind is included -->
   <link rel="stylesheet" href="../css/admin-one-main.css">
+  <link rel="stylesheet" href="../css/font-awesome.min.css">
 </head>
 <body>
 

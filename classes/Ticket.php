@@ -228,27 +228,44 @@ class Ticket
      *
      * @param array $allowedValues An array of allowed values for ordering tickets.
      * @param string $orderBy The value by which to order the tickets, default is "newest".
+     * @param ?string $sortBy The table name for sorting, defaults to null if not provided.
      * @param bool $images A flag to include image attachments in the result, default is true.
      * 
      * @return array The result set containing ticket information, including optional image attachments.
      * 
-     * @throws DomainException If the provided $orderBy value is not in the allowed values.
+     * @throws DomainException If the provided $sortBy or $orderBy value is not in the allowed values.
      * @throws Exception If there is a PDOException while executing the SQL query.
      */
-    public function fetchAllTickets(array $allowedValues, string $orderBy = "newest", bool $images = true): array
+    public function fetchAllTickets(
+        array $allowedValues, 
+        string $orderBy = "newest", 
+        ?string $sortBy = null, 
+        bool $images = true
+    ): array
     {
-        // Checks if $orderBy value is allowed.
-        $allowed = false;
-        foreach ($allowedValues as $key => $value) {
-            if (in_array($orderBy, $value)) {
-                $allowed = true;
-                $table = $key;
+        // Checks if the $sortBy value is valid.
+        $allowedSort = false;
+        if ($sortBy === null || $sortBy === "all") {
+            $allowedSort = true;
+            $table = null;
+        } else {
+            foreach ($allowedValues as $key => $value) {
+                if (in_array($sortBy, $value)) {
+                    $allowedSort = true;
+                    $table = $key;
+                }
             }
         }
 
-        // Throws an exception if the $orderBy value is not allowed
-        if (!$allowed) {
-            throw new DomainException("Invalid ordering value!");
+        // Checka if the $orderBy value is valid.
+        $allowedOrder = false;
+        if ($orderBy === "newest" || $orderBy === "oldest") {
+            $allowedOrder = true;
+        }
+
+        // Throw an exception if either $sortBy or $orderBy is invalid.
+        if ($allowedSort !== true ||  $allowedOrder !== true) {
+            throw new DomainException("Invalid order/sort value!");
         }
 
         try {
@@ -285,7 +302,7 @@ class Ticket
             if ($images) $query .= $queryJoin;
 
             // Sets WHERE clause
-            if ($table != "date") {
+            if (isset($table) && $table !== null) {
                 switch ($table) {
                     case 'statuses':
                         $tableAllias = "s";
@@ -297,7 +314,7 @@ class Ticket
                         $tableAllias = "d";
                 }
 
-                $query .= " WHERE " . $tableAllias . ".name = '" . $orderBy . "'";
+                $query .= " WHERE " . $tableAllias . ".name = '" . $sortBy . "'";
             }
 
             // Adds GROUP BY clause to group results by ticket ID
