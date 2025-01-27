@@ -132,15 +132,18 @@ class Ticket
 
         // Rolls back the process by deleting successfully uploaded files if any file fails to upload.
         if (in_array(false, $movingResult)) {
-            foreach ($uploadedFiles as $file) {
-                unlink($locationDir . DS . $file);
-            }
-
-            throw new Exception("Moving files failed!");
+            $this->deleteAttachmentsFromServer($uploadedFiles, $locationDir);
+            return false;
         }
 
         // Add images to the database
-        return $this->addImagesToDatabase($imageNames, $ticketId);
+        if ($this->addImagesToDatabase($imageNames, $ticketId)) {
+            return true;
+        } else {
+            // Deletes uploaded files if inserting to the database fails.
+            $this->deleteAttachmentsFromServer($imageNames, $locationDir);
+            return false;
+        }
     }
 
     /**
@@ -151,34 +154,24 @@ class Ticket
     private function addImagesToDatabase(string|array $images, int $ticketId): bool 
     {
         try {
-            $query = "INSERT INTO ticket_attachments (file_name, ticket) VALUES (";
-            if (is_array($images)) {
-                $placeholders = [];
-                foreach ($images as $key => $value) {
-                    $placeholders[] = ":fn_{$key}";
-                }
-
-                $query .= implode(",", $placeholders) . ", {$ticketId})";
-            }
-            
-            if (!is_array($images)) {
-                $query .= ":fn, {$ticketId})";
-            }
-
+            $query = "INSERT INTO ticket_attachments (file_name, ticket) VALUES (:file_name, {$ticketId})";
             $stmt = $this->getConn()->connect()->prepare($query);
 
             if (is_array($images)) {
-                foreach ($images as $key => $value) {
-                    $stmt->bindValue(":fn_{$key}", $value, PDO::PARAM_STR);
+                foreach ($images as $value) {
+                    $stmt->bindValue(":file_name", $value, PDO::PARAM_STR);
+                    $stmt->execute();
                 }
             } else {
-                $stmt->bindValue(":fn", $images, PDO::PARAM_STR);
+                $stmt->bindValue(":file_name", $images, PDO::PARAM_STR);
+                $stmt->execute();
             }
-
-            $stmt->execute();
 
             return true;
         } catch (\PDOException $e) {
+            // Deletes attachment enteries that are added for this ticket.
+            $this->deleteAttachmentsFromDBByTicket($ticketId);
+
             logError("addImagesToDatabase() metod error: Adding images to the database failed! ", ['message' => $e->getMessage(), 'code' => $e->getCode()]);
             return false;
         }
@@ -334,6 +327,49 @@ class Ticket
             // Logs the error and throws an exception if a PDOException occurs
             logError($e->getMessage() . $e->getCode());
             throw new Exception($e->getMessage() . $e->getCode());
+        }
+    }
+
+    /**
+     * Deletes all file names for a chosen ticket from ticket_attachments table.
+     * 
+     * @param int $ticketID ID of the ticket whose files want to remove
+     * @return bool Returns true if at least one attachment was deleted, otherwise false.
+     */
+    public function deleteAttachmentsFromDBByTicket(int $ticketId): bool
+    {
+        try {
+            $sql = "DELETE FROM ticket_attachments WHERE ticket = :ticket";
+            $stmt = $this->getConn()->connect()->prepare($sql);
+            $stmt->bindValue(":ticket", $ticketId, PDO::PARAM_INT);
+            $stmt->execute();
+            
+            return $stmt->rowCount() > 0;
+
+        } catch (\PDOException $e) {
+            logError("deleteAttachmentsByTicket() metod error: Failed to delete attachments for ticket ID: {$ticketId}", ['message' => $e->getMessage(), 'code' => $e->getCode()]);
+            return false;
+        }
+    }
+
+    /**
+     * Removes attachments from server.
+     * 
+     * @param string|array $attachment Name or names of file(s) should be removed.
+     * @param string $locationDirectory File location.
+     */
+    public function deleteAttachmentsFromServer(string|array $attachment, string $locationDirectory): void
+    {
+        if (is_array($attachment)) {
+            foreach ($attachment as $value) {
+                if (!unlink($locationDirectory . DS . $value)) {
+                    logError("deleteAttachmentsFromServer() metod error: Failed to delete the attachment: {$value}");
+                };
+            }
+        } else {
+            if (!unlink($locationDirectory . DS . $attachment)) {
+                logError("deleteAttachmentsFromServer() metod error: Failed to delete the attachment: {$attachment}");
+            };
         }
     }
 }
