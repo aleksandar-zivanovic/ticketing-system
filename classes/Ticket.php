@@ -222,6 +222,7 @@ class Ticket
      * @param array $allowedValues An array of allowed values for ordering tickets.
      * @param string $orderBy The value by which to order the tickets, default is "newest".
      * @param ?string $sortBy The table name for sorting, defaults to null if not provided.
+     * @param int $limit Value for LIMIT clause in the SQL query. If 0, no limit is applied. Default value is 0.
      * @param bool $images A flag to include image attachments in the result, default is true.
      * 
      * @return array The result set containing ticket information, including optional image attachments.
@@ -233,36 +234,15 @@ class Ticket
         array $allowedValues, 
         string $orderBy = "newest", 
         ?string $sortBy = null, 
+        int $limit = 0, 
         bool $images = true
     ): array
     {
-        // Checks if the $sortBy value is valid.
-        $allowedSort = false;
-        if ($sortBy === null || $sortBy === "all") {
-            $allowedSort = true;
-            $table = null;
-        } else {
-            foreach ($allowedValues as $key => $value) {
-                if (in_array($sortBy, $value)) {
-                    $allowedSort = true;
-                    $table = $key;
-                }
-            }
-        }
-
-        // Checka if the $orderBy value is valid.
-        $allowedOrder = false;
-        if ($orderBy === "newest" || $orderBy === "oldest") {
-            $allowedOrder = true;
-        }
-
-        // Throw an exception if either $sortBy or $orderBy is invalid.
-        if ($allowedSort !== true ||  $allowedOrder !== true) {
-            throw new DomainException("Invalid order/sort value!");
-        }
+        // Validates sorting and ordering values and sets $table value.
+        $table = $this->validateSortingAndOrdering($allowedValues, $orderBy, $sortBy);
 
         try {
-            // Initial query to select ticket data and associated table names for join
+            // Initial query to select ticket data and associated table names for join.
             $query = "SELECT 
                         t.*, 
                         d.name AS department_name, 
@@ -305,9 +285,12 @@ class Ticket
                         break;
                     case 'departments':
                         $tableAllias = "d";
+                    default: 
+                        $tableAllias = "u";
                 }
 
-                $query .= " WHERE " . $tableAllias . ".name = '" . $sortBy . "'";
+                $column = (in_array($tableAllias, ["s", "p", "d"])) ? "name" : "id";
+                $query .= " WHERE " . $tableAllias . "." . $column . " = '" . $sortBy . "'";
             }
 
             // Adds GROUP BY clause to group results by ticket ID
@@ -317,17 +300,126 @@ class Ticket
             $queryOrder = $orderBy === "oldest" ? " ORDER BY t.id ASC" : " ORDER BY t.id DESC";
             if ($queryOrder) $query .= $queryOrder;
 
+            // Setting limit and offset value
+            if ($limit !== 0) {
+                $page = isset($_GET['page']) ? filter_input(INPUT_GET, "page", FILTER_SANITIZE_NUMBER_INT) : 1;
+                $offset = $page * $limit - $limit;
+
+                $query .= " LIMIT :limit OFFSET {$offset}";
+            }
+
             // Prepares and executes the SQL query
             $stmt = $this->getConn()->connect()->prepare($query);
+
+            // Binds the value of limit to the query if it is greater than 0
+            if ($limit !== 0) $stmt->bindValue("limit", $limit, PDO::PARAM_INT);
+
             $stmt->execute();
 
             // Returns the fetched result set
-            return $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (\PDOException $e) {
             // Logs the error and throws an exception if a PDOException occurs
             logError($e->getMessage() . $e->getCode());
             throw new Exception($e->getMessage() . $e->getCode());
         }
+    }
+
+    /**
+     * Counts all tickets in the database by criteria.
+     */
+    public function countAllTickets(
+        array $allowedValues, 
+        string $orderBy = "newest", 
+        ?string $sortBy = null
+    ): int
+    {
+        // Validates sorting and ordering values and sets $table value.
+        $table = $this->validateSortingAndOrdering($allowedValues, $orderBy, $sortBy);
+
+        try {
+            // Initial query to select ticket data and associated table names for join.
+            $query = "SELECT COUNT(*) FROM tickets t";
+
+            // Sets WHERE clause
+            if (isset($table) && $table !== null) {
+                switch ($table) {
+                    case 'statuses':
+                        $tableAllias = "s";
+                        $query .= " LEFT JOIN statuses s ON t.statusId = s.id";
+                        break;
+                    case 'priorities':
+                        $tableAllias = "p";
+                        $query .= " LEFT JOIN priorities p ON t.priority = p.id";
+                        break;
+                    case 'departments':
+                        $tableAllias = "d";
+                        $query .= " LEFT JOIN departments d ON t.department = d.id";
+                        break;
+                    default: 
+                        $tableAllias = "u";
+                        $query .= " LEFT JOIN users u ON t.handled_by = u.id"; 
+                }
+
+                $column = (in_array($tableAllias, ["s", "p", "d"])) ? "name" : "id";
+                $query .= " WHERE " . $tableAllias . "." . $column . " = '" . $sortBy . "'";
+            }
+
+            // Prepares and executes the SQL query
+            $stmt = $this->getConn()->connect()->prepare($query);
+            $stmt->execute();
+            
+            // Returns the fetched result set
+            return $stmt->fetchColumn();
+        } catch (\PDOException $e) {
+            // Logs the error and throws an exception if a PDOException occurs
+            logError($e->getMessage() . $e->getCode());
+            throw new Exception($e->getMessage() . $e->getCode());
+        }
+    }
+
+    /**
+     * Validates sorting and ordiering values.  
+     * This method is used in methods for making queries for ticket listings. 
+     * Provides table name for the WHERE clause in a query.
+     * 
+     * @param array $allowedValues An associative array of allowed values for ordering tickets.
+     * @param ?string $sortBy The table name for sorting, defaults to null if not provided.
+     * @return string|null Returns table name or null if everything is valid, otherwise throws exception;
+     * @throws DomainException If the provided $sortBy or $orderBy value is not in the allowed values.
+     */
+    private function validateSortingAndOrdering(
+        array $allowedValues, 
+        string $orderBy = "newest", 
+        ?string $sortBy = null
+    ): string|null
+    {
+        // Checks if the $sortBy value is valid.
+        $allowedSort = false;
+        if ($sortBy === null || $sortBy === "all") {
+            $allowedSort = true;
+            $table = null;
+        } else {
+            foreach ($allowedValues as $key => $value) {
+                if (in_array($sortBy, $value)) {
+                    $allowedSort = true;
+                    $table = $key;
+                }
+            }
+        }
+
+        // Checka if the $orderBy value is valid.
+        $allowedOrder = false;
+        if ($orderBy === "newest" || $orderBy === "oldest") {
+            $allowedOrder = true;
+        }
+
+        // Throw an exception if either $sortBy or $orderBy is invalid.
+        if ($allowedSort !== true ||  $allowedOrder !== true) {
+            throw new DomainException("Invalid order/sort value!");
+        }
+
+        return $table;
     }
 
     /**

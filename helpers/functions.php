@@ -195,19 +195,34 @@ function fileName($currentPage): string
 }
 
 /**
- * Adds the "selected" attribute to a form option based on a $_GET parameter value.
+ * Adds the "selected" attribute to a form option based on a $_GET parameter or a session value.
  *
  * This function checks if the provided $_GET parameter matches the given form value.
- * If they match, it returns the "selected" attribute to be used in an <option> element.
- * If they don't match, or if the parameter is not set, it returns null (no attribute).
+ * If they match, it returns the "selected" attribute to be used in an <option> element. 
+ * If the $_GET parameter is not set, it checks if the session value matches the form value.
+ * If neither match, it returns null (no attribute).
  *
  * @param string|null $getParam The name of the $_GET parameter to check.
  * @param string $formValue The value of the option in the form.
+ * @param string|null $sessionName The name of the session variable to check if $_GET is not set.
+ * @param string|bool|null $sessionName The name of the session variable to check if $_GET is not set.
+ *                                      If `true`, it gets the value of `$getParam`.
  * @return string|null Returns "selected" if the values match, otherwise null.
  */
-function addSelectedTag(string $getParam = null, string $formValue): ?string
+function addSelectedTag(
+    string $getParam = null, 
+    string $formValue, 
+    bool|string|null $sessionName = null
+    ): ?string
 {
+    // If $sessionName is true, use $getParam as the session key
+    $sessionName = $sessionName === true ? $getParam : $sessionName;
+
     if (isset($_GET[$getParam]) && cleanString($_GET[$getParam]) === $formValue) {
+        return "selected";
+    }
+
+    if (!isset($_GET[$getParam]) && isset($_SESSION[$sessionName]) && cleanString($_SESSION[$sessionName]) === $formValue) {
         return "selected";
     }
 

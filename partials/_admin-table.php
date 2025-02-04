@@ -69,12 +69,6 @@
                 <table>
                     <thead>
                         <tr>
-                            <th class="checkbox-cell">
-                                <label class="checkbox">
-                                    <input type="checkbox">
-                                    <span class="check"></span>
-                                </label>
-                            </th>
                             <th>ID</th>
                             <th>Created</th>
                             <th>Closed</th>
@@ -89,17 +83,12 @@
                         <?php foreach ($data as $ticket) : ?>
 
                             <tr>
-                                <td class="checkbox-cell">
-                                    <label class="checkbox">
-                                        <input type="checkbox">
-                                        <span class="check"></span>
-                                    </label>
-                                </td>
                                 <td data-label="ID"><?= $ticket['id']; ?></td>
                                 <td data-label="Created">
                                     <small class="text-gray-500" title="<?= $ticket['created_date']; ?>"><?= $ticket['created_date']; ?></small>
                                 </td>
                                 <td data-label="Closed">
+                                    <!-- TODO: change "Unsolved yet" with "Open" -->
                                     <small class="text-gray-500" title="<?= $ticket['closed_date']; ?>"><?= $ticket['closed_date'] ?? "Unsolved yet"; ?></small>
                                 </td>
                                 <td data-label="Department"><?= $ticket['department_name']; ?></td>
@@ -136,16 +125,8 @@
 
                     </tbody>
                 </table>
-                <div class="table-pagination">
-                    <div class="flex items-center justify-between">
-                        <div class="buttons">
-                            <button type="button" class="button active">1</button>
-                            <button type="button" class="button">2</button>
-                            <button type="button" class="button">3</button>
-                        </div>
-                        <small>Page 1 of 3</small>
-                    </div>
-                </div>
+                <!-- Pagination -->
+                <?php require_once '_admin-table-pagination.php'; ?>
             </div>
         </div>
 
