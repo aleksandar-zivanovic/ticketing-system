@@ -7,7 +7,14 @@
                     <option value="5" <?php echo addSelectedTag("limit", 5, true); ?>>5</option>
                     <option value="10" <?php 
                     echo addSelectedTag("limit", 10); 
-                    echo !isset($_GET["limit"]) || $_GET["limit"] == 10 || $_SESSION["limit"] == 10 ? "selected" : "";
+                    if (
+                        (!isset($_GET["limit"]) && !isset($_SESSION["limit"])) || 
+                        (isset($_GET["limit"]) && $_GET["limit"] == 10) || 
+                        (isset($_SESSION["limit"]) && $_SESSION["limit"] == 10)
+                        ) 
+                    {
+                        echo "selected";
+                    }
                     ?>>10</option>
                     <option value="20" <?php echo addSelectedTag("limit", 20, true); ?>>20</option>
                     <option value="50" <?php echo addSelectedTag("limit", 50, true); ?>>50</option>

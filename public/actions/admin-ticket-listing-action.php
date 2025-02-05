@@ -8,6 +8,10 @@ require_once '../../classes/Priority.php';
 require_once '../../classes/Status.php';
 require_once '../../classes/Pagination.php';
 
+// Call log out functionalitiy
+if (isset($_POST['logout'])) logout('../index.php');
+
+// Set $page and $data varaiables
 $page = fileName(__FILE__);
 $data = true;
 
