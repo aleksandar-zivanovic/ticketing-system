@@ -243,3 +243,30 @@ function logout(string $redirectionUrl): void
     header("Location:{$redirectionUrl}");
     die;
 }
+
+/**
+ * Debugging function for formatting var_dump and var_export output, 
+ * and displaying the variable's name.
+ * 
+ * @param string $function The function to call: "d" for var_dump, "e" for var_export.
+ * @param mixed $variable The variable to debug (e.g., $_SESSION, an array, or any other variable).
+ * @return void
+ */
+function formatVar(string $function, mixed $variable) 
+{
+    if ($function !== "d" && $function !== "e") {
+        throw new Exception("Wrong function parameter!");
+    }
+
+    $variableName = "";
+    foreach($GLOBALS as $varName => $value) {
+        if ($value === $variable) {
+            $variableName = "\$" . $varName;
+        }
+    }
+
+    echo "<pre style='background-color:lightblue;'>";
+    echo "<h1>{$variableName}</h1>";
+    $function === "d" ? var_dump($variable) : var_export($variable);
+    echo "</pre>";
+}
