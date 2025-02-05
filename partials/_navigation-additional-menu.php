@@ -20,9 +20,6 @@
             <span>Messages</span>
           </a>
           <hr class="navbar-divider">
-          <a class="navbar-item">
-            <span class="icon"><i class="mdi mdi-logout"></i></span>
-            <span>Log Out</span>
-          </a>
+          <?php require_once '_logout_button.php' ?>
         </div>
       </div>

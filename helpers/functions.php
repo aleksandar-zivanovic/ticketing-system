@@ -228,3 +228,18 @@ function addSelectedTag(
 
     return null;
 }
+
+/**
+ * Logs out the user and redirects the user to the specified page.
+ * 
+ * @param string $redirectionUrl The URL which the user will be redirected to after logging out.
+ * @return void 
+ */
+function logout(string $redirectionUrl): void 
+{
+    session_unset();
+    session_destroy();
+
+    header("Location:{$redirectionUrl}");
+    die;
+}
