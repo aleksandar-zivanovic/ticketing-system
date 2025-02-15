@@ -70,6 +70,7 @@
                     <thead>
                         <tr>
                             <th>ID</th>
+                            <th>Title</th>
                             <th>Created</th>
                             <th>Closed</th>
                             <th>Department</th>
@@ -84,6 +85,13 @@
 
                             <tr>
                                 <td data-label="ID"><?= $ticket['id']; ?></td>
+                                <td data-label="Title">
+                                    <a href="view-ticket.php?ticket=<?= $ticket['id']; ?>">
+                                        <?php
+                                        echo strlen($ticket['title']) > 25 ? substr($ticket['title'], 0, 22) . "..." : $ticket['title'];
+                                        ?>
+                                    </a>
+                                </td>
                                 <td data-label="Created">
                                     <small class="text-gray-500" title="<?= $ticket['created_date']; ?>"><?= $ticket['created_date']; ?></small>
                                 </td>

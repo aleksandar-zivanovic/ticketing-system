@@ -1,7 +1,7 @@
 <section class="is-title-bar">
   <div class="flex flex-col md:flex-row items-center justify-between space-y-6 md:space-y-0">
     <ul>
-      <li><a href="index.php">Admin</a></li>
+      <li><a href="admin-ticket-listing.php">Admin</a></li>
       <li><?= $page ?></li>
     </ul>
     <!-- <a href="https://justboil.me/" onclick="alert('Coming soon'); return false" target="_blank" class="button blue">

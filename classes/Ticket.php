@@ -379,6 +379,59 @@ class Ticket
     }
 
     /**
+     * Fetches ticket data and associated details from related tables.
+     *
+     * This method builds and executes a SQL query to retrieve a ticket data.
+     *
+     * @param int $ticketId A ticket id.
+     * 
+     * @return array The result contains ticket information, including optional image attachments.
+     * 
+     * @throws Exception If there is a PDOException while executing the SQL query.
+     */
+    public function fetchTicketDetails(int $ticketId): array
+    {
+        try {
+            // Initial query to select ticket data and associated table names for join.
+            $query = "SELECT 
+                        t.*, 
+                        d.name AS department_name, 
+                        p.name AS priority_name, 
+                        s.name AS status_name, 
+                        u1.name AS admin_name, 
+                        u1.surname AS admin_surname, 
+                        u2.name AS creator_name, 
+                        u2.surname AS creator_surname,
+                        GROUP_CONCAT(ta.id) AS attachment_id, 
+                        GROUP_CONCAT(ta.file_name) AS file, 
+                        ta.ticket AS from_ticket 
+                    FROM tickets t 
+                    LEFT JOIN ticket_attachments ta on t.id = ta.ticket 
+                    LEFT JOIN departments d ON t.department = d.id 
+                    LEFT JOIN priorities p ON t.priority = p.id 
+                    LEFT JOIN statuses s ON t.statusId = s.id 
+                    LEFT JOIN users u1 ON t.handled_by = u1.id 
+                    LEFT JOIN users u2 ON t.created_by = u2.id 
+                    WHERE t.id = :ticket";
+
+            // Prepares and executes the SQL query
+            $stmt = $this->getConn()->connect()->prepare($query);
+
+            // Binds the value of limit to the query if it is greater than 0
+            $stmt->bindValue("ticket", $ticketId, PDO::PARAM_INT);
+
+            $stmt->execute();
+
+            // Returns the fetched result set
+            return $stmt->fetch(PDO::FETCH_ASSOC);
+        } catch (\PDOException $e) {
+            // Logs the error and throws an exception if a PDOException occurs
+            logError("fetchTicketDetails() metod error: Failed to retrive the ticket data", ['message' => $e->getMessage(), 'code' => $e->getCode()]);
+            throw new Exception("Something went wrong. Try again later!");
+        }
+    }
+
+    /**
      * Validates sorting and ordiering values.  
      * This method is used in methods for making queries for ticket listings. 
      * Provides table name for the WHERE clause in a query.
