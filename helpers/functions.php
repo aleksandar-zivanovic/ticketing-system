@@ -270,3 +270,34 @@ function formatVar(string $function, mixed $variable)
     $function === "d" ? var_dump($variable) : var_export($variable);
     echo "</pre>";
 }
+
+/**
+ * Checks if the user has the required role(s).
+ * If the user is not logged in, redirects to the login page.
+ * If the user is unauthorized, redirects to the specified URL 
+ * or terminates execution with a message if no URL is provided.
+ * 
+ * @param string|array $role The required role or an array of allowed roles.
+ * @param string|null $url Optional. The URL to redirect unauthorized users to. If null, execution is terminated.
+ */
+function checkAuthorization(string|array $role, ?string $url = null) 
+{
+    if (!isset($_SESSION['user_role'])) {
+        header("Location: /ticketing-system/public/forms/login.php");
+        die;
+    }
+
+    if (is_array($role)) $authorized = in_array($_SESSION['user_role'], $role);
+
+    if (is_string($role)) $authorized = $_SESSION['user_role'] === $role;
+    
+    // Redirection
+    if ($authorized !== true) {
+        if ($url === null) {
+            die('Access denied!');
+        } else {
+            header("Location: " . $url);
+            die();
+        }
+    }
+}

@@ -1,5 +1,7 @@
 <?php
 require_once '../actions/admin-ticket-listing-action.php';
+
+checkAuthorization("admin", "../");
 ?>
 
 <!DOCTYPE html>

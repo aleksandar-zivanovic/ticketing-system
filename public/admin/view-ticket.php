@@ -12,12 +12,7 @@ if (
 }
 
 require_once '../../helpers/functions.php';
-// require_once '../../classes/User.php';
 require_once '../../classes/Ticket.php';
-// require_once '../../classes/Department.php';
-// require_once '../../classes/Priority.php';
-// require_once '../../classes/Status.php';
-// require_once '../../classes/Pagination.php';
 
 $ticketID = filter_input(INPUT_GET, "ticket", FILTER_SANITIZE_NUMBER_INT);
 
