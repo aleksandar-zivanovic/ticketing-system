@@ -80,8 +80,7 @@ function renderingInputField(
     string $name, 
     string $type, 
     ?string $placeholder, 
-    string|int|null $value = null, 
-    ?string $image = null
+    string|int|null $value = null
 ): void
 {
     $label = $label ? htmlspecialchars($label) : null;
