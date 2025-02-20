@@ -50,6 +50,8 @@
         <!-- Ticket title -->
         <div class="p-5 mt-4"><i class="text-2xl font-bold"><?= $ticket['title']; ?></i></div>
 
+        <!-- TODO: Add url of the page related to the ticket -->
+
         <!-- Ticket text -->
         <div class="border-2 border-gray-200 p-3 text-lg italic mb-4 bg-yellow-100">
             <?= $ticket['body']; ?>

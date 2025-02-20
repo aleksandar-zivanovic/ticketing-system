@@ -224,6 +224,7 @@ class Ticket
      * @param ?string $sortBy The table name for sorting, defaults to null if not provided.
      * @param int $limit Value for LIMIT clause in the SQL query. If 0, no limit is applied. Default value is 0.
      * @param bool $images A flag to include image attachments in the result, default is true.
+     * @param ?int $userId The ID of the user whose tickets are to be fetched. If `null`, all tickets will be fetched (default).
      * 
      * @return array The result set containing ticket information, including optional image attachments.
      * 
@@ -235,7 +236,8 @@ class Ticket
         string $orderBy = "newest", 
         ?string $sortBy = null, 
         int $limit = 0, 
-        bool $images = true
+        bool $images = true, 
+        ?int $userId = null
     ): array
     {
         // Validates sorting and ordering values and sets $table value.
@@ -291,7 +293,13 @@ class Ticket
 
                 $column = (in_array($tableAllias, ["s", "p", "d"])) ? "name" : "id";
                 $query .= " WHERE " . $tableAllias . "." . $column . " = '" . $sortBy . "'";
+
+                // Fetches only tickets opened by a specified user if $table is specified
+                if ($userId != null) $query .= " AND t.created_by = " . $userId;
             }
+
+            // Fetches only tickets opened by a specified user $table is not specified
+            if ($userId != null && (!isset($table) || $table == null)) $query .= " WHERE t.created_by = " . $userId;
 
             // Adds GROUP BY clause to group results by ticket ID
             $query .= " GROUP BY t.id";
@@ -331,7 +339,8 @@ class Ticket
     public function countAllTickets(
         array $allowedValues, 
         string $orderBy = "newest", 
-        ?string $sortBy = null
+        ?string $sortBy = null, 
+        ?int $userId = null
     ): int
     {
         // Validates sorting and ordering values and sets $table value.
@@ -339,7 +348,7 @@ class Ticket
 
         try {
             // Initial query to select ticket data and associated table names for join.
-            $query = "SELECT COUNT(*) FROM tickets t";
+            $query = "SELECT COUNT(*) FROM tickets t LEFT JOIN users u ON t.handled_by = u.id";
 
             // Sets WHERE clause
             if (isset($table) && $table !== null) {
@@ -358,12 +367,16 @@ class Ticket
                         break;
                     default: 
                         $tableAllias = "u";
-                        $query .= " LEFT JOIN users u ON t.handled_by = u.id"; 
                 }
 
                 $column = (in_array($tableAllias, ["s", "p", "d"])) ? "name" : "id";
                 $query .= " WHERE " . $tableAllias . "." . $column . " = '" . $sortBy . "'";
+                // Fetches only tickets opened by a specified user if $table is specified
+                if ($userId != null) $query .= " AND t.created_by = " . $userId;
             }
+
+            // Fetches only tickets opened by a specified user $table is not specified
+            if ($userId != null && (!isset($table) || $table == null)) $query .= " WHERE t.created_by = " . $userId;
 
             // Prepares and executes the SQL query
             $stmt = $this->getConn()->connect()->prepare($query);

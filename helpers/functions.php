@@ -300,3 +300,13 @@ function checkAuthorization(string|array $role, ?string $url = null)
         }
     }
 }
+
+/**
+ * Detrminates whether the user is in the admin or the in user panel
+ * 
+ * @return string "admin" if the user is in the admin panel, "user" otherwise.
+ */
+function getPanel(): string
+{
+    return str_contains($_SERVER["REQUEST_URI"], "public/admin") ? "admin" : "user";
+}

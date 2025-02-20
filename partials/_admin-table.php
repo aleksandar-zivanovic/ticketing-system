@@ -86,7 +86,7 @@
                             <tr>
                                 <td data-label="ID"><?= $ticket['id']; ?></td>
                                 <td data-label="Title">
-                                    <a href="view-ticket.php?ticket=<?= $ticket['id']; ?>">
+                                    <a href="<?= $panel === "admin" ? "../admin/": "../user/user-" ?>view-ticket.php?ticket=<?= $ticket['id']; ?>">
                                         <?php
                                         echo strlen($ticket['title']) > 25 ? substr($ticket['title'], 0, 22) . "..." : $ticket['title'];
                                         ?>

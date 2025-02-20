@@ -8,7 +8,11 @@
     <p class="menu-label">General</p>
     <ul class="menu-list">
       <li class="active">
-        <a href="admin-ticket-listing.php">
+        <?php if ($panel === "admin"): ?>
+        <a href="/ticketing-system/public/admin/admin-ticket-listing.php">
+        <?php else: ?>
+        <a href="/ticketing-system/public/user/user-ticket-listing.php">
+        <?php endif; ?>
           <span class="icon"><i class="mdi mdi-desktop-mac"></i></span>
           <span class="menu-item-label">Dashboard</span>
         </a>

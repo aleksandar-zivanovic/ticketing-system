@@ -14,6 +14,9 @@ if (
 require_once '../../helpers/functions.php';
 require_once '../../classes/Ticket.php';
 
+// Sets the panel (admin or user)
+$panel = isset($_SERVER['HTTP_REFERER']) && str_contains($_SERVER['HTTP_REFERER'], "/admin/") ? "admin" : "user";
+
 $ticketID = filter_input(INPUT_GET, "ticket", FILTER_SANITIZE_NUMBER_INT);
 
 // Call fetchAllTickets() method

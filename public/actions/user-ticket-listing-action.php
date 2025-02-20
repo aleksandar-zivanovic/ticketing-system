@@ -1,10 +1,6 @@
 <?php
 session_start();
 require_once '../../helpers/functions.php';
-
-// Checks if the user has `admin` role
-checkAuthorization("admin", "../");
-
 require_once '../../classes/User.php';
 require_once '../../classes/Ticket.php';
 require_once '../../classes/Department.php';
@@ -13,7 +9,7 @@ require_once '../../classes/Status.php';
 require_once '../../classes/Pagination.php';
 
 // Sets the panel (admin or user)
-$panel = "admin";
+$panel = "user";
 
 // Set $page and $data varaiables
 $page = fileName(__FILE__);
@@ -66,11 +62,11 @@ if (isset($_GET['limit'])) {
 
 // Call fetchAllTickets() method
 $ticket = new Ticket();
-$data = $ticket->fetchAllTickets(allowedValues: $allowedValues, orderBy: $orderBy, sortBy: $sortBy, limit: $limit);
+$data = $ticket->fetchAllTickets(allowedValues: $allowedValues, orderBy: $orderBy, sortBy: $sortBy, limit: $limit, userId: $_SESSION['user_id']);
 
 // Pagination proccessing
 $ticket2 = new Ticket();
-$totalItems = $ticket2->countAllTickets(allowedValues: $allowedValues, orderBy: $orderBy, sortBy: $sortBy);
+$totalItems = $ticket2->countAllTickets(allowedValues: $allowedValues, orderBy: $orderBy, sortBy: $sortBy, userId: $_SESSION['user_id']);
 
 // Sets results per page
 if (isset($_GET["limit"])) {
