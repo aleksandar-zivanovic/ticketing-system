@@ -12,7 +12,7 @@ require_once '../../classes/Pagination.php';
 $panel = "user";
 
 // Set $page and $data varaiables
-$page = fileName(__FILE__);
+$page = str_replace(" Action", "", fileName(__FILE__));
 $data = true;
 
 // Initialize allowed filter values for tickets
