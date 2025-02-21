@@ -19,6 +19,7 @@ class Database
             require_once __DIR__ . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'helpers' . DIRECTORY_SEPARATOR . 'functions.php';
             logError("Database connection failed: ", [$e->getMessage()]);
             echo "Connection failed: " . $e->getMessage();
+            throw $e;
           }
       }
 

@@ -79,11 +79,8 @@
         </div>
         <hr>
 
-
-        <!-- 
-        TODO: Implement messages between ticket creator and administrtor handling the ticket.
-        -->
-
+        <!-- Message form -->
+        <?php require_once '_message-form.php'; ?>
 
     </div>
 
