@@ -1,6 +1,6 @@
 <section class="is-hero-bar">
     <div class="flex flex-col md:flex-row items-center justify-between space-y-6 md:space-y-0">
-        <h1 class="title">Tickets listing</h1>
+        <h1 class="title">Tickets listing | <span class="text-gray-500 font-thin">Total: <?= $pagination->totalItems ?></span></h1>
         <div class="flex flex-col md:flex-row items-center justify-between space-y-6 md:space-y-0">
             <form action="">
                 <button 

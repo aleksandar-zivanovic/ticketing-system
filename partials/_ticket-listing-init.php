@@ -43,7 +43,7 @@ if ($fileName === "user-ticket-listing.php") {
   include_once '../../partials/_navigation-breadcrumbs.php';
 
   // import table
-  require_once '../../partials/_admin-table.php';
+  require_once '../../partials/_ticket-listing-table.php';
 
   // import edit modal
   include_once '../../partials/_edit_modal.php';
