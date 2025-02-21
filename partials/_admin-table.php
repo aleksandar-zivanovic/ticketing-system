@@ -96,8 +96,7 @@
                                     <small class="text-gray-500" title="<?= $ticket['created_date']; ?>"><?= $ticket['created_date']; ?></small>
                                 </td>
                                 <td data-label="Closed">
-                                    <!-- TODO: change "Unsolved yet" with "Open" -->
-                                    <small class="text-gray-500" title="<?= $ticket['closed_date']; ?>"><?= $ticket['closed_date'] ?? "Unsolved yet"; ?></small>
+                                    <small class="text-gray-500" title="<?= $ticket['closed_date']; ?>"><?= $ticket['closed_date'] ?? "Opened"; ?></small>
                                 </td>
                                 <td data-label="Department"><?= $ticket['department_name']; ?></td>
                                 <td data-label="Handling"><?= $ticket['handled_by'] ? $ticket['admin_name'] . " " . $ticket['admin_surname'] : "Unassigned"; ?></td>

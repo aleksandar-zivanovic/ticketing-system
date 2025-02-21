@@ -24,7 +24,7 @@
                     <th>Created</th>
                     <td data-label="Created"><?= $ticket['created_date']; ?></td>
                     <th>Closed</th>
-                    <td data-label="Closed"><?php echo $ticket['closed_date'] ?? "<strong class='text-orange-500'>Not closed yet!</strong>"; ?></td>
+                    <td data-label="Closed"><?php echo $ticket['closed_date'] ?? "<strong class='text-orange-500'>Opened</strong>"; ?></td>
                     <th>Status</th>
                     <?php
                     $statusClass = $ticket['status_name'] === "closed" ? "class='font-black text-green-500'" : "";
@@ -48,13 +48,18 @@
         <hr>
 
         <!-- Ticket title -->
-        <div class="p-5 mt-4"><i class="text-2xl font-bold"><?= $ticket['title']; ?></i></div>
-
-        <!-- TODO: Add url of the page related to the ticket -->
+        <div class="p-5 mt-4 text-3xl font-semibold"><i><?= $ticket['title']; ?></i></div>
 
         <!-- Ticket text -->
         <div class="border-2 border-gray-200 p-3 text-lg italic mb-4 bg-yellow-100">
-            <?= $ticket['body']; ?>
+            <div class="p-5">
+                <a href="<?= $ticket['url']; ?>" target="_blank">
+                    <strong>Error page: </strong> <span class="text-blue-500 hover:text-blue-900"><?= $ticket['url']; ?></span>
+                </a>
+            </div>
+            <div>
+                <?= $ticket['body']; ?>
+            </div>
         </div>
 
         <div>
@@ -68,7 +73,7 @@
                 <a class="m-2 inline-block" href='../img/ticket_images/<?= $attachment ?>' target="_blank"><img width='150' src='../img/ticket_images/<?= $attachment ?>'/></a>
             
             <?php
-                } // closing freach
+                } // closing foreach
             } // closing if
             ?>
         </div>

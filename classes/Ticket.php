@@ -186,8 +186,8 @@ class Ticket
         $conn = $this->getConn()->connect();
 
         try {
-            $query = "INSERT INTO tickets (created_year, created_month, created_day, department, created_by, priority, statusId, title, body) " .
-            "VALUES(:cy, :cm, :cd, :de, :us, :pr, :st, :tt, :bd)";
+            $query = "INSERT INTO tickets (created_year, created_month, created_day, department, created_by, priority, statusId, title, body, url) " .
+            "VALUES(:cy, :cm, :cd, :de, :us, :pr, :st, :tt, :bd, :ul)";
 
             $stmt = $conn->prepare($query);
             $stmt->bindValue(":cy", $this->year, PDO::PARAM_INT);
@@ -199,9 +199,14 @@ class Ticket
             $stmt->bindValue(":st", $this->statusId, PDO::PARAM_INT);
             $stmt->bindValue(":tt", $this->title, PDO::PARAM_STR);
             $stmt->bindValue(":bd", $this->description, PDO::PARAM_STR);
+            $stmt->bindValue(":ul", $this->url, PDO::PARAM_STR);
             $stmt->execute();
             $ticketId = (int) $conn->lastInsertId();
-            $this->processImages($ticketId);
+
+            // Proccesses files if they are attached in form:
+            if ($_FILES['error_images']['error'][0] != 4) {
+                $this->processImages($ticketId);
+            }
 
             $_SESSION["info_message"] = "The issue is reported! Thank you!";
 
