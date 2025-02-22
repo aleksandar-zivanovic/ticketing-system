@@ -33,6 +33,12 @@ $ticketID = filter_input(INPUT_GET, "ticket", FILTER_SANITIZE_NUMBER_INT);
 $ticket = new Ticket();
 $ticket = $ticket->fetchTicketDetails($ticketID);
 
+// Prevents users who are not the ticket creator or and admin to access to the ticket
+if ($_SESSION['user_role'] != "admin" && $_SESSION['user_id'] != $ticket["created_by"]) {
+  header("Location:../index.php");
+  die;
+}
+
 // Set $page and $data varaiables
 $page = "Ticket: " . $ticket['title'];
 ?>

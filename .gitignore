@@ -4,3 +4,4 @@ logs/php_errors.log
 node_modules/
 **/tests/**
 ticket_images/
+public/TODO.txt
