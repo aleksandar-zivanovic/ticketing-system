@@ -79,6 +79,9 @@
         </div>
         <hr>
 
+        <!-- Messages -->
+        <?php require_once '_message.php' ?>
+
         <!-- Message form -->
         <?php require_once '_message-form.php'; ?>
 

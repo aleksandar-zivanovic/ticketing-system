@@ -4,8 +4,6 @@ require_once 'Database.php';
 class Message
 {
     private ?Database $dbInstance = null;
-    // private int $ticketId;
-    private int $userId;
     private string $message;
 
     /**
@@ -53,4 +51,40 @@ class Message
         }
     }
 
+    /**
+     * Retrives all messages for the ticket with message details.
+     * 
+     * @param int $ticketId Id of the ticket the messages are related to.
+     * @return array Returns array of messages and their details.
+     */
+    public function allMessagesByTicket(int $ticketId): array
+    {
+        try {
+            $sql = "SELECT 
+                m.*, 
+                u.id as creator_id, 
+                u.name as creator_name, 
+                u.surname as creator_surname, 
+                GROUP_CONCAT(a.id) AS attachment_id, 
+                GROUP_CONCAT(a.file_name) AS file 
+                FROM messages AS m 
+                LEFT JOIN message_attachments a ON a.message = m.id 
+                LEFT JOIN users u ON u.id = m.user 
+                WHERE m.ticket = :tk 
+                GROUP BY m.id";
+            
+            $stmt = $this->getConn()->connect()->prepare($sql);
+            $stmt->bindValue(":tk", $ticketId, PDO::PARAM_INT);
+            $stmt->execute();
+
+            // Returns all messages related to the ticket
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (\PDOException $e) {
+            logError("
+                allMessagesByTicket() method error: Failed to retrive the ticket messages.", 
+                ['message' => $e->getMessage(), 'code' => $e->getCode()]
+            );
+            throw new Exception("Something went wrong. Try again later!");
+        }
+    }
 }
