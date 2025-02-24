@@ -40,7 +40,7 @@ class Message
                 $attachment->processImages($messageId);
             }
 
-            header("Location: ../user-view-ticket.php?ticket={$ticketId}");
+            header("Location: ../user/user-view-ticket.php?ticket={$ticketId}");
         } catch (\PDOException $e) {
             logError(
                 "createMessage() metod error: Inserting a message to the database failed! ", 
