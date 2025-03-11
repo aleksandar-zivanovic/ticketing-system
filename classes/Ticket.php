@@ -94,7 +94,7 @@ class Ticket
             if ($_FILES['error_images']['error'][0] != 4) {
                 require_once 'Attachment.php';
                 $attachment = new Attachment();
-                $attachment->processImages($ticketId);
+                $attachment->processImages($ticketId, "ticket_attachments", "error_images");
             }
 
             $_SESSION["info_message"] = "The issue is reported! Thank you!";

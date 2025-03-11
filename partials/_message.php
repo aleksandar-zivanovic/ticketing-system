@@ -1,6 +1,7 @@
 <?php
 $message = new Message();
 $allMessages = $message->allMessagesByTicket($ticketID);
+$lastMessage = end($allMessages);
 
 foreach ($allMessages as $message):
 
@@ -29,7 +30,15 @@ foreach ($allMessages as $message):
         </div>
         <div class="w-5/6 <?= $background ?> p-5 self-<?= $position ?> rounded-xl">
             <div class="w-full">
-                <?= $message["body"] ?>
+                <?php 
+                // Message text
+                echo $message["body"];
+                
+                // Editing message
+                if ($lastMessage["id"] === $message["id"] && $message["user"] === $_SESSION['user_id']) {
+                    require_once '_message-edit-button.php';
+                }
+                ?>
             </div>
         </div>
     </div>
@@ -50,4 +59,5 @@ foreach ($allMessages as $message):
     ?>
     </div>
     <hr>
+
 <?php endforeach; // closing main foreach ?>

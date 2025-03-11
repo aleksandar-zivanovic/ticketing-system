@@ -26,19 +26,34 @@ class Attachment
      * Inserts image names to the database.
      * Uploads images to the designated folder.
      * 
-     * @return bool Returns true on succes otherwise false.
+     * @param int $id ID of a ticket or message related to the files.
+     * @param string $table Name of the table (`ticket_attachments` or `message_attachments`).
+     * @param string $fieldName The name of the file input field in the form.
+     * 
+     * @return bool Returns true on success, otherwise false. 
+     * 
+     * @throws UnexpectedValueException If the table name is invalid.
+     * @throws Exception If there is an error in upload process.
+     * @throws Exception If file format is wrong.
+     * @throws Exception If file extension is wrong.
      */
-    public function processImages(int $ticketId): bool
+    public function processImages(int $id, string $table, string $fieldName): bool
     {
+        // Ensure the provided table name is valid
+        if ($table !== "ticket_attachments" && $table !== "message_attachments") {
+            logError("processImages() method error: Invalid table name: {$table}. Allowed values are 'ticket_attachments' and 'message_attachments'.");
+            throw new UnexpectedValueException ("Invalid table name provided.");
+        }
+
         // Check for errors
-        foreach ($_FILES['error_images']['error'] as $value) {
+        foreach ($_FILES[$fieldName]['error'] as $value) {
             if ($value !== UPLOAD_ERR_OK) {
                 throw new Exception("Upload failed with error code: " . $_FILES['error'][$value]);
             }
         }
 
         // Check MIME type
-        foreach ($_FILES['error_images']['tmp_name'] as $fileLocation) {
+        foreach ($_FILES[$fieldName]['tmp_name'] as $fileLocation) {
             $finfo = finfo_open(FILEINFO_MIME);
             $mimeType = finfo_file($finfo, $fileLocation);
             finfo_close($finfo);
@@ -50,7 +65,7 @@ class Attachment
 
         // Check file extension
         $allowedExtensions = ["jpg", "jpeg", "png",];
-        foreach ($_FILES['error_images']['name'] as $fileName) {
+        foreach ($_FILES[$fieldName]['name'] as $fileName) {
             $fileExtension = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
 
             if (!in_array($fileExtension, $allowedExtensions)) {
@@ -66,16 +81,16 @@ class Attachment
         // Prepare names and moving files
         $movingResult = [];
         $imageNames = [];
-        $iterations = count($_FILES['error_images']['tmp_name']);
+        $iterations = count($_FILES[$fieldName]['tmp_name']);
 
         // Initializes the array to store successfully uploaded files.
         $uploadedFiles = [];
         
         for ($i = 0; $i < $iterations; $i++) { 
-            $imageName = uniqid() . "-" . strtolower(str_replace(" ", "-", $_FILES['error_images']['name'][$i]));
+            $imageName = uniqid() . "-" . strtolower(str_replace(" ", "-", $_FILES[$fieldName]['name'][$i]));
             $imageNames[] = $imageName;
         
-            $movingSuccess = move_uploaded_file($_FILES['error_images']['tmp_name'][$i], $locationDir . DS . $imageName);
+            $movingSuccess = move_uploaded_file($_FILES[$fieldName]['tmp_name'][$i], $locationDir . DS . $imageName);
             $movingResult[] = $movingSuccess;
 
             if ($movingSuccess) {
@@ -91,7 +106,7 @@ class Attachment
         }
 
         // Add images to the database
-        if ($this->addImagesToDatabase($imageNames, $ticketId)) {
+        if ($this->addImagesToDatabase($imageNames, $id, $table)) {
             return true;
         } else {
             // Deletes uploaded files if inserting to the database fails.
@@ -102,43 +117,47 @@ class Attachment
 
     /**
      * Inserts image file names into the appropriate database table.
-     * Determines whether the attachment belongs to a ticket or a message
-     * based on the form submission context.
      * 
      * If an error occurs, it rolls back the process by deleting attachments linked to the given ID.
      * 
      * @param string|array $images Image file name(s) to be inserted.
-     * @param int $id ID of a ticket or a message to which the attachment belongs.
+     * @param int $id ID of a ticket or a message to which the attachment belongs. 
+     * @param string $table Name of the table (`ticket_attachments` or `message_attachments`).
      * 
      * @return bool Returns true on success, otherwise false.
      */
-    private function addImagesToDatabase(string|array $images, int $id): bool 
+    public function addImagesToDatabase(string|array $images, int $id, string $table): bool 
     {
+        $column = $table === "message_attachments" ? "message" : "ticket";
+
+        // Convert a string to an array to unify processing for both types.
+        if (is_string($images)) $images = [$images];
+
+        $placeholders = [];
+        $params = [];
+        foreach ($images as $key => $image) {
+            $placeholders[] = "(:img{$key}, :id)";
+            $params[] = $image;
+        }
+
         try {
-            if (isset($_POST['create_message'])) {
-                // query for adding attachment in 'message_attachments' table
-                $query = "INSERT INTO message_attachments (file_name, message) VALUES (:file_name, {$id})";
-            } else {
-                // query for adding attachment in 'ticket_attachments' table
-                $query = "INSERT INTO ticket_attachments (file_name, ticket) VALUES (:file_name, {$id})";
-            }
+            // Create query.
+            $query = "INSERT INTO {$table} (file_name, {$column}) VALUES " . implode(", ", $placeholders);
 
             $stmt = $this->getConn()->connect()->prepare($query);
 
-            if (is_array($images)) {
-                foreach ($images as $value) {
-                    $stmt->bindValue(":file_name", $value, PDO::PARAM_STR);
-                    $stmt->execute();
-                }
-            } else {
-                $stmt->bindValue(":file_name", $images, PDO::PARAM_STR);
-                $stmt->execute();
+            foreach ($params as $key => $param) {
+                $stmt->bindValue(":img{$key}", $param, PDO::PARAM_STR);
             }
+
+            $stmt->bindValue(":id", $id, PDO::PARAM_INT);
+            $stmt->execute();
 
             return true;
         } catch (\PDOException $e) {
             // Deletes attachment enteries that are inserted into database.
-            $this->deleteAttachmentsFromDbById($id);
+            $ids = $this->getAttachmentsIdsForTicket($id);
+            $this->deleteAttachmentsFromDbById($ids, "ticket_attachments");
 
             logError(
                 "addImagesToDatabase() metod error: Adding images to the database failed! ", 
@@ -149,24 +168,37 @@ class Attachment
     }
 
     /**
-     * Deletes all file names for a chosen ticket from attachment tables.
+     * Deletes all file names for a chosen ticket from ticket_attachments or message_attachments table.
      * 
      * @param int $id ID of the ticket or the message whose files should be removed.
+     * @param string $table Database table (`message_attachments` or `ticket_attachments`).
      * @return bool Returns true if at least one attachment was deleted, otherwise false.
      */
-    public function deleteAttachmentsFromDbById(int $id): bool
+    public function deleteAttachmentsFromDbById(int|array $id, string $table): bool
     {
+        if ($table !== "message_attachments" && $table !== "ticket_attachments") {
+            throw new Exception("Wrong Database Table!");
+        }
+
+        // Convert an integer to an array to unify processing for both types.
+        if (is_int($id)) $id = [$id];
+
+        // Validate and prepare IDs for placeholders and binding in SQL query.
+        list($integerIds, $params) = $this->prepareIdsForQuery($id);
+
         try {
-            $sql = "DELETE FROM ticket_attachments WHERE ticket = :ticket";
+            $sql = "DELETE FROM {$table} WHERE id in (" . implode(',', $params) . ")";
             $stmt = $this->getConn()->connect()->prepare($sql);
-            $stmt->bindValue(":ticket", $id, PDO::PARAM_INT);
+            // Bind values
+            $this->bindParamsToQuery($stmt, $params, $integerIds);
+
             $stmt->execute();
             
             return $stmt->rowCount() > 0;
 
         } catch (\PDOException $e) {
             logError(
-                "deleteAttachmentsFromDbById() metod error: Failed to delete attachments for the ticket/message ID: {$id}", 
+                "deleteAttachmentsFromDbById() metod error: Failed to delete attachments for the ticket/message ID in this range of IDs: " . implode(", ", $params), 
                 ['message' => $e->getMessage(), 'code' => $e->getCode()]
             );
             return false;
@@ -174,23 +206,162 @@ class Attachment
     }
 
     /**
-     * Removes attachments from server.
+     * Deletes attachments from server.
+     * If there is deletion problem, the same file 
+     * will be tried to delete three more times.
+     * Unsuccessful tries log to php_errors.log file.
+     * Undeleted file names will be logged in image_error.log.
+     * If there are undeleted files at the end RuntimeException will be thrown.
      * 
-     * @param string|array $attachment Name or names of file(s) should be removed.
+     * @param string|array $attachments Name or names of file(s) should be removed.
      * @param string $locationDirectory File location.
      */
-    public function deleteAttachmentsFromServer(string|array $attachment, string $locationDirectory): void
+    public function deleteAttachmentsFromServer(string|array $attachments, string $locationDirectory): void
     {
-        if (is_array($attachment)) {
-            foreach ($attachment as $value) {
-                if (!unlink($locationDirectory . DS . $value)) {
-                    logError("deleteAttachmentsFromServer() metod error: Failed to delete the attachment: {$value}");
+        // Convert a string to an array to unify processing for both types.
+        $deleteFiles = is_string($attachments) ? explode(",", $attachments) : $attachments; 
+
+        $allowedAttempts = 3; // Maximum number of deletion attempts allowed.
+        $failedToDelete = []; // Array of files failed to delete.
+
+        // Delete files from server and log unsuccessful deletes.
+        foreach ($deleteFiles as $value) {
+            $fileLocation = $locationDirectory . DS . $value;
+            $attempts = 0;
+            $success = true;
+
+            while ($attempts < $allowedAttempts) {
+                if (file_exists($fileLocation)) {
+                    $attempts++;
+
+                    if (unlink($fileLocation)) {
+                        $deleteImages[] = $value;
+                        break; // Exit loop if file is successfully deleted.
+                    } else {
+                        sleep(1); // Sleep for 1 second.
+                        // Log failure to php_errors.log
+                        logError("Failed to delete image", ['image' => $value, 'path' => $fileLocation]);
+                        $success = false;
+                    }
+                } else {
+                    logError("File doesn't exist!", ['image' => $value, 'path' => $fileLocation]);
+                    throw new RuntimeException("Failed to delete file after {$allowedAttempts} attempts: {$fileLocation}");
                 }
             }
-        } else {
-            if (!unlink($locationDirectory . DS . $attachment)) {
-                logError("deleteAttachmentsFromServer() metod error: Failed to delete the attachment: {$attachment}");
-            };
+
+            if (!$success) {
+                $failedToDelete[] = $value;
+                // Log undeleted files to image_error.log
+                logError(message: $fileLocation, logFileName: "image_error.log");
+            }
+        }
+
+        if (!empty($failedToDelete)) {
+            $reportFail = implode(", ", $failedToDelete);
+            throw new RuntimeException("Failed to delete file(s): " . $reportFail . " from server.");
+        }
+    }
+
+    /**
+     * Fetches attachments' details by attachments' IDs.
+     * 
+     * @param array $ids Returns an associative array of attachments' details.
+     */
+    public function getAttachmentsByIds(array $ids): array 
+    {
+        // Validate and prepare IDs for placeholders and binding in SQL query.
+        list($integerIds, $params) = $this->prepareIdsForQuery($ids);
+
+        try {
+            $sql = "SELECT * FROM message_attachments WHERE id in (" . implode(",", $params) . ")";
+            $stmt = $this->getConn()->connect()->prepare($sql);
+
+            // Bind values
+            $this->bindParamsToQuery($stmt, $params, $integerIds);
+
+            $stmt->execute();
+            $attachments = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (\PDOException $e) {
+            logError(
+                "getAttachmentsByIds() metod error: Failed to fetch attachments", 
+                ['message' => $e->getMessage(), 'code' => $e->getCode()]
+            );
+            throw new Exception("Error Fetching Request!");
+        }
+
+        return $attachments;
+    }
+
+    /**
+     * Validate and prepare IDs for placeholders and binding in SQL query.
+     * IDs must be numeric and greater than 0.
+     * 
+     * @param array $ids Array of attachment IDs.
+     * @return array An array containing the integer IDs and their respective placeholders for SQL.
+     * @throws Exception If any of the IDs are invalid.
+     */
+    protected function prepareIdsForQuery(array $ids): array 
+    {
+        $integerIds = [];
+        $params = [];
+        foreach ($ids as $key => $value) {
+            if (is_numeric($value) && $value > 0) {
+                $integerIds[] = intval($value);
+                $params[] = ":id{$key}";
+            } else {
+                throw new Exception("Attachments' IDs are not valid");
+            }
+        }
+
+        return [$integerIds, $params];
+    }
+
+    /** 
+     * Bind values to placeholders in an SQL query for a specific PDO parameter type. 
+     * This method binds each value in the `$values` array to the corresponding placeholder 
+     * in the prepared SQL statement (`$stmt`), using the specified parameter type 
+     * (default is PDO::PARAM_INT).
+     * 
+     * @param PDOStatement $stmt The prepared PDO statement with placeholders.
+     * @param array $params Array of placeholders (e.g., ':id1', ':id2').
+     * @param array $values Array of values to bind to the placeholders.
+     * @param $paramType The PDO parameter type to bind (default is PDO::PARAM_INT).
+     * 
+     */
+    protected function bindParamsToQuery($stmt, array $params, array $values, $paramType = PDO::PARAM_INT): void
+    {
+        foreach ($params as $key => $param) {
+            $stmt->bindValue($param, $values[$key], $paramType);
+        }
+    }
+
+    /**
+     * Fetches all attachment IDs associated with a given ticket.
+     * 
+     * This method retrieves the `id` values from the `ticket_attachments` table 
+     * where the ticket ID matches the provided one. 
+     * If no attachments are found, an empty array is returned.
+     * 
+     * 
+     * 
+     * 
+     * @param int $id The ID of the ticket for which attachment IDs are being fetched.
+     * @return array An array of attachment IDs related to the specified ticket. 
+     *               Returns an empty array if no attachments are found.
+     */
+    public function getAttachmentsIdsForTicket(int $id): array 
+    {
+        try {
+            $sql = "SELECT id from ticket_attachments WHERE ticket = :id";
+            $stmt = $this->getConn()->connect()->prepare($sql);
+            $stmt->bindValue(":id", $id, PDO::PARAM_INT);
+            return $stmt->fetchAll(PDO::FETCH_COLUMN);
+        } catch (\PDOException $e) {
+            logError(
+                "getAttachmentsIdsForTicket() metod error: Failed to fetch attachments IDs for ticket ID: {$id}", 
+                ['message' => $e->getMessage(), 'code' => $e->getCode()]
+            );
+            throw new Exception("Error Fetching Request!");
         }
     }
 }

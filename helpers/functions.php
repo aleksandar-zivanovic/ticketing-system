@@ -46,19 +46,19 @@ function checkAndCreateDirectory($locationDir): void {
 }
 
 // writting down error log
-function logError(string $message, array|string|null $errorInfo = null): void
+function logError(string $message, array|string|null $errorInfo = null,  ?string $logFileName = "php_errors.log"): void 
 {
     // check if the directory exists and create if not
-    $logDirectory = __DIR__ . '../../logs';
+    $logDirectory = __DIR__ . '../../logs/';
     checkAndCreateDirectory($logDirectory);
 
     // preparing final message
     if (!empty($errorInfo)) {
-        $message .= is_array($errorInfo) ? " | PDO error: " . implode(", ", $errorInfo) : $message;
+        $message .= is_array($errorInfo) ? " | Error: " . implode(", ", $errorInfo) : $message;
     }
 
     // writting down an error to the log file
-    $logFile = $logDirectory . '/php_errors.log';
+    $logFile = $logDirectory . $logFileName;
     $timestamp = date("Y-m-d H:i:s");
     error_log("[$timestamp]: $message" .  PHP_EOL, 3, $logFile);
 }
