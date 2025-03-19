@@ -7,9 +7,9 @@ class Ticket
     public string $title;
     public string $description;
     public string $url;
-    public int $day;
-    public int $month;
-    public int $year;
+    public string|int $day;
+    public string|int $month;
+    public string|int $year;
     public int $departmentId;
     public int $priorityId;
     public int $statusId;
@@ -368,17 +368,64 @@ class Ticket
             }
         }
 
-        // Checka if the $orderBy value is valid.
+        // Checks if the $orderBy value is valid.
         $allowedOrder = false;
         if ($orderBy === "newest" || $orderBy === "oldest") {
             $allowedOrder = true;
         }
 
-        // Throw an exception if either $sortBy or $orderBy is invalid.
+        // Throws an exception if either $sortBy or $orderBy is invalid.
         if ($allowedSort !== true ||  $allowedOrder !== true) {
             throw new DomainException("Invalid order/sort value!");
         }
 
         return $table;
+    }
+
+    /**
+     * Sets ticket status to "closed" or "in progress".
+     * Creates a log entry and throws an exception if the process fails.
+     * 
+     * @param int $ticketId ID of the ticket should be closed.
+     * @param string $action Detrmines if needs to close or reopen ticket. Allowed values are "close" and "reopen"
+     * @return bool Returns true if the process was successful, otherwise returns false.
+     */
+    public function closeReopenTicket(int $ticketId, string $action): bool
+    {
+        // Verifies that the $action parameter contains a valid value ("close" or "reopen").
+        if ($action !== "close" && $action !== "reopen") {
+            throw new DomainException("The action parameter is invalid!");
+        }
+
+        if ($action === "close") {
+            $this->day = date("d");
+            $this->month = date("m");
+            $this->year = date("Y");
+            $curentDate = date("Y-m-d H:i:s");
+            $curentDateSql = "'{$curentDate}'";
+            $statusId = 3;
+        }
+
+        if ($action === "reopen") {
+            $this->day = $this->month = $this->year = $curentDateSql = "NULL";
+            $statusId = 2;
+        }
+
+        try {
+            $sql = "UPDATE tickets SET statusId = :si, closed_date = {$curentDateSql}, closed_year = {$this->year}, closed_month = {$this->month}, closed_day = {$this->day} WHERE id = :tid";
+            $stmt = $this->getConn()->connect()->prepare($sql);
+            $stmt->bindValue(":si", $statusId, PDO::PARAM_INT);
+            $stmt->bindValue(":tid", $ticketId, PDO::PARAM_INT);
+
+            $stmt->execute();
+            return $stmt->rowCount() === 1;
+        } catch (\PDOException $e) {
+            // Logs the error and throws an exception if a PDOException occurs.
+            logError(
+                "closeReopenTicket() metod error: Failed to {$action} the ticket", 
+                ['message' => $e->getMessage(), 'code' => $e->getCode()]
+            );
+            throw new Exception("Something went wrong. Try again to {$action} ticket.");
+        }
     }
 }

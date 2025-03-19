@@ -42,6 +42,10 @@ if ($_SESSION['user_role'] != "admin" && $_SESSION['user_id'] != $ticket["create
 
 // Set $page and $data varaiables
 $page = "Ticket: " . $ticket['title'];
+
+// Fetch all messages related to the ticket.
+$message = new Message();
+$allMessages = $message->allMessagesByTicket($ticketID);
 ?>
 
 <!DOCTYPE html>
@@ -73,12 +77,6 @@ $page = "Ticket: " . $ticket['title'];
 
   // import table
   require_once '../../partials/_admin-ticket.php';
-
-  // import edit modal
-  include_once '../../partials/_edit_modal.php';
-
-  // import delete modal
-  include_once '../../partials/_delete_modal.php';
 
   // import footer
   include_once '../../partials/_footer.php'; 

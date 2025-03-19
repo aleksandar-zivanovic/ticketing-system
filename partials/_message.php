@@ -1,6 +1,4 @@
 <?php
-$message = new Message();
-$allMessages = $message->allMessagesByTicket($ticketID);
 $lastMessage = end($allMessages);
 
 foreach ($allMessages as $message):

@@ -79,6 +79,28 @@
         </div>
         <hr>
 
+        <!-- Close / Reopen ticket button -->
+        <?php
+        // Prevents closing ticket has status different from "in progress" or "closed" and no messages.
+        if (($ticket["statusId"] === 2 || $ticket["statusId"] === 3) && !empty($allMessages)): 
+        ?>
+            <form class="p-8" method="POST" action="../actions/process_close_reopen_ticket.php">
+            <input type="hidden" name="ticket_id" value=<?= $ticket['id'] ?>>
+                <div class="field grouped">
+                    <?php if ($ticket['status_name'] !== "closed"): ?>
+                        <div class="control w-full">
+                            <input type="submit" name="close_ticket" value="Close Ticket" class="button red w-full">
+                        </div>
+                    <?php else: ?>
+                        <div class="control w-full">
+                            <input type="submit" name="reopen_ticket" value="Reopen Ticket" class="button blue w-full">
+                        </div>
+                    <?php endif; ?>
+                </div>
+            </form>
+            <hr>
+        <?php endif; ?>
+        
         <!-- Messages -->
         <?php require_once '_message.php' ?>
 
