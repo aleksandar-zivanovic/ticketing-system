@@ -61,9 +61,6 @@
                     <span class="icon"><i class="mdi mdi-account-multiple"></i></span>
                     Tickets
                 </p>
-                <a href="#" class="card-header-icon">
-                    <span class="icon"><i class="mdi mdi-reload"></i></span>
-                </a>
             </header>
             <div class="card-content">
                 <table>
@@ -72,11 +69,10 @@
                             <th>ID</th>
                             <th>Title</th>
                             <th>Created</th>
-                            <th>Closed</th>
+                            <th>Status</th>
                             <th>Department</th>
                             <th>Handling</th>
                             <th>Priority</th>
-                            <th>Status</th>
                             <th>Files</th>
                         </tr>
                     </thead>
@@ -92,16 +88,39 @@
                                         ?>
                                     </a>
                                 </td>
+
                                 <td data-label="Created">
                                     <small class="text-gray-500" title="<?= $ticket['created_date']; ?>"><?= $ticket['created_date']; ?></small>
                                 </td>
-                                <td data-label="Closed">
-                                    <small class="text-gray-500" title="<?= $ticket['closed_date']; ?>"><?= $ticket['closed_date'] ?? "Opened"; ?></small>
-                                </td>
+
+                                <?php
+                                // Set ticket status name color
+                                if (isset(TICKET_STATUSES[$ticket['status_name']]) && $ticket['status_name'] !== "closed") {
+                                    $statusValue = $ticket['status_name'];
+                                    $statusStyle = "style='" . TICKET_STATUSES[$ticket['status_name']] . "'";
+                                }
+                                
+                                if ($ticket['status_name'] === "closed") {
+                                    $statusValue = $ticket['closed_date'];
+                                    $statusStyle = $statusStyle = "style='color:green; font-style: italic;'";
+                                }
+                                ?>
+                                <td data-label="Status" <?= $statusStyle ?? ""; ?>><?= $statusValue ?></td>
+
                                 <td data-label="Department"><?= $ticket['department_name']; ?></td>
-                                <td data-label="Handling"><?= $ticket['handled_by'] ? $ticket['admin_name'] . " " . $ticket['admin_surname'] : "Unassigned"; ?></td>
-                                <td data-label="Priority"><?= $ticket['priority_name']; ?></td>
-                                <td data-label="Status"><?= $ticket['status_name']; ?></td>
+
+                                <?php
+                                // Set style for unassigned tickets
+                                $handlingStyle = $ticket['handled_by'] ? "style='color:green;'" : "style='color:coral; font-style: italic;'"
+                                ?>
+                                
+                                <td <?= $handlingStyle ?> data-label="Handling"><?= $ticket['handled_by'] ? $ticket['admin_name'] . " " . $ticket['admin_surname'] : "Unassigned"; ?></td>
+
+                                <?php
+                                // Set style for the highest priority level
+                                $priorityStyle = HIGHEST_PRIORITY === $ticket['priority_name'] ? "style='color:coral; font-style: italic;'" : "";
+                                ?>
+                                <td <?= $priorityStyle ?> data-label="Priority"><?= $ticket['priority_name']; ?></td>
 
                                 <?php
                                 if ($ticket['attachment_id']) {
@@ -115,16 +134,6 @@
                                     echo $attachments ?? "None";
                                     unset($attachments);
                                     ?>
-                                </td>
-                                <td class="actions-cell">
-                                    <div class="buttons right nowrap">
-                                        <button class="button small green --jb-modal" data-target="sample-modal-2" type="button">
-                                            <span class="icon"><i class="mdi mdi-eye"></i></span>
-                                        </button>
-                                        <button class="button small red --jb-modal" data-target="sample-modal" type="button">
-                                            <span class="icon"><i class="mdi mdi-trash-can"></i></span>
-                                        </button>
-                                    </div>
                                 </td>
                             </tr>
 

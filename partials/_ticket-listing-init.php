@@ -45,12 +45,6 @@ if ($fileName === "user-ticket-listing.php") {
   // import table
   require_once '../../partials/_ticket-listing-table.php';
 
-  // import edit modal
-  include_once '../../partials/_edit_modal.php';
-
-  // import delete modal
-  include_once '../../partials/_delete_modal.php';
-
   // import footer
   include_once '../../partials/_footer.php'; 
   ?>
