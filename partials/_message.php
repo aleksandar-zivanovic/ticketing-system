@@ -33,7 +33,11 @@ foreach ($allMessages as $message):
                 echo $message["body"];
                 
                 // Editing message
-                if ($lastMessage["id"] === $message["id"] && $message["user"] === $_SESSION['user_id']) {
+                if (
+                    $ticket["statusId"] !== 3 && 
+                    $lastMessage["id"] === $message["id"] && 
+                    $message["user"] === $_SESSION['user_id']
+                ) {
                     require_once '_message-edit-button.php';
                 }
                 ?>
