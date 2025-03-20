@@ -105,7 +105,7 @@
         <?php require_once '_message.php' ?>
 
         <!-- Message form -->
-        <?php require_once '_message-form.php'; ?>
+        <?php if ($ticket["statusId"] !== 3) require_once '_message-form.php'; ?>
 
     </div>
 
