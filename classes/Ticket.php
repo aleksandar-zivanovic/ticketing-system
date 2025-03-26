@@ -287,13 +287,10 @@ class Ticket
 
     /**
      * Fetches ticket data and associated details from related tables.
-     *
      * This method builds and executes a SQL query to retrieve a ticket data.
      *
      * @param int $ticketId A ticket id.
-     * 
      * @return array The result contains ticket information, including optional image attachments.
-     * 
      * @throws Exception If there is a PDOException while executing the SQL query.
      */
     public function fetchTicketDetails(int $ticketId): array
@@ -427,5 +424,97 @@ class Ticket
             );
             throw new Exception("Something went wrong. Try again to {$action} ticket.");
         }
+    }
+
+    /**
+     * Delete a ticket from database. 
+     * If the ticket ID is int or string it will be converted to array type.
+     * 
+     * @param int|string|array $ticketId Ticket ID(s) for delation.
+     */
+    public function deleteTicketRow($id): bool 
+    {
+        // Convert string to array type.
+        if (is_string($id)) $id = explode(",", $id);
+
+        // Convert integer to array type.
+        if (is_int($id)) $id = [$id];
+
+        require_once "helpers/IdValidator.php";
+        list($ids, $params) =IdValidator::prepareIdsForQuery($id);
+// formatVar("d", $ids);
+        try {
+            $sql = "DELETE FROM tickets WHERE id IN (" . implode(",", $params) . ")";
+            $stmt = $this->getConn()->connect()->prepare($sql);
+            foreach ($params as $key => $value) {
+                $stmt->bindValue($value, $ids[$key], PDO::PARAM_INT);
+            }
+// var_dump($stmt); die;
+            return $stmt->execute();
+        } catch (\PDOException $e) {
+            // Logs the error and throws an exception if a PDOException occurs.
+            logError(
+                "deleteTicketRow() metod error: Failed to delete the ticket from the database", 
+                ['message' => $e->getMessage(), 'code' => $e->getCode()]
+            );
+            throw new Exception("Something went wrong with deleting the ticket. Try again.");
+        }
+    }
+
+    /**
+     * Deletes the attachment(s) from the server and the database.
+     * 
+     * @param int $id ID of the ticket whose attachment(s) should be deleted.
+     * @return bool Returns true on success. Throws an exception on failure.
+     */
+    public function deleteTicket(int $id): bool 
+    {
+        // Get ticket data.
+        $ticket = $this->fetchTicketDetails($id);
+
+        // Validate user's deletion premission. 
+        if (
+            $ticket["statusId"] !== 1 && 
+            $ticket["handled_by"] != null && 
+            !empty($allMessages) && 
+            ($ticket["created_by"] !== trim($_SESSION['user_id']) && trim($_SESSION["user_role"] !== "admin"))
+        ) {
+            $panel = $ticket["created_by"] !== trim($_SESSION['user_id']) && trim($_SESSION["user_role"] === "admin") ? "admin" : "user";
+            $redirectionUrl = $panel === "admin" ? "../public/admin/admin-ticket-listing.php" : "../public/user/user-ticket-listing.php";
+            die(header("Location: {$redirectionUrl}"));
+        }
+        
+        // Delete attachments from the database and the server.
+        if (!empty($ticket["attachment_id"])) {
+            require_once 'Attachment.php';
+            $attachment = new Attachment();
+
+            // Convert string of IDs to an array of IDs.
+            $idsArray = explode(",", $ticket["attachment_id"]);
+
+            $attachments = $attachment->getAttachmentsByIds($idsArray, "ticket_attachments");
+
+            // Get attachment names for deleteAttachmentsFromServer() method.
+            $attachmentNames = [];
+            foreach ($attachments as $anAttachment) {
+                $attachmentNames[] = $anAttachment["file_name"];
+            }
+
+            // Collect data about existing and missing files.
+            $attachmentFilesStatus = $attachment->isAttachmentExisting($attachmentNames);
+
+            if (!empty($attachmentFilesStatus["exist"])) {
+                // Delete attachments from the server.
+                $attachment->deleteAttachmentsFromServer($attachmentNames);
+            }
+
+            // Delete attachments from the database.
+            if ($attachment->deleteAttachmentsFromDbById($idsArray, "ticket_attachments") === false) {
+                throw new RuntimeException("Deleting attachments from the database failed");
+            };
+        }
+
+        // Delete the ticket from the database.
+        return $this->deleteTicketRow($id);
     }
 }

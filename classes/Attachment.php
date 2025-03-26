@@ -4,6 +4,7 @@ require_once 'Database.php';
 class Attachment
 {
     private ?Database $dbInstance = null;
+    public string $attachmentDirectory = ROOT . DS . "public" . DS . "img" . DS . "ticket_images";
 
     /**
      * Sets connection with the database
@@ -73,10 +74,8 @@ class Attachment
             }
         }
 
-        $locationDir = ROOT . DS . "public" . DS . "img" . DS . "ticket_images";
-
         // Checks if the directory exists and creates it if it doesn't exist
-        checkAndCreateDirectory($locationDir);
+        checkAndCreateDirectory($this->attachmentDirectory);
 
         // Prepare names and moving files
         $movingResult = [];
@@ -90,7 +89,7 @@ class Attachment
             $imageName = uniqid() . "-" . strtolower(str_replace(" ", "-", $_FILES[$fieldName]['name'][$i]));
             $imageNames[] = $imageName;
         
-            $movingSuccess = move_uploaded_file($_FILES[$fieldName]['tmp_name'][$i], $locationDir . DS . $imageName);
+            $movingSuccess = move_uploaded_file($_FILES[$fieldName]['tmp_name'][$i], $this->attachmentDirectory . DS . $imageName);
             $movingResult[] = $movingSuccess;
 
             if ($movingSuccess) {
@@ -101,7 +100,7 @@ class Attachment
         
         // Rolls back the process by deleting successfully uploaded files if any file fails to upload.
         if (in_array(false, $movingResult)) {
-            $this->deleteAttachmentsFromServer($uploadedFiles, $locationDir);
+            $this->deleteAttachmentsFromServer($uploadedFiles);
             return false;
         }
 
@@ -110,7 +109,7 @@ class Attachment
             return true;
         } else {
             // Deletes uploaded files if inserting to the database fails.
-            $this->deleteAttachmentsFromServer($imageNames, $locationDir);
+            $this->deleteAttachmentsFromServer($imageNames);
             return false;
         }
     }
@@ -184,7 +183,8 @@ class Attachment
         if (is_int($id)) $id = [$id];
 
         // Validate and prepare IDs for placeholders and binding in SQL query.
-        list($integerIds, $params) = $this->prepareIdsForQuery($id);
+        require_once 'helpers/IdValidator.php';
+        list($integerIds, $params) = IdValidator::prepareIdsForQuery($id);
 
         try {
             $sql = "DELETE FROM {$table} WHERE id in (" . implode(',', $params) . ")";
@@ -214,9 +214,8 @@ class Attachment
      * If there are undeleted files at the end RuntimeException will be thrown.
      * 
      * @param string|array $attachments Name or names of file(s) should be removed.
-     * @param string $locationDirectory File location.
      */
-    public function deleteAttachmentsFromServer(string|array $attachments, string $locationDirectory): void
+    public function deleteAttachmentsFromServer(string|array $attachments): void
     {
         // Convert a string to an array to unify processing for both types.
         $deleteFiles = is_string($attachments) ? explode(",", $attachments) : $attachments; 
@@ -226,7 +225,7 @@ class Attachment
 
         // Delete files from server and log unsuccessful deletes.
         foreach ($deleteFiles as $value) {
-            $fileLocation = $locationDirectory . DS . $value;
+            $fileLocation = $this->attachmentDirectory . DS . $value;
             $attempts = 0;
             $success = true;
 
@@ -265,15 +264,24 @@ class Attachment
     /**
      * Fetches attachments' details by attachments' IDs.
      * 
-     * @param array $ids Returns an associative array of attachments' details.
+     * @param array $ids Array of attachment IDs.
+     * @param string $table Name of the table from which the data should be fetched. 
+     *               Allowed table names are "message_attachments" and "ticket_attachments"
+     * @return array Returns an associative array of attachments' details.
      */
-    public function getAttachmentsByIds(array $ids): array 
+    public function getAttachmentsByIds(array $ids, string $table): array 
     {
+        // Validate the database ticket name.
+        if ($table !== "message_attachments" && $table !== "ticket_attachments") {
+            throw new Exception("Trying to fetch data from invalid table.");
+        }
+
         // Validate and prepare IDs for placeholders and binding in SQL query.
-        list($integerIds, $params) = $this->prepareIdsForQuery($ids);
+        require_once 'helpers/IdValidator.php';
+        list($integerIds, $params) = IdValidator::prepareIdsForQuery($ids);
 
         try {
-            $sql = "SELECT * FROM message_attachments WHERE id in (" . implode(",", $params) . ")";
+            $sql = "SELECT * FROM {$table} WHERE id in (" . implode(",", $params) . ")";
             $stmt = $this->getConn()->connect()->prepare($sql);
 
             // Bind values
@@ -290,30 +298,6 @@ class Attachment
         }
 
         return $attachments;
-    }
-
-    /**
-     * Validate and prepare IDs for placeholders and binding in SQL query.
-     * IDs must be numeric and greater than 0.
-     * 
-     * @param array $ids Array of attachment IDs.
-     * @return array An array containing the integer IDs and their respective placeholders for SQL.
-     * @throws Exception If any of the IDs are invalid.
-     */
-    protected function prepareIdsForQuery(array $ids): array 
-    {
-        $integerIds = [];
-        $params = [];
-        foreach ($ids as $key => $value) {
-            if (is_numeric($value) && $value > 0) {
-                $integerIds[] = intval($value);
-                $params[] = ":id{$key}";
-            } else {
-                throw new Exception("Attachments' IDs are not valid");
-            }
-        }
-
-        return [$integerIds, $params];
     }
 
     /** 
@@ -363,5 +347,33 @@ class Attachment
             );
             throw new Exception("Error Fetching Request!");
         }
+    }
+
+    /**
+     * Checks if attachment files exist on the server 
+     * and returns an array of existing and missing attachments.
+     * If the list of files is a string, the method converts it to an array.
+     * 
+     * @param string|array $attachment Attachment(s) to check for existence.
+     * @return array An associative array with existing and missing attachments.
+     *               The scructure of the array: 
+     *               ["exist" => array of existing attachments, "missing" => array of missing attachments]
+     */
+    public function isAttachmentExisting(string|array $attachment): array 
+    {
+        // If attachment is a string, convert it to an array.
+        $attachments = is_string($attachment) ? explode(",", $attachment) : $attachment;
+
+        $existingFiles = [];
+        $missingFiles = [];
+        foreach ($attachments as $fileName) {
+            if (file_exists($this->attachmentDirectory . DS . $fileName)) {
+                $existingFiles[] = $fileName;
+            } else {
+                $missingFiles[] = $fileName;
+            }
+        }
+
+        return ["exist" => $existingFiles, "missing" => $missingFiles];
     }
 }

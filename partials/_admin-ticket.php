@@ -99,13 +99,33 @@
                 </div>
             </form>
             <hr>
-        <?php endif; ?>
-        
-        <!-- Messages -->
-        <?php require_once '_message.php' ?>
+        <?php 
+        endif; // End of Close / Reopen ticket button block
 
-        <!-- Message form -->
-        <?php if ($ticket["statusId"] !== 3) require_once '_message-form.php'; ?>
+        // Delete the ticket button
+        if (
+            $ticket["statusId"] === 1 && 
+            $ticket["handled_by"] === null && 
+            empty($allMessages) && 
+            ($ticket["created_by"] == trim($_SESSION['user_id']) || trim($_SESSION["user_role"] === "admin"))
+        ): 
+            require_once '_ticket_delete_modal.php';
+        ?>
+            <div class="p-8">
+                <button class="button red w-full --jb-modal"  data-target="ticket-delete-modal" type="button">
+                    Delete Ticket
+                </button>
+            </div>
+            <hr>
+        <?php 
+        endif; // End of delete ticket button block
+        
+        // Messages
+        require_once '_message.php';
+        
+        // Message form
+        if ($ticket["statusId"] !== 3) require_once '_message-form.php'; 
+        ?>
 
     </div>
 

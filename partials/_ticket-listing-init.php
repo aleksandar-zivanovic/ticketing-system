@@ -25,6 +25,7 @@ if ($fileName === "user-ticket-listing.php") {
   <title><?= $page ?></title>
 
   <!-- Tailwind is included -->
+  <link rel="stylesheet" href="../css/tailwind-output.css">
   <link rel="stylesheet" href="../css/admin-one-main.css">
   <link rel="stylesheet" href="../css/font-awesome.min.css">
 </head>
@@ -41,6 +42,9 @@ if ($fileName === "user-ticket-listing.php") {
 
   // import breadcrumbs
   include_once '../../partials/_navigation-breadcrumbs.php';
+
+  // import session messages
+  include_once '../../partials/_session-messages.php';
 
   // import table
   require_once '../../partials/_ticket-listing-table.php';

@@ -27,7 +27,14 @@ function saveFormValuesToSession(?array $exceptions = null): void
     }
 }
 
-// handling session messages
+/**
+ * Display a session message. Unset session message after displaying it.
+ * 
+ * @param string $name $_SESSION key for the message.
+ * @param bool $div If true, wraps the message inside a <div> tag.
+ * @param string $class An optional class attribute for the <div> tag. 
+ *                      If not empty and $div is true, it is added as a class attribute.
+ */ 
 function handleSessionMessages(string $name, bool $div = false, string $class = ""): void
 {
     if (isset($_SESSION[$name])) {
@@ -302,7 +309,7 @@ function checkAuthorization(string|array $role, ?string $url = null)
 }
 
 /**
- * Detrminates whether the user is in the admin or the in user panel
+ * Detrminates whether the user is in the admin or in the user panel
  * 
  * @return string "admin" if the user is in the admin panel, "user" otherwise.
  */

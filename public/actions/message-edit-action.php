@@ -102,7 +102,6 @@ $attachment = new Attachment();
 
 // Delete images if there're images chosen for deletion
 if (!empty($sanitizedIds)) {
-    $locationDirectory = ROOT . "public" . DS . "img" . DS . "ticket_images";
 
     // Delete files from database.
     $attachment->deleteAttachmentsFromDbById($sanitizedIds, 'message_attachments');
@@ -118,7 +117,7 @@ if (!empty($sanitizedIds)) {
     }
 
     // Delete files from server
-    $attachment->deleteAttachmentsFromServer($fileNamesForDeletion, $locationDirectory);
+    $attachment->deleteAttachmentsFromServer($fileNamesForDeletion);
 }
 
 // Upload files process
