@@ -77,10 +77,16 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <?php foreach ($data as $ticket) : ?>
+                        <?php 
+                        foreach ($data as $ticket) : 
+                            $assignedToMe = $_SESSION["user_id"] === $ticket["handled_by"] ? "px-1 bg-green-300 rounded-full" : "";
+                            $myTicket = $_SESSION["user_id"] === $ticket["created_by"] ? "px-1 bg-orange-300 rounded-full" : "";
+                        ?>
 
                             <tr>
-                                <td data-label="ID"><?= $ticket['id']; ?></td>
+                                <td data-label="ID">
+                                    <span class="<?= $assignedToMe . " " . $myTicket ?>"><?= $ticket['id']; ?></span>
+                                </td>
                                 <td data-label="Title">
                                     <a href="<?= $panel === "admin" ? "../admin/": "../user/user-" ?>view-ticket.php?ticket=<?= $ticket['id']; ?>">
                                         <?php
