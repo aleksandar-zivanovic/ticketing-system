@@ -517,4 +517,32 @@ class Ticket
         // Delete the ticket from the database.
         return $this->deleteTicketRow($id);
     }
+
+    /**
+     * Set an admin as the ticket handler.
+     * This method allows an admin to take the administration over the ticket.
+     * 
+     * @param int $ticketId ID of the ticket that will be assigned to an admin.
+     * @return bool True on success, otherwise throws an exception.
+     * @throws Exception If the assignment fails.
+     */
+    public function takeTicket(int $ticketId): bool 
+    {
+        $adminId = trim($_SESSION["user_role"]) === "admin" ? trim($_SESSION["user_id"]) : false;
+        if ($adminId === false) die(header("Location: ../user/user-ticket-listing.php"));
+
+        try {
+            $sql = "UPDATE tickets SET handled_by = :adm, statusId = 2 WHERE id = {$ticketId}";
+            $stmt = $this->getConn()->connect()->prepare($sql);
+            $stmt->bindValue(":adm", $adminId, PDO::PARAM_INT);
+            $stmt->execute();
+            return true;
+        } catch (\PDOException $e) {
+            logError(
+                "takeTicket() metod error: Failed to assign the ticket (ID: {$ticketId}) the administrator (ID: {$adminId}).", 
+                ['message' => $e->getMessage(), 'code' => $e->getCode()]
+            );
+            throw new Exception("Something went wrong. The ticket is not assigned to the administrator.");
+        }
+    }
 }

@@ -75,6 +75,9 @@ $allMessages = $message->allMessagesByTicket($ticketID);
   // import breadcrumbs
   include_once '../../partials/_navigation-breadcrumbs.php';
 
+   // import session messages
+   include_once '../../partials/_session-messages.php';
+
   // import table
   require_once '../../partials/_admin-ticket.php';
 

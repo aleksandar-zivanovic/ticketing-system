@@ -46,6 +46,25 @@
             </table>
         </div>
         <hr>
+ 
+        <?php
+        // Take the ticket the ticket button
+        if (
+            $ticket["statusId"] === 1 && 
+            $ticket["handled_by"] === null && 
+            trim($_SESSION["user_role"] === "admin") && 
+            $_SESSION["user_id"] !== $ticket["created_by"]
+        ): 
+        ?>
+            <form class="px-8" method="POST" action="../actions/process_take_ticket.php">
+                <input type="hidden" name="take_ticket_id" value=<?= $ticket['id'] ?>>
+                <div class="field grouped">
+                    <div class="control w-full">
+                        <input type="submit" name="take_ticket" value="Take the Ticket" class="button bg-green-500 hover:bg-green-700 text-white font-bold w-full">
+                    </div>
+                </div>
+            </form>
+        <?php endif; // End of take the ticket button block ?>
 
         <!-- Ticket title -->
         <div class="p-5 mt-4 text-3xl font-semibold"><i><?= $ticket['title']; ?></i></div>
