@@ -278,6 +278,17 @@ function formatVar(string $function, mixed $variable)
 }
 
 /**
+ * Checks if the user is logged in.
+ * If the user is not logged in, redirects to the login page.
+ */
+function requireLogin() {
+    if (!isset($_SESSION['user_role'])) {
+        header("Location: /ticketing-system/public/forms/login.php");
+        die;
+    }
+}
+
+/**
  * Checks if the user has the required role(s).
  * If the user is not logged in, redirects to the login page.
  * If the user is unauthorized, redirects to the specified URL 
@@ -288,10 +299,8 @@ function formatVar(string $function, mixed $variable)
  */
 function checkAuthorization(string|array $role, ?string $url = null) 
 {
-    if (!isset($_SESSION['user_role'])) {
-        header("Location: /ticketing-system/public/forms/login.php");
-        die;
-    }
+    // Check if the user is logged in, redirects to the login page if not.
+    requireLogin();
 
     if (is_array($role)) $authorized = in_array($_SESSION['user_role'], $role);
 

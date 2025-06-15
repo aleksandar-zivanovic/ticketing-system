@@ -119,6 +119,7 @@ class Ticket
      * @param int $limit Value for LIMIT clause in the SQL query. If 0, no limit is applied. Default value is 0.
      * @param bool $images A flag to include image attachments in the result, default is true.
      * @param ?int $userId The ID of the user whose tickets are to be fetched. If `null`, all tickets will be fetched (default).
+     * @param bool $handledByMe If true, fetches only tickets handled by the currently logged-in admin.
      * 
      * @return array The result set containing ticket information, including optional image attachments.
      * 
@@ -131,7 +132,8 @@ class Ticket
         ?string $sortBy = null, 
         int $limit = 0, 
         bool $images = true, 
-        ?int $userId = null
+        ?int $userId = null, 
+        bool $handledByMe = false
     ): array
     {
         // Validates sorting and ordering values and sets $table value.
@@ -195,6 +197,20 @@ class Ticket
             // Fetches only tickets opened by a specified user $table is not specified
             if ($userId != null && (!isset($table) || $table == null)) $query .= " WHERE t.created_by = " . $userId;
 
+            // Fetch only tickets handled by the current admin role user
+            if ($handledByMe === true) {
+                if (trim($_SESSION["user_role"]) !== "admin") {
+                    logError("Error: Non admin users can't have tickets they handle!");
+                    throw new Exception("User doesn't have permission for this action!");
+                }
+
+                if (isset($table) && $table !== null) {
+                    $query .= " AND t.handled_by = " . trim($_SESSION["user_id"]);
+                } else {
+                    $query .= " WHERE t.handled_by = " . trim($_SESSION["user_id"]);
+                }
+            }
+
             // Adds GROUP BY clause to group results by ticket ID
             $query .= " GROUP BY t.id";
 
@@ -234,7 +250,8 @@ class Ticket
         array $allowedValues, 
         string $orderBy = "newest", 
         ?string $sortBy = null, 
-        ?int $userId = null
+        ?int $userId = null, 
+        bool $handledByMe = false
     ): int
     {
         // Validates sorting and ordering values and sets $table value.
@@ -271,6 +288,20 @@ class Ticket
 
             // Fetches only tickets opened by a specified user $table is not specified
             if ($userId != null && (!isset($table) || $table == null)) $query .= " WHERE t.created_by = " . $userId;
+
+            // Fetch only tickets handled by the current admin role user
+            if ($handledByMe === true) {
+                if (trim($_SESSION["user_role"]) !== "admin") {
+                    logError("Error: Non admin users can't have tickets they handle!");
+                    throw new Exception("User doesn't have permission for this action!");
+                }
+
+                if (isset($table) && $table !== null) {
+                    $query .= " AND t.handled_by = " . trim($_SESSION["user_id"]);
+                } else {
+                    $query .= " WHERE t.handled_by = " . trim($_SESSION["user_id"]);
+                }
+            }
 
             // Prepares and executes the SQL query
             $stmt = $this->getConn()->connect()->prepare($query);
@@ -442,14 +473,14 @@ class Ticket
 
         require_once "helpers/IdValidator.php";
         list($ids, $params) =IdValidator::prepareIdsForQuery($id);
-// formatVar("d", $ids);
+
         try {
             $sql = "DELETE FROM tickets WHERE id IN (" . implode(",", $params) . ")";
             $stmt = $this->getConn()->connect()->prepare($sql);
             foreach ($params as $key => $value) {
                 $stmt->bindValue($value, $ids[$key], PDO::PARAM_INT);
             }
-// var_dump($stmt); die;
+
             return $stmt->execute();
         } catch (\PDOException $e) {
             // Logs the error and throws an exception if a PDOException occurs.

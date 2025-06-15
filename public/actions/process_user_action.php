@@ -1,8 +1,7 @@
 <?php
+session_start();
 require_once('../../classes/User.php');
 require_once('../../helpers/functions.php');
-
-session_start();
 
 if ($_SERVER['REQUEST_METHOD'] == "POST") {
 

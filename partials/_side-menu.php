@@ -18,8 +18,16 @@
         </a>
       </li>
     </ul>
-    <p class="menu-label">Examples</p>
+    <p class="menu-label">Menu</p>
     <ul class="menu-list">
+      <?php if(isset($panel) && $panel === "admin"): ?>
+      <li class="--set-active-tables-html">
+        <a href="admin-tickets-i-handle.php">
+          <span class="icon"><i class="mdi mdi-table"></i></span>
+          <span class="menu-item-label">Handling tickets</span>
+        </a>
+      </li>
+      <?php endif; ?>
       <li class="--set-active-tables-html">
         <a href="tables.php">
           <span class="icon"><i class="mdi mdi-table"></i></span>

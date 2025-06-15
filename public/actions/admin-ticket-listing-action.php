@@ -1,7 +1,4 @@
 <?php
-session_start();
-require_once '../../helpers/functions.php';
-
 // Checks if the user has `admin` role
 checkAuthorization("admin", "../");
 
@@ -64,13 +61,16 @@ if (isset($_GET['limit'])) {
   $_SESSION['limit'] = 10;
 }
 
+// If $ticketsIHandle is not set, set it to false
+$ticketsIHandle = $ticketsIHandle ?? false;
+
 // Call fetchAllTickets() method
 $ticket = new Ticket();
-$data = $ticket->fetchAllTickets(allowedValues: $allowedValues, orderBy: $orderBy, sortBy: $sortBy, limit: $limit);
+$data = $ticket->fetchAllTickets(allowedValues: $allowedValues, orderBy: $orderBy, sortBy: $sortBy, limit: $limit, handledByMe: $ticketsIHandle);
 
 // Pagination proccessing
 $ticket2 = new Ticket();
-$totalItems = $ticket2->countAllTickets(allowedValues: $allowedValues, orderBy: $orderBy, sortBy: $sortBy);
+$totalItems = $ticket2->countAllTickets(allowedValues: $allowedValues, orderBy: $orderBy, sortBy: $sortBy, handledByMe: $ticketsIHandle);
 
 // Sets results per page
 if (isset($_GET["limit"])) {
