@@ -71,7 +71,9 @@
                             <th>Created</th>
                             <th>Status</th>
                             <th>Department</th>
+                            <?php if ($fileName != "admin-tickets-i-handle.php"): ?>
                             <th>Handling</th>
+                            <?php endif; ?>
                             <th>Priority</th>
                             <th>Files</th>
                         </tr>
@@ -116,11 +118,13 @@
                                 <td data-label="Department"><?= $ticket['department_name']; ?></td>
 
                                 <?php
-                                // Set style for unassigned tickets
-                                $handlingStyle = $ticket['handled_by'] ? "style='color:green;'" : "style='color:coral; font-style: italic;'"
-                                ?>
-                                
-                                <td <?= $handlingStyle ?> data-label="Handling"><?= $ticket['handled_by'] ? $ticket['admin_name'] . " " . $ticket['admin_surname'] : "Unassigned"; ?></td>
+                                if ($fileName != "admin-tickets-i-handle.php"):
+                                    // Set style for unassigned tickets
+                                    $handlingStyle = $ticket['handled_by'] ? "style='color:green;'" : "style='color:coral; font-style: italic;'"
+                                    ?>
+                                    
+                                    <td <?= $handlingStyle ?> data-label="Handling"><?= $ticket['handled_by'] ? $ticket['admin_name'] . " " . $ticket['admin_surname'] : "Unassigned"; ?></td>
+                                <?php endif; ?>
 
                                 <?php
                                 // Set style for the highest priority level
