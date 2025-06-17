@@ -24,7 +24,7 @@ require_once '../../classes/Ticket.php';
 require_once '../../classes/Message.php';
 
 // Sets the panel (admin or user)
-$panel = isset($_SERVER['HTTP_REFERER']) && str_contains($_SERVER['HTTP_REFERER'], "/admin/") ? "admin" : "user";
+$panel = $_SESSION['user_role'] === "admin" ? "admin" : "user";
 
 $ticketID = filter_input(INPUT_GET, "ticket", FILTER_SANITIZE_NUMBER_INT);
 
