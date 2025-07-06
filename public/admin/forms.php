@@ -8,7 +8,6 @@
 
   <!-- Tailwind is included -->
   <link rel="stylesheet" href="../css/admin-one-main.css">
-
 </head>
 <body>
 

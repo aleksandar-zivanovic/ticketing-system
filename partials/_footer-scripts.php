@@ -24,6 +24,6 @@ if (str_ends_with($currentPage, "index.php") || str_ends_with($currentPage, "/")
 <script type="text/javascript" src="../js/admin-one-chart.js"></script>
 <?php endif; ?>
 
-<!-- Material Design Icons (MDI) - Local copy v4.9.95 -->
-<!-- Downloaded from: https://cdn.materialdesignicons.com/4.9.95/css/materialdesignicons.min.css -->
+<!-- Material Design Icons (MDI) - Local copy v7.4.47 -->
+<!-- Downloaded from: https://github.com/Templarian/MaterialDesign-Webfont/releases/tag/v7.4.47 -->
 <link rel="stylesheet" href="../css/materialdesignicons.min.css">

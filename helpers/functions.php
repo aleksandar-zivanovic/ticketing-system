@@ -326,3 +326,23 @@ function getPanel(): string
 {
     return str_contains($_SERVER["REQUEST_URI"], "public/admin") ? "admin" : "user";
 }
+
+/**
+ * Renders a single dashboard card in the admin panel.
+ *   
+ * @param string $icon. Icon code for Materila Design Icons. 
+ * 
+ * @param string $label      Name of the ticket category shown on the card (e.g. "Solved").
+ * @param int    $count      Total number of tickets that belong to the given $label category.
+ * @param string $iconColor  Tailwind CSS class for icon color (e.g. "text-blue-500").
+ * @param string $icon       Material Design Icon class (e.g. "mdi-ticket").
+ */
+
+function renderDashboardCard (
+    string $label, 
+    int $count, 
+    string $iconColor, 
+    string $icon)
+{
+    include '../../partials/_admin_dashboard_card_widget.php';
+}

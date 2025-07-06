@@ -7,27 +7,48 @@
   <div class="menu is-menu-main">
     <p class="menu-label">General</p>
     <ul class="menu-list">
-      <li class="active">
-        <?php if ($panel === "admin"): ?>
-        <a href="/ticketing-system/public/admin/admin-ticket-listing.php">
-        <?php else: ?>
-        <a href="/ticketing-system/public/user/user-ticket-listing.php">
-        <?php endif; ?>
-          <span class="icon"><i class="mdi mdi-desktop-mac"></i></span>
-          <span class="menu-item-label">Dashboard</span>
+      <?php if ($_SESSION['user_role'] === "admin") : ?>
+        <li class="--set-active-tables-html">
+          <a href="/ticketing-system/public/admin/dashboard.php">
+            <span class="icon"><i class="mdi mdi-view-dashboard-edit"></i></span>
+            <span class="menu-item-label">Dashboard</span>
+          </a>
+        </li>
+      <?php endif; ?>
+      <li class="--set-active-tables-html">
+        <a href="/ticketing-system/public/user/my-dashboard.php">
+          <span class="icon"><i class="mdi mdi-view-dashboard"></i></span>
+          <span class="menu-item-label">My Dashboard</span>
         </a>
       </li>
     </ul>
     <p class="menu-label">Menu</p>
     <ul class="menu-list">
-      <?php if(isset($panel) && $panel === "admin"): ?>
+      <?php if ($_SESSION['user_role'] === "admin") : ?>
+        <li class="--set-active-tables-html">
+          <a href="/ticketing-system/public/admin/admin-ticket-listing.php">
+            <span class="icon"><i class="mdi mdi-ticket-confirmation"></i></span>
+            <span class="menu-item-label">Tickets</span>
+          </a>
+        </li>
+      <?php endif; ?>
+
       <li class="--set-active-tables-html">
-        <a href="admin-tickets-i-handle.php">
-          <span class="icon"><i class="mdi mdi-table"></i></span>
-          <span class="menu-item-label">Handling tickets</span>
+        <a href="/ticketing-system/public/user/user-ticket-listing.php">
+          <span class="icon"><i class="mdi mdi-ticket-account"></i></span>
+          <span class="menu-item-label">My Tickets</span>
         </a>
       </li>
+
+      <?php if ($_SESSION['user_role'] === "admin") : ?>
+        <li class="--set-active-tables-html">
+          <a href="admin-tickets-i-handle.php">
+            <span class="icon"><i class="mdi mdi-ticket-percent"></i></span>
+            <span class="menu-item-label">Handling tickets</span>
+          </a>
+        </li>
       <?php endif; ?>
+      
       <li class="--set-active-tables-html">
         <a href="tables.php">
           <span class="icon"><i class="mdi mdi-table"></i></span>
