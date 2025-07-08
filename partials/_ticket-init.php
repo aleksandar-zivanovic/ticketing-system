@@ -28,7 +28,7 @@ $panel = $_SESSION['user_role'] === "admin" ? "admin" : "user";
 
 $ticketID = filter_input(INPUT_GET, "ticket", FILTER_SANITIZE_NUMBER_INT);
 
-// Call fetchAllTickets() method
+// Call fetchTicketDetails() method
 $ticket = new Ticket();
 $ticket = $ticket->fetchTicketDetails($ticketID);
 

@@ -16,22 +16,14 @@ $panel = "admin";
 $page = str_replace(" Action", "", fileName(__FILE__));
 $data = true;
 
-// Initialize allowed filter values for tickets
-$status = new Status();
-$statuses = $status->getAllStatusNames();
+// Initializes allowed filter values for tickets
+$allTicketFilterData = loadTicketFilterData();
+$statuses    = $allTicketFilterData["statuses"];
+$priorities  = $allTicketFilterData["priorities"];
+$departments = $allTicketFilterData["departments"];
 
-$priority = new Priority();
-$priorities = $priority->getAllPriorityNames();
-
-$department = new Department();
-$departments = $department->getAllDepartmentNames();
-
-// Set allowed values list for fetchAllTickets() method
-$allowedValues = array_merge(
-  ["statuses" => $statuses], 
-  ["priorities" => $priorities], 
-  ["departments" => $departments],
-);
+// Sets allowed values list for fetchAllTickets() method
+$allowedValues = buildAllowedTicketValues($allTicketFilterData);
 
 // Get sorting and ordering parameters
 if (isset($_GET['order_by'])) {

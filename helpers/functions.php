@@ -346,3 +346,54 @@ function renderDashboardCard (
 {
     include '../../partials/_admin_dashboard_card_widget.php';
 }
+
+/**
+ * Loads ticket-related names (statuses, priorities, departments) from the database.
+ * Useful for building filter dropdowns and preparing allowed values.
+ *
+ * @return array{
+ *     statuses: string[],
+ *     priorities: string[],
+ *     departments: string[]
+ * }
+ */
+function loadTicketFilterData(): array
+{
+    // Initialize allowed filter values for tickets
+    $status = new Status();
+    $statuses = $status->getAllStatusNames();
+
+    $priority = new Priority();
+    $priorities = $priority->getAllPriorityNames();
+
+    $department = new Department();
+    $departments = $department->getAllDepartmentNames();
+
+    return [
+        "statuses" => $statuses, 
+        "priorities" => $priorities, 
+        "departments" => $departments, 
+    ];
+}
+
+/**
+ * Prepares the allowed values array used for validating filters in fetchAllTickets().
+ * Merges statuses, priorities, and departments arrays into one multidimensional array.
+ *
+ * @param array $allTicketFilterData Associative array with keys 'statuses', 'priorities', and 'departments', each containing an array of strings.
+ *
+ * @return array{
+ *     statuses: string[],
+ *     priorities: string[],
+ *     departments: string[]
+ * }
+ */
+function buildAllowedTicketValues(array $allTicketFilterData): array
+{
+    // Set allowed values list for fetchAllTickets() method
+    return array_merge(
+        ["statuses" => $allTicketFilterData["statuses"]], 
+        ["priorities" => $allTicketFilterData["priorities"]], 
+        ["departments" => $allTicketFilterData["departments"]],
+    );
+}
