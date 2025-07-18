@@ -576,4 +576,96 @@ class Ticket
             throw new Exception("Something went wrong. The ticket is not assigned to the administrator.");
         }
     }
+
+    /**
+     * Gets an array of tickets filtered by a given parameter and year, grouped by months.
+     * 
+     * Returns an array formatted like: 
+     * [
+     *    ["Jan" => [
+     *        "parameter_name" => array  // Contains values of any type (int, string, bool, null, etc.) 
+     *    ],
+     *    ["Feb" => [
+     *        "parameter_name" => array  // Contains values of any type (int, string, bool, null, etc.)  
+     *    ],
+     *    // ... rest of the months
+     * ]
+     * 
+     * @param string $param Parameter name that exists as a key in each ticket returned by the fetchAllTickets() method.
+     * @param array $allTicketsData The array of all tickets returned by the `fetchAllTickets` method.
+     * @param int $year The year to filter tickets by.
+     * 
+     * @return array Array with month abbreviations as keys.
+     *     Each month key maps to an array of values of mixed types (int, string, bool, null)
+     *     corresponding to the specified parameter.
+     */
+    public static function getMonthlyTicketsByParameter(string $param, array $allTicketsData, int $year): array 
+    {
+        $months = [
+            'Jan' => '01',
+            'Feb' => '02',
+            'Mar' => '03',
+            'Apr' => '04',
+            'May' => '05',
+            'Jun' => '06',
+            'Jul' => '07',
+            'Avg' => '08',
+            'Sep' => '09',
+            'Oct' => '10',
+            'Nov' => '11',
+            'Dec' => '12',
+        ];
+
+        // Prepares empty array buckets to prevent undefined keys
+        $monthsData = [];
+        foreach ($months as $monthName => $_) {
+            $monthsData[$monthName] = [];
+        }
+
+        // Fills buckets with tickets grouped by month
+        foreach ($allTicketsData as $ticket) {
+            foreach ($months as $monthName => $MonthNumber) {
+                if (str_contains(haystack: $ticket[$param], needle: "{$year}-{$MonthNumber}-")) {
+                    $monthsData[$monthName][$param][] = $ticket;
+                    break; // stop looping months when matched
+                }
+            }
+        }
+
+        return $monthsData;
+    }
+
+    /**
+     * Counts tickets received from `getMonthlyTicketsByParameter` and groupes them by months.
+     * Returns an array formatted like: 
+     * [
+     *    "Jan" => [
+     *        "parameter_name" => int
+     *    ],
+     *    "Feb" => [
+     *        "parameter_name" => int 
+     *    ],
+     *    // ... rest of the months
+     * ]
+     * 
+     * @param string $param Parameter name that exists as a key in each ticket returned by the `fetchAllTickets` method.
+     * @param array $allTicketsData The array of all tickets returned by the `fetchAllTickets` method.
+     * @param int $year The year to filter tickets by.
+     * 
+     * @return array Array with month abbreviations as keys.
+     *     Each month key maps specified parameter name as a key and integer as value.
+     */
+    public static function countMonthlyTicketsByParameter(string $param, array $allTicketsData, int $year): array 
+    {
+        $counts = [];
+        $tickets = static::getMonthlyTicketsByParameter($param, $allTicketsData, $year);
+        foreach ($tickets as $month => $arraysByParamNames) {
+            foreach ($arraysByParamNames as $tickets) {
+                $counts[$month][$param] = count($tickets);
+            }
+        }
+        
+        return $counts;
+    }
+
 }

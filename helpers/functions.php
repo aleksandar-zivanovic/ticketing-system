@@ -397,3 +397,35 @@ function buildAllowedTicketValues(array $allTicketFilterData): array
         ["departments" => $allTicketFilterData["departments"]],
     );
 }
+
+/**
+ * Renders chart.
+ * 
+ * @param string $title Chart name.
+ * @param string $type Chart type (e.g. "line", "bar", etc.).
+ * @param array $data Array of data prepared for rendering the chart.
+ *   Structure:
+ *   - 'labels': array of strings — labels for the X-axis (e.g. months).
+ *   - 'datasets': array of arrays — each dataset includes:
+ *       - 'label': string — name of the dataset (e.g. ticket status).
+ *       - 'data': array of integers — integer values matching the labels.
+ *
+ * Example:
+ * [
+ *   'labels' => ['Jan', 'Feb', 'Mar', ..., 'Dec'],
+ *   'datasets' => [
+ *     [
+ *       'label' => 'Open',
+ *       'data'  => [12, 7, 3, ...]
+ *     ],
+ *     // More datasets...
+ *   ]
+ * ]
+ * 
+ * @return void
+ */
+function renderChart(string $title, string $type, array $data): void
+{
+    $chartId = 'chart_' . uniqid();;
+    include '../../partials/_admin_dashboard_chart.php';
+}

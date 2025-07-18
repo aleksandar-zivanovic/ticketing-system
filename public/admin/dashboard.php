@@ -33,6 +33,31 @@ $handledTicketsCountStatuses   = Status::countStatuses($handledTicketsData);
 $countHandledTickets           = $handledTicketsCountStatuses["all"];
 $countHandledInProgressTickets = $handledTicketsCountStatuses["in_progress"];
 $countHandledSolvedTickets     = $handledTicketsCountStatuses["closed"];
+
+$year = 2025;
+$countCreatedTicketsByMonths = Ticket::countMonthlyTicketsByParameter("created_date", $allTicketsData, $year);
+$countSolvedTicketsByMonths  = Ticket::countMonthlyTicketsByParameter("closed_date", $allTicketsData, $year);
+
+// Formats data for the chart
+$rawData   = [$countCreatedTicketsByMonths, $countSolvedTicketsByMonths];
+$opened    = [];
+$closed    = [];
+$chartData = [];
+for ($i = 0; $i < count($rawData); $i++) {
+  foreach ($rawData[$i] as $month => $filteredMonthlyTickets) {
+    foreach ($filteredMonthlyTickets as $filter => $numberOfTickets) {
+      if ($filter === "created_date") {
+        $opened[] = $numberOfTickets;
+      } elseif ($filter === "closed_date") {
+        $closed[] = $numberOfTickets;
+      }
+    }
+  }
+}
+
+$chartData["labels"] = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Avg', 'Sep', 'Oct', 'Nov', 'Dec'];
+$chartData["datasets"][0] = ["label" => "Opened", "data" => $opened];
+$chartData["datasets"][1] = ["label" => "Closed", "data" => $closed];
 ?>
 
 <!DOCTYPE html>
@@ -48,6 +73,8 @@ $countHandledSolvedTickets     = $handledTicketsCountStatuses["closed"];
   <!-- Tailwind is included -->
   <link rel="stylesheet" href="../css/tailwind-output.css">
   <link rel="stylesheet" href="../css/font-awesome.min.css">
+  <!-- Chart.js-->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 </head>
 
@@ -80,8 +107,10 @@ $countHandledSolvedTickets     = $handledTicketsCountStatuses["closed"];
       require '../../helpers/admin/dashboard_cards.php';
       ?>
 
-      <!-- TODO: Grafik -->
-      <?php include '../../partials/_admin_dashboard_chart.php'; ?>
+      <!-- Charts -->
+      <?php 
+      renderChart("All tickets chart", "line", $chartData);
+      ?>
 
       <!-- Tables -->
       <div class="card has-table grid grid-cols-1 gap-6 lg:grid-cols-2 mb-6">
