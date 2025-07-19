@@ -429,3 +429,43 @@ function renderChart(string $title, string $type, array $data): void
     $chartId = 'chart_' . uniqid();;
     include '../../partials/_admin_dashboard_chart.php';
 }
+
+/**
+ * Formats monthly ticket counts for Chart.js.
+ * 
+ * @param array $created Monthly counts for created tickets.
+ *   Format: [
+ *     "Jan" => ["created_date" => int],
+ *     "Feb" => ["created_date" => int],
+ *     // ... all months
+ *   ]
+ * @param array $solved Monthly counts for solved tickets.
+ *   Format: [
+ *     "Jan" => ["closed_date" => int],
+ *     "Feb" => ["closed_date" => int],
+ *     // ... all months
+ *   ]
+ * 
+ * @return array Returns an array with:
+ *               - 'opened': array of integers, counts per month
+ *               - 'closed': array of integers, counts per month
+ */
+function formatDataForChartjs(array $created, array $solved): array
+{
+    $rawData   = [$created, $solved];
+    $opened    = [];
+    $closed    = [];
+    for ($i = 0; $i < count($rawData); $i++) {
+        foreach ($rawData[$i] as $month => $filteredMonthlyTickets) {
+            foreach ($filteredMonthlyTickets as $filter => $numberOfTickets) {
+                if ($filter === "created_date") {
+                    $opened[] = $numberOfTickets;
+                } elseif ($filter === "closed_date") {
+                    $closed[] = $numberOfTickets;
+                }
+            }
+        }
+    }
+
+    return ["opened" => $opened, "closed" => $closed];
+}

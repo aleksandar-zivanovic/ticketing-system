@@ -660,11 +660,14 @@ class Ticket
         $counts = [];
         $tickets = static::getMonthlyTicketsByParameter($param, $allTicketsData, $year);
         foreach ($tickets as $month => $arraysByParamNames) {
+            if (empty($arraysByParamNames)) {
+                $counts[$month][$param] = 0;
+            }
             foreach ($arraysByParamNames as $tickets) {
                 $counts[$month][$param] = count($tickets);
             }
         }
-        
+
         return $counts;
     }
 

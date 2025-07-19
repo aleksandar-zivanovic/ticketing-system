@@ -49,8 +49,8 @@
 
       <!-- Charts -->
       <?php
-      renderChart("All tickets chart", "line", $chartData);
-      renderChart("Tickets you are handling", "line", $chartData);
+      renderChart("All tickets chart", "line", $chartAllData);
+      renderChart("Tickets you are handling", "line", $chartHandledData);
       ?>
 
       <!-- Tables -->

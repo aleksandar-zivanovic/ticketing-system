@@ -35,27 +35,24 @@ $countHandledInProgressTickets = $handledTicketsCountStatuses["in_progress"];
 $countHandledSolvedTickets     = $handledTicketsCountStatuses["closed"];
 
 $year = 2025;
+
+// Counts all tickets count for chart
 $countCreatedTicketsByMonths = Ticket::countMonthlyTicketsByParameter("created_date", $allTicketsData, $year);
 $countSolvedTicketsByMonths  = Ticket::countMonthlyTicketsByParameter("closed_date", $allTicketsData, $year);
 
-// Formats data for the chart
-$rawData   = [$countCreatedTicketsByMonths, $countSolvedTicketsByMonths];
-$opened    = [];
-$closed    = [];
-$chartData = [];
-for ($i = 0; $i < count($rawData); $i++) {
-  foreach ($rawData[$i] as $month => $filteredMonthlyTickets) {
-    foreach ($filteredMonthlyTickets as $filter => $numberOfTickets) {
-      if ($filter === "created_date") {
-        $opened[] = $numberOfTickets;
-      } elseif ($filter === "closed_date") {
-        $closed[] = $numberOfTickets;
-      }
-    }
-  }
-}
+// Counts tickets handled by the admin for the chart
+$countHandledCreatedTicketsByMonths = Ticket::countMonthlyTicketsByParameter("created_date", $handledTicketsData, $year);
+$countHandledSolvedTicketsByMonths  = Ticket::countMonthlyTicketsByParameter("closed_date", $handledTicketsData, $year);
 
-$chartData["labels"] = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Avg', 'Sep', 'Oct', 'Nov', 'Dec'];
-$chartData["datasets"][0] = ["label" => "Opened", "data" => $opened];
-$chartData["datasets"][1] = ["label" => "Closed", "data" => $closed];
+// Formats all tickets data for chart
+$foramtedAllData = formatDataForChartjs($countCreatedTicketsByMonths, $countSolvedTicketsByMonths);
+$chartAllData["labels"] = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Avg', 'Sep', 'Oct', 'Nov', 'Dec'];
+$chartAllData["datasets"][0] = ["label" => "Opened", "data" => $foramtedAllData["opened"]];
+$chartAllData["datasets"][1] = ["label" => "Closed", "data" => $foramtedAllData["closed"]];
+
+// Formats chart data for tickets handled by the admin
+$foramtedHandledData = formatDataForChartjs($countHandledCreatedTicketsByMonths, $countHandledSolvedTicketsByMonths);
+$chartHandledData["labels"] = $chartAllData["labels"];
+$chartHandledData["datasets"][0] = ["label" => "Opened", "data" => $foramtedHandledData["opened"]];
+$chartHandledData["datasets"][1] = ["label" => "Closed", "data" => $foramtedHandledData["closed"]];
 ?>
