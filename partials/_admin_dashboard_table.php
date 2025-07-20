@@ -13,7 +13,7 @@
             <thead>
                 <tr>
                     <th><?= $category ?> name:</th>
-                    <th>Tickets:</th>
+                    <th>Total:</th>
                 </tr>
             </thead>
             <tbody>

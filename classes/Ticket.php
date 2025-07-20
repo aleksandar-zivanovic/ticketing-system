@@ -671,4 +671,42 @@ class Ticket
         return $counts;
     }
 
+    /**
+     * Counts data by a filter for a dashboard card table.
+     * Returns array in format: 
+     *  [
+     *      ["FilterNameValue1", int], ["FilterNameValue2", int], ["FilterNameValue3", int], ...
+     *  ] 
+     * 
+     * @param array $data Array of that returned by `fetchAllTickets` metod.
+     * @param array $filters List of filter name strings.
+     * @param string $ticketFilter Key of a single ticket array from $data, that you want to sort all tickets by.
+     * 
+     * @return array Array of array pairs of ticketFilter names and ticket counts for every ticketFilter name.
+     */
+    public static function countDataForDashboardCard(array $data, array $filters, string $ticketFilter): array
+    {
+        $ticketsByFilters = [];
+        // Prepares array of tickets sorted by appropriate filters
+        foreach ($data as $ticket) {
+            foreach ($filters as $filterName) {
+                if (str_contains(haystack: $ticket[$ticketFilter], needle: $filterName)) {
+                    $ticketsByFilters[$filterName][] = $ticket;
+                    break; // stop looping filters when matched
+                }
+            }
+        }
+
+        $countTicketsByFilters = [];
+        for ($i = 0; $i < count($filters); $i++) {
+            foreach ($ticketsByFilters as $name => $_) {
+                if (str_contains(haystack: $name, needle: $filters[$i])) {
+                    $countTicketsByFilters[] = [ucfirst($filters[$i]), count($ticketsByFilters[$filters[$i]])];
+                    break;
+                }
+            }
+        }
+
+        return $countTicketsByFilters;
+    }
 }

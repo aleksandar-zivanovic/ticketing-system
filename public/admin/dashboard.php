@@ -56,28 +56,6 @@
       <!-- Tables -->
       <div class="card has-table grid grid-cols-1 gap-6 lg:grid-cols-2 mb-6">
         <?php
-        // TODO: fetch the data from DB
-        $arrayTables = [
-          "Deparmants" => [
-            ["Dep1", 6],
-            ["Dep2", 2],
-            ["Dep3", 36],
-          ],
-          "Tickets by users" => [
-            ["User1", 16],
-            ["User2", 2],
-            ["User3", 86],
-            ["User4", 23],
-            ["User5", 1],
-          ],
-          "Statuses" => [
-            ["Status1", 0],
-            ["Status2", 2],
-            ["Status3", 86],
-          ],
-        ];
-
-
         foreach ($arrayTables as $category  => $items) {
           include '../../partials/_admin_dashboard_table.php';
         }

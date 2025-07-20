@@ -22,6 +22,12 @@ class Department
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    /**
+     * Returns indexed array of all department names.
+     * Example: ['Unassigned', 'Human Resources', 'Finance', ...]
+     * 
+     * @return array Indexed list of department names.
+     */
     public function getAllDepartmentNames(): array
     {
         $departmentNames = [];
