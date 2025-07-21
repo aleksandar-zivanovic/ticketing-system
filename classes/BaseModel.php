@@ -8,7 +8,7 @@ abstract class BaseModel
     /**
      * Gets connection with the database.
      */
-    private function getConn(): object
+    protected function getConn(): object
     {
         if ($this->dbInstance === null) {
             $this->dbInstance = new Database();

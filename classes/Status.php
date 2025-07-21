@@ -1,36 +1,27 @@
 <?php
-require_once('Database.php');
+require_once('BaseModel.php');
 
-class Status
+class Status extends BaseModel
 {
-    private ?Database $dbInstance = null;
-
-    private function getConn(): object
-    {
-        if ($this->dbInstance === null) {
-            $this->dbInstance = new Database();
-        }
-
-        return $this->dbInstance;
-    }
-
+    /**
+     * Fetches all data from `statuses` table.
+     * 
+     * @return array
+     */
     public function getAllstatuses(): array
     {
-        $query = "SELECT * FROM statuses";
-        $stmt = $this->getConn()->connect()->prepare($query);
-        $stmt->execute();
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        return $this->getAll("statuses");
     }
 
+    /**
+     * Returns indexed array of all status names.
+     * Example: ['in progres', 'waiting', 'closed', ...]
+     * 
+     * @return array List of status names.
+     */
     public function getAllStatusNames(): array
     {
-        $statusNames = [];
-
-        foreach ($this->getAllstatuses() as $value) {
-            $statusNames[] = $value['name'];
-        }
-
-        return $statusNames;
+        return $this->getAllNames("statuses", "name");
     }
 
     /**

@@ -1,11 +1,12 @@
 <?php
+require_once('BaseModel.php');
 
-    //Import PHPMailer classes into the global namespace
-    use PHPMailer\PHPMailer\PHPMailer;
-    use PHPMailer\PHPMailer\SMTP;
-    use PHPMailer\PHPMailer\Exception;
+//Import PHPMailer classes into the global namespace
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\SMTP;
+use PHPMailer\PHPMailer\Exception;
 
-class User
+class User extends BaseModel
 {
     public string $email;
     public string $password;
@@ -15,39 +16,30 @@ class User
     public string $phone;
     public string $departmentId;
     public string $role;
-    protected object $db;
     private ?string $verificationCode;
-
-    private function dbConn(): object
-    {
-        require_once('Database.php');
-        $connection = new Database;
-        return $this->db = $connection->connect();
-    }
 
     public function register()
     {
-        $this->dbConn();
-
-        if (!empty($_POST['email'])  
-            && !empty($_POST['password']) 
-            && !empty($_POST['rpassword']) 
-            && !empty($_POST['name']) 
-            && !empty($_POST['surname']) 
-            && !empty($_POST['phone'])) 
-        {
+        if (
+            !empty($_POST['email'])
+            && !empty($_POST['password'])
+            && !empty($_POST['rpassword'])
+            && !empty($_POST['name'])
+            && !empty($_POST['surname'])
+            && !empty($_POST['phone'])
+        ) {
             $this->email = htmlspecialchars(trim(filter_input(INPUT_POST, 'email', FILTER_SANITIZE_EMAIL)), ENT_QUOTES, 'UTF-8');
             $this->password = htmlspecialchars(trim(filter_input(INPUT_POST, 'password', FILTER_DEFAULT)), ENT_QUOTES, 'UTF-8');
             $this->repeatedPassword = htmlspecialchars(trim(filter_input(INPUT_POST, 'rpassword', FILTER_DEFAULT)), ENT_QUOTES, 'UTF-8');
             $this->name = htmlspecialchars(trim(filter_input(INPUT_POST, 'name', FILTER_DEFAULT)), ENT_QUOTES, 'UTF-8');
             $this->surname = htmlspecialchars(trim(filter_input(INPUT_POST, 'surname', FILTER_DEFAULT)), ENT_QUOTES, 'UTF-8');
             $this->phone = htmlspecialchars(trim(filter_input(INPUT_POST, 'phone', FILTER_DEFAULT)), ENT_QUOTES, 'UTF-8');
-            
+
             // checks if email format is valid
             if (!filter_var($this->email, FILTER_VALIDATE_EMAIL)) {
                 $this->registrationErrorHandling("Email address is not valid!");
             }
-            
+
             // checks if the email is already in use
             $this->isEmailOccupied();
 
@@ -59,7 +51,7 @@ class User
             } else {
                 $this->registrationErrorHandling("Password must be at least 6 characters long.");
             }
-            
+
             // hashing password
             $this->passwordHashing();
 
@@ -68,23 +60,22 @@ class User
 
             // inserting a new user to the database and sending verification email
             $this->addUser();
-
         } else {
             $this->registrationErrorHandling("Fill all fields, please.");
         }
-        
     }
 
     // checking if there is a use with the entered email
     public function isEmailOccupied(): void
     {
-            $queryLookForEmail = "SELECT email FROM users WHERE email = :email";
-            $query = $this->db->prepare($queryLookForEmail);
-            $query->bindValue(':email', $this->email, PDO::PARAM_STR);
-            $query->execute();
-            if ($query->rowCount() >= 1) {
-                $this->registrationErrorHandling("Email is already in use!");
-            }
+        $conn = $this->getConn()->connect();
+        $queryLookForEmail = "SELECT email FROM users WHERE email = :email";
+        $query = $conn->prepare($queryLookForEmail);
+        $query->bindValue(':email', $this->email, PDO::PARAM_STR);
+        $query->execute();
+        if ($query->rowCount() >= 1) {
+            $this->registrationErrorHandling("Email is already in use!");
+        }
     }
 
     // hashing password
@@ -97,21 +88,21 @@ class User
     public function registrationErrorHandling(string $errorMessage): void
     {
         $_SESSION['error_message'] = $errorMessage;
-            die(header("Location: ../forms/register.php"));
+        die(header("Location: ../forms/register.php"));
     }
 
     // saving new user data to the database
     public function addUser(): void
     {
         $addUserQuery = "INSERT INTO users (email, password, name, surname, phone, role_id, department_id, verification_code, verified) VALUES(:em, :pw, :nm, :sn, :pn, 1, NULL, :vc, 0)";
-        $query = $this->db->prepare($addUserQuery);
+        $query = $this->getConn()->connect()->prepare($addUserQuery);
         $query->bindValue(':em', $this->email, PDO::PARAM_STR);
         $query->bindValue(':pw', $this->password, PDO::PARAM_STR);
         $query->bindValue(':nm', $this->name, PDO::PARAM_STR);
         $query->bindValue(':sn', $this->surname, PDO::PARAM_STR);
         $query->bindValue(':pn', $this->phone, PDO::PARAM_STR);
         $query->bindValue(':vc', $this->verificationCode, PDO::PARAM_STR);
-        if($query->execute()) {
+        if ($query->execute()) {
             $_SESSION['error_message'] = "You are registered. We sent verification email to your email addres. Check your email and verify it.";
             $this->sendingVerificationEmail();
         }
@@ -155,8 +146,8 @@ class User
             //Content
             $mail->isHTML(true);                                  //Set email format to HTML
             $mail->Subject = 'Verification email';
-            $mail->Body = 'Hello ' . $this->name . ' !<br> To finish registration click on this link:  <a href="' . $verificationUrl .'?email=' . $this->email . '&verification_code=' . $this->verificationCode . '">'. $verificationUrl . '?email=' . $this->email . '&verification_code=' . $this->verificationCode . '</a></b>';
-            $mail->AltBody = 'Copy this URL in your broswer navigation bar and click enter to finsih registration proccess by confirming your email address: href="' . $verificationUrl .'?email=' . $this->email . '&verification_code=' . $this->verificationCode . '">'. $verificationUrl . '?email=' . $this->email . '&verification_code=' . $this->verificationCode;
+            $mail->Body = 'Hello ' . $this->name . ' !<br> To finish registration click on this link:  <a href="' . $verificationUrl . '?email=' . $this->email . '&verification_code=' . $this->verificationCode . '">' . $verificationUrl . '?email=' . $this->email . '&verification_code=' . $this->verificationCode . '</a></b>';
+            $mail->AltBody = 'Copy this URL in your broswer navigation bar and click enter to finsih registration proccess by confirming your email address: href="' . $verificationUrl . '?email=' . $this->email . '&verification_code=' . $this->verificationCode . '">' . $verificationUrl . '?email=' . $this->email . '&verification_code=' . $this->verificationCode;
 
             $mail->send();
 
@@ -177,12 +168,10 @@ class User
         $verificationCodeFromUrl = htmlspecialchars(trim(filter_input(INPUT_GET, 'verification_code', FILTER_DEFAULT)));
         $this->verificationCode = $this->gettingUserVerificationCode();
 
-        if ($this->verificationCode != null && $this->verificationCode == $verificationCodeFromUrl) 
-        {
+        if ($this->verificationCode != null && $this->verificationCode == $verificationCodeFromUrl) {
             $makeUserVerifiedQuery = "UPDATE users SET verification_code = null, verified = 1 WHERE email = '{$this->email}'";
-            $query = $this->db->prepare($makeUserVerifiedQuery);
-            if ($query->execute()) 
-            {
+            $query = $this->getConn()->connect()->prepare($makeUserVerifiedQuery);
+            if ($query->execute()) {
                 $_SESSION['verification_status'] = "You are verified successfully.<br>Login in, please.";
                 return true;
             } else {
@@ -198,10 +187,9 @@ class User
 
     public function gettingUserVerificationCode(): string|null
     {
-        $this->db = $this->dbConn();
         $this->email = htmlspecialchars(trim(filter_input(INPUT_GET, 'email', FILTER_DEFAULT)));
         $verificationCodeQuery = "SELECT verification_code FROM users WHERE email = :em";
-        $query = $this->db->prepare($verificationCodeQuery);
+        $query = $this->getConn()->connect()->prepare($verificationCodeQuery);
         $query->bindValue(':em', $this->email, PDO::PARAM_STR);
         $query->execute();
         return $query->rowCount() >= 1 ? $query->fetchColumn() : null;
@@ -210,18 +198,14 @@ class User
     // adding a new verification code to a user and sending verification email
     public function resendVerificatonCode(): void
     {
-        $this->dbConn();
-
-        if (!empty($_POST['email']))
-        {
+        if (!empty($_POST['email'])) {
             $emailForVerification = htmlspecialchars(trim(filter_input(INPUT_POST, 'email', FILTER_SANITIZE_EMAIL)), ENT_QUOTES, 'UTF-8');
 
             if (filter_var($emailForVerification, FILTER_VALIDATE_EMAIL)) {
                 $this->email = $emailForVerification;
 
                 $user = $this->getUserByEmail();
-                if (!$user) 
-                {
+                if (!$user) {
                     $_SESSION['error_message'] = "User with that email doesn't exist. Go to registration page to register with that email address.";
                     header("Location: ../forms/resend-code.php");
                     die();
@@ -275,8 +259,8 @@ class User
                                 LEFT JOIN departments as d ON u.department_id = d.id 
                                 LEFT JOIN roles as r ON u.role_id = r.id 
                                 WHERE email = :em";
-        
-        $query = $this->db->prepare($getUserByEmailQuery);
+
+        $query = $this->getConn()->connect()->prepare($getUserByEmailQuery);
         $query->bindValue(":em", $this->email, PDO::PARAM_STR);
         $query->execute();
         $result = $query->fetch(PDO::FETCH_ASSOC);
@@ -286,7 +270,7 @@ class User
     public function getPasswordByEmail(): string|null
     {
         $getPasswordByEmail = "SELECT password FROM users WHERE email = :em";
-        $query = $this->db->prepare($getPasswordByEmail);
+        $query = $this->getConn()->connect()->prepare($getPasswordByEmail);
         $query->bindValue(":em", $this->email, PDO::PARAM_STR);
         $query->execute();
         $result = $query->fetch(PDO::FETCH_ASSOC);
@@ -297,7 +281,7 @@ class User
     public function addVerifcationCodeToUser(): bool
     {
         $addVerifcationCodeToUserQuery = "UPDATE users SET verification_code = :vc WHERE email = '{$this->email}'";
-        $query = $this->db->prepare($addVerifcationCodeToUserQuery);
+        $query = $this->getConn()->connect()->prepare($addVerifcationCodeToUserQuery);
         $query->bindValue(':vc', $this->verificationCode, PDO::PARAM_STR);
         $query->execute();
         return $query->rowCount() > 0 ? true : false;
@@ -322,7 +306,6 @@ class User
             die();
         }
 
-        $this->dbConn();
         $passwordFromDb = $this->getPasswordByEmail();
 
         if ($passwordFromDb === null) {
@@ -330,7 +313,7 @@ class User
             header("Location: ../forms/login.php");
             die();
         }
-        
+
         if (password_verify($this->password, $passwordFromDb)) {
             // getting all details for the user
             $user = $this->getUserByEmail();
