@@ -1,22 +1,9 @@
 <?php
-require_once 'Database.php';
+require_once 'BaseModel.php';
 
-class Attachment
+class Attachment extends BaseModel
 {
-    private ?Database $dbInstance = null;
     public string $attachmentDirectory = ROOT . DS . "public" . DS . "img" . DS . "ticket_images";
-
-    /**
-     * Sets connection with the database
-     */
-    private function getConn(): object
-    {
-        if ($this->dbInstance === null) {
-            $this->dbInstance = new Database();
-        }
-
-        return $this->dbInstance;
-    }
 
     /**
      * Processes images from the form.

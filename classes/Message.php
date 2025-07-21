@@ -1,22 +1,9 @@
 <?php
-require_once 'Database.php';
+require_once 'BaseModel.php';
 
-class Message
+class Message extends BaseModel
 {
-    private ?Database $dbInstance = null;
     private string $message;
-
-    /**
-     * Sets connection with the database
-     */
-    private function getConn(): object
-    {
-        if ($this->dbInstance === null) {
-            $this->dbInstance = new Database();
-        }
-
-        return $this->dbInstance;
-    }
 
     public function createMessage(int $ticketId): void
     {

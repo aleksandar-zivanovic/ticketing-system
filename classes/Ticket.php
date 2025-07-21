@@ -1,9 +1,8 @@
 <?php
-require_once 'Database.php';
+require_once 'BaseModel.php';
 
-class Ticket
+class Ticket extends BaseModel
 {
-    private ?Database $dbInstance = null;
     public string $title;
     public string $description;
     public string $url;
@@ -17,28 +16,13 @@ class Ticket
     public ?array $images;
 
     /**
-     * Sets connection with the database
-     */
-    private function getConn(): object
-    {
-        if ($this->dbInstance === null) {
-            $this->dbInstance = new Database();
-        }
-
-        return $this->dbInstance;
-    }
-
-    /**
      * Fetches all data from priorities table
      * 
      * @return array Return associative array of priorities
      */
     public function getAllPriorities(): array
     {
-        $query = "SELECT * FROM priorities";
-        $stmt = $this->getConn()->connect()->prepare($query);
-        $stmt->execute();
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        return $this->getAll("priorities");
     }
 
     /**

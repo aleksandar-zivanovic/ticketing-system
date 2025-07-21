@@ -1,35 +1,26 @@
 <?php
-require_once('Database.php');
+require_once 'BaseModel.php';
 
-class Priority
+class Priority extends BaseModel
 {
-    private ?Database $dbInstance = null;
-
-    private function getConn(): object
-    {
-        if ($this->dbInstance === null) {
-            $this->dbInstance = new Database();
-        }
-
-        return $this->dbInstance;
-    }
-
+    /**
+     * Fetches all data from `priorities` table.
+     * 
+     * @return array
+     */
     public function getAllPriorities(): array
     {
-        $query = "SELECT * FROM priorities";
-        $stmt = $this->getConn()->connect()->prepare($query);
-        $stmt->execute();
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        return $this->getAll("priorities");
     }
 
+    /**
+     * Returns indexed array of all priority names.
+     * Example: ['low', 'medium', 'high', ...]
+     * 
+     * @return array List of priority names.
+     */
     public function getAllPriorityNames(): array
     {
-        $statusNames = [];
-        
-        foreach ($this->getAllPriorities() as $value) {
-            $statusNames[] = $value['name'];
-        }
-
-        return $statusNames;
+        return $this->getAllNames("priorities", "name");
     }
 }
