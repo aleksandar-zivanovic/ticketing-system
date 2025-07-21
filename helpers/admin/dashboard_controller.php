@@ -4,6 +4,7 @@ require_once '../../classes/Ticket.php';
 require_once '../../classes/Department.php';
 require_once '../../classes/Priority.php';
 require_once '../../classes/Status.php';
+require_once '../../classes/User.php';
 require_once '../../helpers/functions.php';
 $page = "Dashboard";
 
@@ -20,6 +21,7 @@ $allowedValues = buildAllowedTicketValues($allTicketFilterData);
 $ticket = new Ticket();
 $allTicketsData = $ticket->fetchAllTickets(allowedValues: $allowedValues, images: false);
 $handledTicketsData = $ticket->fetchAllTickets(allowedValues: $allowedValues, images: false, handledByMe: true);
+unset($ticket);
 
 // Counts all existing tickets and their statuses
 $allTicketsCountStatuses   = Status::countStatuses($allTicketsData);
@@ -58,8 +60,9 @@ $chartHandledData["datasets"][0] = ["label" => "Opened", "data" => $foramtedHand
 $chartHandledData["datasets"][1] = ["label" => "Closed", "data" => $foramtedHandledData["closed"]];
 
 // Prepares data for departments stats table
-$departmen = new Department();
-$departmentNames = $departmen->getAllDepartmentNames();
+$department = new Department();
+$departmentNames = $department->getAllDepartmentNames();
+unset($department);
 $arrayTables["Tickets by deparmants"] = Ticket::countDataForDashboardCard($allTicketsData, $departmentNames, "department_name");
 
 // Prepares data for statuses stats table
@@ -67,14 +70,48 @@ $countAllInProgressTickets = $allTicketsCountStatuses["in_progress"];
 $countAllSolvedTickets     = $allTicketsCountStatuses["closed"];
 $countAllWaitingTickets    = $allTicketsCountStatuses["waiting"];
 
-$arrayTables["Tickets by status"] = [
-    ["Waiting", $countAllWaitingTickets], 
-    ["In progres", $countAllInProgressTickets], 
-    ["Solved", $countAllSolvedTickets], 
+$arrayTables["Tickets by statuses"] = [
+    ["Waiting", $countAllWaitingTickets],
+    ["In progres", $countAllInProgressTickets],
+    ["Solved", $countAllSolvedTickets],
 ];
 
-// Prepares data for urgent stats table
+// Prepares data for priority stats table
 $priority = new Priority();
 $priorityNames = $priority->getAllPriorityNames();
-$arrayTables["Tickets by priority"] = Ticket::countDataForDashboardCard($allTicketsData, $priorityNames, "priority_name");
+unset($priority);
+$arrayTables["Tickets by priorities"] = Ticket::countDataForDashboardCard($allTicketsData, $priorityNames, "priority_name");
+
+// Prepares data for users stats table
+$user = new User();
+$allUsers = $user->getAllUsers();
+unset($user);
+
+// Set array of user ID's as and tickets as value 
+$ticketsPerUsers = [];
+foreach ($allTicketsData as $singleTicket) {
+    if (!in_array($singleTicket["created_by"], $ticketsPerUsers)) {
+        $ticketsPerUsers[$singleTicket["created_by"]][] = $singleTicket["id"];
+    }
+}
+unset($allTicketsData); // Frees up memory after processing all tickets
+
+// Sort users by ticket count in descending order, excluding users with zero tickets
+arsort($ticketsPerUsers);
+
+$countTicketsPerUsers = [];
+foreach ($ticketsPerUsers as $creator => $tickets) {
+    foreach ($allUsers as $aUser) {
+        if ($creator === $aUser["id"]) {
+            // TODO: Instead of <a href='#'> add a real peath to the list of all user's tickets
+            $countTicketsPerUsers[] = [
+                "ID: {$creator} | Name: {$aUser["name"]} {$aUser["surname"]}", "<a href='#'>" . count($tickets) . "</a>"
+            ];
+            break;
+        }
+    }
+}
+unset($allUsers);  // Frees up memory from all users' data
+
+$arrayTables["Tickets by users"] = $countTicketsPerUsers;
 ?>
