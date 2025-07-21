@@ -12,7 +12,7 @@
         <table>
             <thead>
                 <tr>
-                    <th><?= $category ?> name:</th>
+                    <th><?= ucfirst($columnName) ?>:</th>
                     <th>Total:</th>
                 </tr>
             </thead>

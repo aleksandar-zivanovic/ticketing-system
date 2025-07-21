@@ -237,6 +237,20 @@ class User extends BaseModel
         }
     }
 
+    /**
+     * Fetch all records from `users` table.
+     * Returns an array of users, each user represented as an associative array.
+     * 
+     * @return array[] Array of user arrays.
+     */
+    public function getAllUsers(): array 
+    {
+        $query = "SELECT * FROM users";
+        $query = $this->getConn()->connect()->prepare($query);
+        $query->execute();
+        return $query->fetchAll(PDO::FETCH_ASSOC);
+    }
+
     // fetch all user data by email
     public function getUserByEmail(): array|null
     {
@@ -247,8 +261,7 @@ class User extends BaseModel
                                     u.name AS u_name, 
                                     u.surname AS u_surname, 
                                     u.role_id  AS u_role_id, 
-                                    u.phone AS u_phone, 
-                                    u.department_id AS u_department_id, 
+                                    u.phone AS u_phone,  
                                     u.department_id AS u_department_id, 
                                     u.verified AS u_verified, 
                                     d.id AS d_id, 

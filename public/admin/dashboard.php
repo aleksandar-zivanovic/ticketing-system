@@ -57,7 +57,9 @@
       <div class="card has-table grid grid-cols-1 gap-6 lg:grid-cols-2 mb-6">
         <?php
         foreach ($arrayTables as $category  => $items) {
-          include '../../partials/_admin_dashboard_table.php';
+          $pieces = explode(' ', $category);
+          $columnName = array_pop($pieces);
+            include '../../partials/_admin_dashboard_table.php';
         }
         ?>
     </section>
