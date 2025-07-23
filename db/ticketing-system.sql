@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Oct 30, 2024 at 03:36 PM
+-- Generation Time: Jul 23, 2025 at 11:01 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -37,7 +37,24 @@ CREATE TABLE `departments` (
 --
 
 INSERT INTO `departments` (`id`, `name`) VALUES
-(1, 'none');
+(1, 'Unassigned'),
+(2, 'Human Resources'),
+(3, 'Finance'),
+(4, 'Operations'),
+(5, 'Marketing'),
+(6, 'Information Technology');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `favorite_tickets`
+--
+
+CREATE TABLE `favorite_tickets` (
+  `id` int(11) NOT NULL,
+  `user` int(11) NOT NULL,
+  `ticket` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -150,20 +167,15 @@ INSERT INTO `statuses` (`id`, `name`) VALUES
 CREATE TABLE `tickets` (
   `id` int(11) NOT NULL,
   `created_date` timestamp NOT NULL DEFAULT current_timestamp(),
-  `created_year` smallint(4) NOT NULL,
-  `created_month` tinyint(4) NOT NULL,
-  `created_day` tinyint(4) NOT NULL,
   `closed_date` timestamp NULL DEFAULT NULL,
-  `closed_year` smallint(4) DEFAULT NULL,
-  `closed_month` tinyint(4) DEFAULT NULL,
-  `closed_day` tinyint(4) DEFAULT NULL,
   `department` tinyint(4) NOT NULL,
   `created_by` int(11) NOT NULL,
-  `handled_by` int(11) NOT NULL,
+  `handled_by` int(11) DEFAULT NULL,
   `priority` tinyint(4) NOT NULL,
-  `status` tinyint(4) NOT NULL,
+  `statusId` tinyint(4) NOT NULL,
   `title` varchar(255) NOT NULL,
-  `body` text NOT NULL
+  `body` text NOT NULL,
+  `url` varchar(255) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -197,6 +209,17 @@ CREATE TABLE `users` (
   `verified` tinyint(1) NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `years`
+--
+
+CREATE TABLE `years` (
+  `id` smallint(6) NOT NULL,
+  `year` year(4) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
 --
 -- Indexes for dumped tables
 --
@@ -206,6 +229,13 @@ CREATE TABLE `users` (
 --
 ALTER TABLE `departments`
   ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `favorite_tickets`
+--
+ALTER TABLE `favorite_tickets`
+  ADD KEY `fk_favorite_tickets_user_users_id` (`user`),
+  ADD KEY `favorite_tickets_ticket_tickets_id` (`ticket`);
 
 --
 -- Indexes for table `messages`
@@ -257,7 +287,7 @@ ALTER TABLE `tickets`
   ADD KEY `fk_tickets_department_departments_id` (`department`),
   ADD KEY `fk_tickets_handledby_users_id` (`handled_by`),
   ADD KEY `fk_tickets_priority_priorities_id` (`priority`),
-  ADD KEY `fk_tickets_status_statuses_id` (`status`);
+  ADD KEY `fk_tickets_statusId_statuses_id` (`statusId`) USING BTREE;
 
 --
 -- Indexes for table `ticket_attachments`
@@ -275,6 +305,13 @@ ALTER TABLE `users`
   ADD KEY `fk_users_departmentid_departments_id` (`department_id`);
 
 --
+-- Indexes for table `years`
+--
+ALTER TABLE `years`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `year` (`year`);
+
+--
 -- AUTO_INCREMENT for dumped tables
 --
 
@@ -282,7 +319,7 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `departments`
 --
 ALTER TABLE `departments`
-  MODIFY `id` tinyint(4) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` tinyint(4) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT for table `messages`
@@ -339,15 +376,28 @@ ALTER TABLE `users`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `years`
+--
+ALTER TABLE `years`
+  MODIFY `id` smallint(6) NOT NULL AUTO_INCREMENT;
+
+--
 -- Constraints for dumped tables
 --
+
+--
+-- Constraints for table `favorite_tickets`
+--
+ALTER TABLE `favorite_tickets`
+  ADD CONSTRAINT `favorite_tickets_ticket_tickets_id` FOREIGN KEY (`ticket`) REFERENCES `tickets` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_favorite_tickets_user_users_id` FOREIGN KEY (`user`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Constraints for table `messages`
 --
 ALTER TABLE `messages`
-  ADD CONSTRAINT `fk_messages_ticket_tickets_id` FOREIGN KEY (`ticket`) REFERENCES `tickets` (`id`),
-  ADD CONSTRAINT `fk_messages_user_users_id` FOREIGN KEY (`user`) REFERENCES `users` (`id`);
+  ADD CONSTRAINT `fk_messages_ticket_tickets_id` FOREIGN KEY (`ticket`) REFERENCES `tickets` (`id`) ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_messages_user_users_id` FOREIGN KEY (`user`) REFERENCES `users` (`id`) ON UPDATE CASCADE;
 
 --
 -- Constraints for table `message_attachments`
@@ -370,13 +420,13 @@ ALTER TABLE `tickets`
   ADD CONSTRAINT `fk_tickets_department_departments_id` FOREIGN KEY (`department`) REFERENCES `departments` (`id`),
   ADD CONSTRAINT `fk_tickets_handledby_users_id` FOREIGN KEY (`handled_by`) REFERENCES `users` (`id`),
   ADD CONSTRAINT `fk_tickets_priority_priorities_id` FOREIGN KEY (`priority`) REFERENCES `priorities` (`id`),
-  ADD CONSTRAINT `fk_tickets_status_statuses_id` FOREIGN KEY (`status`) REFERENCES `statuses` (`id`);
+  ADD CONSTRAINT `fk_tickets_statusId_statuses_id` FOREIGN KEY (`statusId`) REFERENCES `statuses` (`id`);
 
 --
 -- Constraints for table `ticket_attachments`
 --
 ALTER TABLE `ticket_attachments`
-  ADD CONSTRAINT `fk_ticketattachments_ticket_tickets_id` FOREIGN KEY (`ticket`) REFERENCES `tickets` (`id`);
+  ADD CONSTRAINT `fk_ticketattachments_ticket_tickets_id` FOREIGN KEY (`ticket`) REFERENCES `tickets` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Constraints for table `users`

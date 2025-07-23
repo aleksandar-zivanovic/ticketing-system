@@ -51,4 +51,20 @@ abstract class BaseModel
 
         return $names;
     }
+
+    /**
+     * Checks if a record exists in a table.
+     * 
+     * @param string $table Name of the table.
+     * @param string $column Name of the table's column.
+     * @param int|string $record Value of the record.
+     * 
+     * @return bool True if exists, false if doesn't exist
+     */
+    protected function checkTheRecordExists(string $table, string $column, int|string $record): bool
+    {
+        $records = $this->getAllNames($table, $column);
+
+        return in_array($record, $records);
+    }
 }

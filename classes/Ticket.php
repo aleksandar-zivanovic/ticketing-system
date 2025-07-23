@@ -6,9 +6,6 @@ class Ticket extends BaseModel
     public string $title;
     public string $description;
     public string $url;
-    public string|int $day;
-    public string|int $month;
-    public string|int $year;
     public int $departmentId;
     public int $priorityId;
     public int $statusId;
@@ -28,7 +25,7 @@ class Ticket extends BaseModel
     /**
      * Collects and sanitizes data from the form for creating a new ticket.
      */
-    public function collectTicketData(): void 
+    public function collectTicketData(): void
     {
         // Validates the URL from the form input.
         $url = cleanString(filter_input(INPUT_POST, "error_page", FILTER_SANITIZE_URL));
@@ -39,9 +36,6 @@ class Ticket extends BaseModel
         $this->url = $url;
         $this->title = cleanString(filter_input(INPUT_POST, "error_title", FILTER_DEFAULT));
         $this->description = cleanString(filter_input(INPUT_POST, "error_description", FILTER_DEFAULT));
-        $this->day = date("d");
-        $this->month = date("m");
-        $this->year = date("Y");
         $this->departmentId = cleanString(filter_input(INPUT_POST, "department", FILTER_SANITIZE_NUMBER_INT));
         $this->priorityId = cleanString(filter_input(INPUT_POST, "priority", FILTER_SANITIZE_NUMBER_INT));
         $this->statusId = 1;
@@ -57,13 +51,10 @@ class Ticket extends BaseModel
         $conn = $this->getConn()->connect();
 
         try {
-            $query = "INSERT INTO tickets (created_year, created_month, created_day, department, created_by, priority, statusId, title, body, url) " .
-            "VALUES(:cy, :cm, :cd, :de, :us, :pr, :st, :tt, :bd, :ul)";
+            $query = "INSERT INTO tickets (department, created_by, priority, statusId, title, body, url) " .
+                "VALUES(:de, :us, :pr, :st, :tt, :bd, :ul)";
 
             $stmt = $conn->prepare($query);
-            $stmt->bindValue(":cy", $this->year, PDO::PARAM_INT);
-            $stmt->bindValue(":cm", $this->month, PDO::PARAM_INT);
-            $stmt->bindValue(":cd", $this->day, PDO::PARAM_INT);
             $stmt->bindValue(":de", $this->departmentId, PDO::PARAM_INT);
             $stmt->bindValue(":us", $this->userId, PDO::PARAM_INT);
             $stmt->bindValue(":pr", $this->priorityId, PDO::PARAM_INT);
@@ -73,6 +64,9 @@ class Ticket extends BaseModel
             $stmt->bindValue(":ul", $this->url, PDO::PARAM_STR);
             $stmt->execute();
             $ticketId = (int) $conn->lastInsertId();
+
+            // Add the year in `years` table.
+            $this->addCurrentYear();
 
             // Proccesses files if they are attached in form:
             if ($_FILES['error_images']['error'][0] != 4) {
@@ -90,6 +84,16 @@ class Ticket extends BaseModel
 
             throw new \RuntimeException("createTicket method query execution failed");
         }
+    }
+
+    /**
+     * Inserts a year in 'years' table.
+     */
+    private function addCurrentYear(): void
+    {
+        require_once 'Year.php';
+        $yearInstance = new Year();
+        $yearInstance->createYear(date("Y")); // Add the year in `years` table.
     }
 
     /**
@@ -111,15 +115,14 @@ class Ticket extends BaseModel
      * @throws Exception If there is a PDOException while executing the SQL query.
      */
     public function fetchAllTickets(
-        array $allowedValues, 
-        string $orderBy = "newest", 
-        ?string $sortBy = null, 
-        int $limit = 0, 
-        bool $images = true, 
-        ?int $userId = null, 
+        array $allowedValues,
+        string $orderBy = "newest",
+        ?string $sortBy = null,
+        int $limit = 0,
+        bool $images = true,
+        ?int $userId = null,
         bool $handledByMe = false
-    ): array
-    {
+    ): array {
         // Validates sorting and ordering values and sets $table value.
         $table = $this->validateSortingAndOrdering($allowedValues, $orderBy, $sortBy);
 
@@ -143,7 +146,7 @@ class Ticket extends BaseModel
 
                 $queryJoin = " LEFT JOIN ticket_attachments ta on t.id = ta.ticket";
             }
-            
+
             $query .= " FROM tickets t";
 
             // Adding joins for departments, priorities, statuses and users
@@ -152,7 +155,7 @@ class Ticket extends BaseModel
                         LEFT JOIN statuses s ON t.statusId = s.id 
                         LEFT JOIN users u ON t.handled_by = u.id 
                     ";
-        
+
             // If $images is true, includes the join for attachments table
             if ($images) $query .= $queryJoin;
 
@@ -167,7 +170,7 @@ class Ticket extends BaseModel
                         break;
                     case 'departments':
                         $tableAllias = "d";
-                    default: 
+                    default:
                         $tableAllias = "u";
                 }
 
@@ -231,13 +234,12 @@ class Ticket extends BaseModel
      * Counts all tickets in the database by criteria.
      */
     public function countAllTickets(
-        array $allowedValues, 
-        string $orderBy = "newest", 
-        ?string $sortBy = null, 
-        ?int $userId = null, 
+        array $allowedValues,
+        string $orderBy = "newest",
+        ?string $sortBy = null,
+        ?int $userId = null,
         bool $handledByMe = false
-    ): int
-    {
+    ): int {
         // Validates sorting and ordering values and sets $table value.
         $table = $this->validateSortingAndOrdering($allowedValues, $orderBy, $sortBy);
 
@@ -260,7 +262,7 @@ class Ticket extends BaseModel
                         $tableAllias = "d";
                         $query .= " LEFT JOIN departments d ON t.department = d.id";
                         break;
-                    default: 
+                    default:
                         $tableAllias = "u";
                 }
 
@@ -290,7 +292,7 @@ class Ticket extends BaseModel
             // Prepares and executes the SQL query
             $stmt = $this->getConn()->connect()->prepare($query);
             $stmt->execute();
-            
+
             // Returns the fetched result set
             return $stmt->fetchColumn();
         } catch (\PDOException $e) {
@@ -361,11 +363,10 @@ class Ticket extends BaseModel
      * @throws DomainException If the provided $sortBy or $orderBy value is not in the allowed values.
      */
     private function validateSortingAndOrdering(
-        array $allowedValues, 
-        string $orderBy = "newest", 
+        array $allowedValues,
+        string $orderBy = "newest",
         ?string $sortBy = null
-    ): string|null
-    {
+    ): string|null {
         // Checks if the $sortBy value is valid.
         $allowedSort = false;
         if ($sortBy === null || $sortBy === "all") {
@@ -410,31 +411,34 @@ class Ticket extends BaseModel
         }
 
         if ($action === "close") {
-            $this->day = date("d");
-            $this->month = date("m");
-            $this->year = date("Y");
             $curentDate = date("Y-m-d H:i:s");
             $curentDateSql = "'{$curentDate}'";
             $statusId = 3;
         }
 
         if ($action === "reopen") {
-            $this->day = $this->month = $this->year = $curentDateSql = "NULL";
+            $curentDateSql = "NULL";
             $statusId = 2;
         }
 
         try {
-            $sql = "UPDATE tickets SET statusId = :si, closed_date = {$curentDateSql}, closed_year = {$this->year}, closed_month = {$this->month}, closed_day = {$this->day} WHERE id = :tid";
+            $sql = "UPDATE tickets SET statusId = :si, closed_date = {$curentDateSql} WHERE id = :tid";
             $stmt = $this->getConn()->connect()->prepare($sql);
             $stmt->bindValue(":si", $statusId, PDO::PARAM_INT);
             $stmt->bindValue(":tid", $ticketId, PDO::PARAM_INT);
-
             $stmt->execute();
-            return $stmt->rowCount() === 1;
+            if ($stmt->rowCount() === 1) {
+                if ($action === "close") {
+                    // Add the year in `years` table.
+                    $this->addCurrentYear();
+                }
+                return true;
+            }
+            return false;
         } catch (\PDOException $e) {
             // Logs the error and throws an exception if a PDOException occurs.
             logError(
-                "closeReopenTicket() metod error: Failed to {$action} the ticket", 
+                "closeReopenTicket() metod error: Failed to {$action} the ticket",
                 ['message' => $e->getMessage(), 'code' => $e->getCode()]
             );
             throw new Exception("Something went wrong. Try again to {$action} ticket.");
@@ -447,7 +451,7 @@ class Ticket extends BaseModel
      * 
      * @param int|string|array $ticketId Ticket ID(s) for delation.
      */
-    public function deleteTicketRow($id): bool 
+    public function deleteTicketRow($id): bool
     {
         // Convert string to array type.
         if (is_string($id)) $id = explode(",", $id);
@@ -456,7 +460,7 @@ class Ticket extends BaseModel
         if (is_int($id)) $id = [$id];
 
         require_once "helpers/IdValidator.php";
-        list($ids, $params) =IdValidator::prepareIdsForQuery($id);
+        list($ids, $params) = IdValidator::prepareIdsForQuery($id);
 
         try {
             $sql = "DELETE FROM tickets WHERE id IN (" . implode(",", $params) . ")";
@@ -469,7 +473,7 @@ class Ticket extends BaseModel
         } catch (\PDOException $e) {
             // Logs the error and throws an exception if a PDOException occurs.
             logError(
-                "deleteTicketRow() metod error: Failed to delete the ticket from the database", 
+                "deleteTicketRow() metod error: Failed to delete the ticket from the database",
                 ['message' => $e->getMessage(), 'code' => $e->getCode()]
             );
             throw new Exception("Something went wrong with deleting the ticket. Try again.");
@@ -482,23 +486,23 @@ class Ticket extends BaseModel
      * @param int $id ID of the ticket whose attachment(s) should be deleted.
      * @return bool Returns true on success. Throws an exception on failure.
      */
-    public function deleteTicket(int $id): bool 
+    public function deleteTicket(int $id): bool
     {
         // Get ticket data.
         $ticket = $this->fetchTicketDetails($id);
 
         // Validate user's deletion premission. 
         if (
-            $ticket["statusId"] !== 1 && 
-            $ticket["handled_by"] != null && 
-            !empty($allMessages) && 
+            $ticket["statusId"] !== 1 &&
+            $ticket["handled_by"] != null &&
+            !empty($allMessages) &&
             ($ticket["created_by"] !== trim($_SESSION['user_id']) && trim($_SESSION["user_role"] !== "admin"))
         ) {
             $panel = $ticket["created_by"] !== trim($_SESSION['user_id']) && trim($_SESSION["user_role"] === "admin") ? "admin" : "user";
             $redirectionUrl = $panel === "admin" ? "../public/admin/admin-ticket-listing.php" : "../public/user/user-ticket-listing.php";
             die(header("Location: {$redirectionUrl}"));
         }
-        
+
         // Delete attachments from the database and the server.
         if (!empty($ticket["attachment_id"])) {
             require_once 'Attachment.php';
@@ -541,7 +545,7 @@ class Ticket extends BaseModel
      * @return bool True on success, otherwise throws an exception.
      * @throws Exception If the assignment fails.
      */
-    public function takeTicket(int $ticketId): bool 
+    public function takeTicket(int $ticketId): bool
     {
         $adminId = trim($_SESSION["user_role"]) === "admin" ? trim($_SESSION["user_id"]) : false;
         if ($adminId === false) die(header("Location: ../user/user-ticket-listing.php"));
@@ -554,7 +558,7 @@ class Ticket extends BaseModel
             return true;
         } catch (\PDOException $e) {
             logError(
-                "takeTicket() metod error: Failed to assign the ticket (ID: {$ticketId}) the administrator (ID: {$adminId}).", 
+                "takeTicket() metod error: Failed to assign the ticket (ID: {$ticketId}) the administrator (ID: {$adminId}).",
                 ['message' => $e->getMessage(), 'code' => $e->getCode()]
             );
             throw new Exception("Something went wrong. The ticket is not assigned to the administrator.");
@@ -583,7 +587,7 @@ class Ticket extends BaseModel
      *     Each month key maps to an array of values of mixed types (int, string, bool, null)
      *     corresponding to the specified parameter.
      */
-    public static function getMonthlyTicketsByParameter(string $param, array $allTicketsData, int $year): array 
+    public static function getMonthlyTicketsByParameter(string $param, array $allTicketsData, int $year): array
     {
         $months = [
             'Jan' => '01',
@@ -639,7 +643,7 @@ class Ticket extends BaseModel
      * @return array Array with month abbreviations as keys.
      *     Each month key maps specified parameter name as a key and integer as value.
      */
-    public static function countMonthlyTicketsByParameter(string $param, array $allTicketsData, int $year): array 
+    public static function countMonthlyTicketsByParameter(string $param, array $allTicketsData, int $year): array
     {
         $counts = [];
         $tickets = static::getMonthlyTicketsByParameter($param, $allTicketsData, $year);
