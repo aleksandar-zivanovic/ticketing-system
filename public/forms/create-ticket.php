@@ -45,7 +45,7 @@ require_once '../../classes/Ticket.php';
                 $data = $department->getAllDepartments();
                 renderingSelectOption("Choose department", "department", $data);
 
-                // choose department
+                // choose priority
                 $ticket = new Ticket();
                 $data = $ticket->getAllPriorities();
                 renderingSelectOption("Choose priority", "priority", $data);
