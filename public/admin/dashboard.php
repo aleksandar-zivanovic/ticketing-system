@@ -1,4 +1,7 @@
-<?php require_once '../../helpers/admin/dashboard_controller.php'; ?>
+<?php
+$panel = "admin";
+require_once '../../helpers/admin/dashboard_controller.php';
+?>
 
 <!DOCTYPE html>
 <html lang="en" class="">
@@ -23,7 +26,7 @@
   <div id="app">
 
     <?php
-    $panel = "admin";
+
     // import header navigation bar
     include_once '../../partials/_navigation-bar.php';
 
@@ -59,7 +62,7 @@
         foreach ($arrayTables as $category  => $items) {
           $pieces = explode(' ', $category);
           $columnName = array_pop($pieces);
-            include '../../partials/_admin_dashboard_table.php';
+          include '../../partials/_admin_dashboard_table.php';
         }
         ?>
     </section>
