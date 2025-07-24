@@ -19,9 +19,14 @@ $allowedValues = buildAllowedTicketValues($allTicketFilterData);
 
 // Calls fetchAllTickets() method
 $ticket = new Ticket();
-$allTicketsData = $ticket->fetchAllTickets(allowedValues: $allowedValues, images: false);
-$handledTicketsData = $ticket->fetchAllTickets(allowedValues: $allowedValues, images: false, handledByMe: true);
-unset($ticket);
+if ($panel === "admin") {
+    $allTicketsData = $ticket->fetchAllTickets(allowedValues: $allowedValues, images: false);
+    $handledTicketsData = $ticket->fetchAllTickets(allowedValues: $allowedValues, images: false, handledByMe: true);
+    unset($ticket);
+} else {
+    $allTicketsData = $ticket->fetchAllTickets(allowedValues: $allowedValues, images: false, userId: cleanString($_SESSION["user_id"]));
+}
+
 
 // Counts all existing tickets and their statuses
 $allTicketsCountStatuses   = Status::countStatuses($allTicketsData);
@@ -30,11 +35,13 @@ $countAllInProgressTickets = $allTicketsCountStatuses["in_progress"];
 $countAllSolvedTickets     = $allTicketsCountStatuses["closed"];
 $countAllWaitingTickets    = $allTicketsCountStatuses["waiting"];;
 
-// Counts tickets handled by the admin and their statuses
-$handledTicketsCountStatuses   = Status::countStatuses($handledTicketsData);
-$countHandledTickets           = $handledTicketsCountStatuses["all"];
-$countHandledInProgressTickets = $handledTicketsCountStatuses["in_progress"];
-$countHandledSolvedTickets     = $handledTicketsCountStatuses["closed"];
+if ($panel === "admin") {
+    // Counts tickets handled by the admin and their statuses
+    $handledTicketsCountStatuses   = Status::countStatuses($handledTicketsData);
+    $countHandledTickets           = $handledTicketsCountStatuses["all"];
+    $countHandledInProgressTickets = $handledTicketsCountStatuses["in_progress"];
+    $countHandledSolvedTickets     = $handledTicketsCountStatuses["closed"];
+}
 
 // TODO: Make dropdown button for $year value
 $year = 2025;
@@ -43,9 +50,11 @@ $year = 2025;
 $countCreatedTicketsByMonths = Ticket::countMonthlyTicketsByParameter("created_date", $allTicketsData, $year);
 $countSolvedTicketsByMonths  = Ticket::countMonthlyTicketsByParameter("closed_date", $allTicketsData, $year);
 
-// Counts tickets handled by the admin for the chart
-$countHandledCreatedTicketsByMonths = Ticket::countMonthlyTicketsByParameter("created_date", $handledTicketsData, $year);
-$countHandledSolvedTicketsByMonths  = Ticket::countMonthlyTicketsByParameter("closed_date", $handledTicketsData, $year);
+if ($panel === "admin") {
+    // Counts tickets handled by the admin for the chart
+    $countHandledCreatedTicketsByMonths = Ticket::countMonthlyTicketsByParameter("created_date", $handledTicketsData, $year);
+    $countHandledSolvedTicketsByMonths  = Ticket::countMonthlyTicketsByParameter("closed_date", $handledTicketsData, $year);
+}
 
 // Formats all tickets data for chart
 $foramtedAllData = formatDataForChartjs($countCreatedTicketsByMonths, $countSolvedTicketsByMonths);
@@ -53,11 +62,13 @@ $chartAllData["labels"] = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Avg
 $chartAllData["datasets"][0] = ["label" => "Opened", "data" => $foramtedAllData["opened"]];
 $chartAllData["datasets"][1] = ["label" => "Closed", "data" => $foramtedAllData["closed"]];
 
-// Formats chart data for tickets handled by the admin
-$foramtedHandledData = formatDataForChartjs($countHandledCreatedTicketsByMonths, $countHandledSolvedTicketsByMonths);
-$chartHandledData["labels"] = $chartAllData["labels"];
-$chartHandledData["datasets"][0] = ["label" => "Opened", "data" => $foramtedHandledData["opened"]];
-$chartHandledData["datasets"][1] = ["label" => "Closed", "data" => $foramtedHandledData["closed"]];
+if ($panel === "admin") {
+    // Formats chart data for tickets handled by the admin
+    $foramtedHandledData = formatDataForChartjs($countHandledCreatedTicketsByMonths, $countHandledSolvedTicketsByMonths);
+    $chartHandledData["labels"] = $chartAllData["labels"];
+    $chartHandledData["datasets"][0] = ["label" => "Opened", "data" => $foramtedHandledData["opened"]];
+    $chartHandledData["datasets"][1] = ["label" => "Closed", "data" => $foramtedHandledData["closed"]];
+}
 
 // Prepares data for departments stats table
 $department = new Department();
@@ -82,36 +93,38 @@ $priorityNames = $priority->getAllPriorityNames();
 unset($priority);
 $arrayTables["Tickets by priorities"] = Ticket::countDataForDashboardCard($allTicketsData, $priorityNames, "priority_name");
 
-// Prepares data for users stats table
-$user = new User();
-$allUsers = $user->getAllUsers();
-unset($user);
+if ($panel === "admin") {
+    // Prepares data for users stats table
+    $user = new User();
+    $allUsers = $user->getAllUsers();
+    unset($user);
 
-// Set array of user ID's as and tickets as value 
-$ticketsPerUsers = [];
-foreach ($allTicketsData as $singleTicket) {
-    if (!in_array($singleTicket["created_by"], $ticketsPerUsers)) {
-        $ticketsPerUsers[$singleTicket["created_by"]][] = $singleTicket["id"];
-    }
-}
-unset($allTicketsData); // Frees up memory after processing all tickets
-
-// Sort users by ticket count in descending order, excluding users with zero tickets
-arsort($ticketsPerUsers);
-
-$countTicketsPerUsers = [];
-foreach ($ticketsPerUsers as $creator => $tickets) {
-    foreach ($allUsers as $aUser) {
-        if ($creator === $aUser["id"]) {
-            // TODO: Instead of <a href='#'> add a real peath to the list of all user's tickets
-            $countTicketsPerUsers[] = [
-                "ID: {$creator} | Name: {$aUser["name"]} {$aUser["surname"]}", "<a href='#'>" . count($tickets) . "</a>"
-            ];
-            break;
+    // Set array of user ID's as and tickets as value 
+    $ticketsPerUsers = [];
+    foreach ($allTicketsData as $singleTicket) {
+        if (!in_array($singleTicket["created_by"], $ticketsPerUsers)) {
+            $ticketsPerUsers[$singleTicket["created_by"]][] = $singleTicket["id"];
         }
     }
-}
-unset($allUsers);  // Frees up memory from all users' data
+    unset($allTicketsData); // Frees up memory after processing all tickets
 
-$arrayTables["Tickets by users"] = $countTicketsPerUsers;
+    // Sort users by ticket count in descending order, excluding users with zero tickets
+    arsort($ticketsPerUsers);
+
+    $countTicketsPerUsers = [];
+    foreach ($ticketsPerUsers as $creator => $tickets) {
+        foreach ($allUsers as $aUser) {
+            if ($creator === $aUser["id"]) {
+                // TODO: Instead of <a href='#'> add a real peath to the list of all user's tickets
+                $countTicketsPerUsers[] = [
+                    "ID: {$creator} | Name: {$aUser["name"]} {$aUser["surname"]}", "<a href='#'>" . count($tickets) . "</a>"
+                ];
+                break;
+            }
+        }
+    }
+    unset($allUsers);  // Frees up memory from all users' data
+
+    $arrayTables["Tickets by users"] = $countTicketsPerUsers;
+}
 ?>
