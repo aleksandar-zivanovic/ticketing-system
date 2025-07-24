@@ -5,6 +5,7 @@ require_once '../../classes/Department.php';
 require_once '../../classes/Priority.php';
 require_once '../../classes/Status.php';
 require_once '../../classes/User.php';
+require_once '../../classes/Year.php';
 require_once '../../helpers/functions.php';
 $page = "Dashboard";
 
@@ -43,17 +44,27 @@ if ($panel === "admin") {
     $countHandledSolvedTickets     = $handledTicketsCountStatuses["closed"];
 }
 
-// TODO: Make dropdown button for $year value
-$year = 2025;
+// Prepare data for dropdown button
+$year = new Year();
+$years = array_reverse($year->getAllYears());
+if (isset($_GET["year"]) && !empty($_GET["year"])) {
+    $chosenYear = filter_input(INPUT_GET, "year", FILTER_VALIDATE_INT);
+    if (!$chosenYear) {
+        throw new InvalidArgumentException("Wrong year parameter!");
+    }
+} else {
+    // Sets highest year in the array
+    $chosenYear = $years[0];
+}
 
 // Counts all tickets count for chart
-$countCreatedTicketsByMonths = Ticket::countMonthlyTicketsByParameter("created_date", $allTicketsData, $year);
-$countSolvedTicketsByMonths  = Ticket::countMonthlyTicketsByParameter("closed_date", $allTicketsData, $year);
+$countCreatedTicketsByMonths = Ticket::countMonthlyTicketsByParameter("created_date", $allTicketsData, $chosenYear);
+$countSolvedTicketsByMonths  = Ticket::countMonthlyTicketsByParameter("closed_date", $allTicketsData, $chosenYear);
 
 if ($panel === "admin") {
     // Counts tickets handled by the admin for the chart
-    $countHandledCreatedTicketsByMonths = Ticket::countMonthlyTicketsByParameter("created_date", $handledTicketsData, $year);
-    $countHandledSolvedTicketsByMonths  = Ticket::countMonthlyTicketsByParameter("closed_date", $handledTicketsData, $year);
+    $countHandledCreatedTicketsByMonths = Ticket::countMonthlyTicketsByParameter("created_date", $handledTicketsData, $chosenYear);
+    $countHandledSolvedTicketsByMonths  = Ticket::countMonthlyTicketsByParameter("closed_date", $handledTicketsData, $chosenYear);
 }
 
 // Formats all tickets data for chart
@@ -127,4 +138,3 @@ if ($panel === "admin") {
 
     $arrayTables["Tickets by users"] = $countTicketsPerUsers;
 }
-?>
