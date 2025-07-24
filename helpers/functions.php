@@ -1,8 +1,15 @@
 <?php
 
+/**
+ * Cleans string to prevent XSS attack.
+ * 
+ * @param string $string String to sanitize.
+ * 
+ * @return string
+ */
 function cleanString(string $string): string
 {
-    return htmlspecialchars(trim($string));
+    return htmlspecialchars(trim($string), ENT_QUOTES, 'UTF-8');
 }
 
 function persist_input(string $sessionName): void 
