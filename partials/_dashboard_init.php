@@ -1,5 +1,6 @@
 <?php
 require_once '../../helpers/admin/dashboard_controller.php';
+require_once '../../config/features-config.php';
 ?>
 
 <!DOCTYPE html>
@@ -17,6 +18,7 @@ require_once '../../helpers/admin/dashboard_controller.php';
     <link rel="stylesheet" href="../css/font-awesome.min.css">
     <!-- Chart.js-->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
 
 </head>
 
@@ -75,6 +77,12 @@ require_once '../../helpers/admin/dashboard_controller.php';
             renderChart("Tickets you are handling", "line", $chartHandledData);
         }
         ?>
+        <div class="card has-table grid grid-cols-1 gap-6 lg:grid-cols-2 mb-6">
+            <?php
+            renderChart("Tickets per department", TICKETS_PER_DEPARTMENT_CHART_TYPE, $chartDepartmentdData);
+            renderChart("Tickets per admin", TICKETS_PER_ADMIN_CHART_TYPE, $chartPerAdminData);
+            ?>
+        </div>
 
         <!-- Tables -->
         <div class="card has-table grid grid-cols-1 gap-6 lg:grid-cols-2 mb-6">
@@ -86,13 +94,12 @@ require_once '../../helpers/admin/dashboard_controller.php';
             }
             ?>
             </section>
-
-            <?php
-
-            // import footer
-            include_once '../../partials/_footer.php';
-            ?>
         </div>
+
+        <?php
+        // import footer
+        include_once '../../partials/_footer.php';
+        ?>
 
 </body>
 

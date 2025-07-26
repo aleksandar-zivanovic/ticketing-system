@@ -672,7 +672,7 @@ class Ticket extends BaseModel
      * 
      * @return array Array of array pairs of ticketFilter names and ticket counts for every ticketFilter name.
      */
-    public static function countDataForDashboardCard(array $data, array $filters, string $ticketFilter): array
+    public static function countDataForDashboardTable(array $data, array $filters, string $ticketFilter): array
     {
         $ticketsByFilters = [];
         // Prepares array of tickets sorted by appropriate filters
