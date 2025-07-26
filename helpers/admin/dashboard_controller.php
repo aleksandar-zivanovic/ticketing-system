@@ -7,6 +7,7 @@ require_once '../../classes/Status.php';
 require_once '../../classes/User.php';
 require_once '../../classes/Year.php';
 require_once '../../helpers/functions.php';
+require_once '../../helpers/chart_helpers.php';
 $page = "Dashboard";
 
 // Initializes allowed filter values for tickets
@@ -27,7 +28,6 @@ if ($panel === "admin") {
 } else {
     $allTicketsData = $ticket->fetchAllTickets(allowedValues: $allowedValues, images: false, userId: cleanString($_SESSION["user_id"]));
 }
-
 
 // Counts all existing tickets and their statuses
 $allTicketsCountStatuses   = Status::countStatuses($allTicketsData);
@@ -68,14 +68,14 @@ if ($panel === "admin") {
 }
 
 // Formats all tickets data for chart
-$foramtedAllData = formatDataForChartjs($countCreatedTicketsByMonths, $countSolvedTicketsByMonths);
+$foramtedAllData = formatMonthlyDataForChartjs($countCreatedTicketsByMonths, $countSolvedTicketsByMonths);
 $chartAllData["labels"] = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Avg', 'Sep', 'Oct', 'Nov', 'Dec'];
 $chartAllData["datasets"][0] = ["label" => "Opened", "data" => $foramtedAllData["opened"]];
 $chartAllData["datasets"][1] = ["label" => "Closed", "data" => $foramtedAllData["closed"]];
 
 if ($panel === "admin") {
     // Formats chart data for tickets handled by the admin
-    $foramtedHandledData = formatDataForChartjs($countHandledCreatedTicketsByMonths, $countHandledSolvedTicketsByMonths);
+    $foramtedHandledData = formatMonthlyDataForChartjs($countHandledCreatedTicketsByMonths, $countHandledSolvedTicketsByMonths);
     $chartHandledData["labels"] = $chartAllData["labels"];
     $chartHandledData["datasets"][0] = ["label" => "Opened", "data" => $foramtedHandledData["opened"]];
     $chartHandledData["datasets"][1] = ["label" => "Closed", "data" => $foramtedHandledData["closed"]];
@@ -85,7 +85,11 @@ if ($panel === "admin") {
 $department = new Department();
 $departmentNames = $department->getAllDepartmentNames();
 unset($department);
-$arrayTables["Tickets by deparmants"] = Ticket::countDataForDashboardCard($allTicketsData, $departmentNames, "department_name");
+
+$arrayTables["Tickets by deparmants"] = Ticket::countDataForDashboardTable($allTicketsData, $departmentNames, "department_name");
+
+// Prepares data for departments chart
+$chartDepartmentdData = preparePieBarChartData($arrayTables["Tickets by deparmants"]);
 
 // Prepares data for statuses stats table
 $countAllInProgressTickets = $allTicketsCountStatuses["in_progress"];
@@ -102,39 +106,24 @@ $arrayTables["Tickets by statuses"] = [
 $priority = new Priority();
 $priorityNames = $priority->getAllPriorityNames();
 unset($priority);
-$arrayTables["Tickets by priorities"] = Ticket::countDataForDashboardCard($allTicketsData, $priorityNames, "priority_name");
+$arrayTables["Tickets by priorities"] = Ticket::countDataForDashboardTable($allTicketsData, $priorityNames, "priority_name");
+
+
+$user = new User();
+$allUsers = $user->getAllUsers();
+unset($user);
 
 if ($panel === "admin") {
-    // Prepares data for users stats table
-    $user = new User();
-    $allUsers = $user->getAllUsers();
-    unset($user);
-
-    // Set array of user ID's as and tickets as value 
-    $ticketsPerUsers = [];
-    foreach ($allTicketsData as $singleTicket) {
-        if (!in_array($singleTicket["created_by"], $ticketsPerUsers)) {
-            $ticketsPerUsers[$singleTicket["created_by"]][] = $singleTicket["id"];
-        }
-    }
-    unset($allTicketsData); // Frees up memory after processing all tickets
-
-    // Sort users by ticket count in descending order, excluding users with zero tickets
-    arsort($ticketsPerUsers);
-
-    $countTicketsPerUsers = [];
-    foreach ($ticketsPerUsers as $creator => $tickets) {
-        foreach ($allUsers as $aUser) {
-            if ($creator === $aUser["id"]) {
-                // TODO: Instead of <a href='#'> add a real peath to the list of all user's tickets
-                $countTicketsPerUsers[] = [
-                    "ID: {$creator} | Name: {$aUser["name"]} {$aUser["surname"]}", "<a href='#'>" . count($tickets) . "</a>"
-                ];
-                break;
-            }
-        }
-    }
-    unset($allUsers);  // Frees up memory from all users' data
-
-    $arrayTables["Tickets by users"] = $countTicketsPerUsers;
+    // Prepares data for tickets by creators stats table
+    $creatorsChartAndTableData = prepareChartAndTableDataByFilterAndUser($allTicketsData, $allUsers, "created_by");
+    $arrayTables["Tickets by creators"] = $creatorsChartAndTableData["table_data"];
 }
+
+// Prepares data for tickets handled by admins stats table and chart
+$adminChartAndTableData = prepareChartAndTableDataByFilterAndUser($allTicketsData, $allUsers, "handled_by");
+unset($allTicketsData); // Unsets array of all tickets data
+unset($allUsers);       // Unsets array of all users data
+$labelForTicketsPerAdmins = $panel === "admin" ? "Tickets handled by admins" : "Admins who work(ed) on your tickets";
+$arrayTables[$labelForTicketsPerAdmins] = $adminChartAndTableData["table_data"]; // Data for table
+$chartPerAdminData                      = $adminChartAndTableData["chart_data"]; // Data for chart
+?>
