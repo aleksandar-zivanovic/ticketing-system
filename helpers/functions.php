@@ -433,6 +433,6 @@ function buildAllowedTicketValues(array $allTicketFilterData): array
  */
 function renderChart(string $title, string $type, array $data): void
 {
-    $chartId = 'chart_' . uniqid();;
+    $chartId = 'chart_' . uniqid();
     include '../../partials/_admin_dashboard_chart.php';
 }
