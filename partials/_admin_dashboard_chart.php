@@ -25,7 +25,6 @@
 <script>
     const data_<?= $chartId ?> = <?php echo json_encode($data); ?>;
     const chartType_<?= $chartId ?> = "<?= $type ?>";
-    // let dashStyles_<?= $chartId ?>;
 
     if (chartType_<?= $chartId ?> === "line") {
         var dashStyles_<?= $chartId ?> = [
@@ -86,6 +85,20 @@
                             font: {
                                 size: 15,
                             },
+                            ...(chartType_<?= $chartId ?> === "pie" && {
+                                generateLabels: function(chart) {
+                                    const data = chart.data;
+                                    return data.labels.map((label, i) => {
+                                        const value = data.datasets[0].data[i];
+                                        return {
+                                            text: `${label} (${value})`,
+                                            fillStyle: data.datasets[0].backgroundColor[i],
+                                            strokeStyle: data.datasets[0].backgroundColor[i],
+                                            index: i
+                                        };
+                                    });
+                                },
+                            }),
                         },
                     },
                 }),
@@ -109,8 +122,6 @@
                         textAlign: 'center',
                     }),
                 },
-
-
             },
         },
         plugins: [ChartDataLabels],
