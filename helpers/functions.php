@@ -436,3 +436,33 @@ function renderChart(string $title, string $type, array $data): void
     $chartId = 'chart_' . uniqid();
     include '../../partials/_admin_dashboard_chart.php';
 }
+
+/**
+ * Debugs value of a variable with the chosen function.
+ * Formats display with <pre> tag.
+ * 
+ * @param mixed $variable A variable for debugging.
+ * @param string $function Built-in function you want to use for debugging.
+ *                         Allowed values are "var_dump", "var_export" and "print_r".
+ * @param bool $die Options that activate die() function.
+ * 
+ * @return void
+ */
+function dd(mixed $variable, string $function = "var_dump", bool $die = true): void 
+{
+    echo "<pre>";
+
+    if ($function === "var_dump") {
+        var_dump($variable);
+    } elseif ($function === "var_export") {
+        var_export($variable);
+    } elseif ($function === "print_r") {
+        print_r($variable);
+    } else {
+        throw new DomainException("\$function param has unallowed value. Choose `var_dump`, `var_export` or `print_r` value for it.");
+    }
+    
+    echo "</pre>";
+
+    if ($die === true) die;
+}
