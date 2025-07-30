@@ -29,6 +29,32 @@ if ($panel === "admin") {
 }
 unset($ticket);
 
+// Prepares data for average ticket resolution time stats
+if ($panel === "admin") {
+    $allClosedTickets = [];
+    $solvingTimeTotal = 0;
+    foreach ($allTicketsData as $ticketData) {
+        if ($ticketData["closed_date"]) {
+            $allClosedTickets[] = $ticketData;
+            $openedDate = new DateTime($ticketData["created_date"]);
+            $closedDate = new DateTime($ticketData["closed_date"]);
+            $solvingTimeTotal += $closedDate->getTimestamp() - $openedDate->getTimestamp();
+        }
+    }
+
+    $closedTicketsCount = count($allClosedTickets);
+
+    if ($closedTicketsCount > 0) {
+        $allSecondsPerTicket = $solvingTimeTotal / $closedTicketsCount;
+
+        $days    = floor($allSecondsPerTicket / 86400);
+        $hours   = floor(($allSecondsPerTicket % 86400) / 3600);
+        $minutes = floor(($allSecondsPerTicket % 3600) / 60);
+
+        $formatedTime = $days > 0 ? "$days d $hours h $minutes m" :"$hours h $minutes m";
+    }
+}
+
 // Counts all existing tickets and their statuses
 $allTicketsCountStatuses   = Status::countStatuses($allTicketsData);
 $countAllTickets           = $allTicketsCountStatuses["all"];
@@ -130,4 +156,3 @@ if ($panel === "admin" || ($panel === "user" && $countAllTickets > 0)) {
     $chartPerAdminData                      = $adminChartAndTableData["chart_data"]; // Data for chart
 
 }
-?>

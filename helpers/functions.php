@@ -340,14 +340,14 @@ function getPanel(): string
  * @param string $icon. Icon code for Materila Design Icons. 
  * 
  * @param string $label      Name of the ticket category shown on the card (e.g. "Solved").
- * @param int    $count      Total number of tickets that belong to the given $label category.
+ * @param int|string $count  Value shown on the card.
  * @param string $iconColor  Tailwind CSS class for icon color (e.g. "text-blue-500").
  * @param string $icon       Material Design Icon class (e.g. "mdi-ticket").
  */
 
 function renderDashboardCard (
     string $label, 
-    int $count, 
+    int|string $count, 
     string $iconColor, 
     string $icon)
 {

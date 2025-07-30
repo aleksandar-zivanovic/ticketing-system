@@ -46,10 +46,28 @@ require_once '../../config/features-config.php';
             // Statistic for tickets handled by the administrator
             $cardGroup = "handling";
             require '../../helpers/admin/dashboard_cards.php';
+
+            // Average ticket resolution time card
+            if ($closedTicketsCount > 0) {
+        ?>
+                <header class="card-header">
+                    <p class="card-header-title text-xl">
+                        Average ticket resolution time:
+                    </p>
+                </header>
+                <div class="grid gap-6 grid-cols-1 md:grid-cols-2 mb-6">
+                    <?php
+                    renderDashboardCard("Aver. resolution time", $formatedTime, "text-yellow-500", "mdi-timer-check-outline");
+                    ?>
+                </div>
+
+            <?php
+            } // End $closedTicketsCount > 0
         }
 
-        if ($panel === "admin" || ($panel === "user" && $countAllTickets > 0)) { // Awoids rendering tables and chart for no tickets for users
-        ?>
+        // Awoids rendering tables and chart for no tickets for users
+        if ($panel === "admin" || ($panel === "user" && $countAllTickets > 0)) {
+            ?>
 
             <!-- Dropdown button -->
             <section class="is-hero-bar">
