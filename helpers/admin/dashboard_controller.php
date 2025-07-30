@@ -24,10 +24,10 @@ $ticket = new Ticket();
 if ($panel === "admin") {
     $allTicketsData = $ticket->fetchAllTickets(allowedValues: $allowedValues, images: false);
     $handledTicketsData = $ticket->fetchAllTickets(allowedValues: $allowedValues, images: false, handledByMe: true);
-    unset($ticket);
 } else {
     $allTicketsData = $ticket->fetchAllTickets(allowedValues: $allowedValues, images: false, userId: cleanString($_SESSION["user_id"]));
 }
+unset($ticket);
 
 // Counts all existing tickets and their statuses
 $allTicketsCountStatuses   = Status::countStatuses($allTicketsData);
