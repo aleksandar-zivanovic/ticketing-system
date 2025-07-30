@@ -4,8 +4,8 @@ $lastMessage = end($allMessages);
 foreach ($allMessages as $message):
 
     // Determinate whether the message creator is also the ticket creator or not
-    $messageCreator = $message["user"] === $ticket["created_by"] ? "ticketCreator" : 
-        ($message["user"] === $ticket["handled_by"] ? "ticketAdmin" : "otherAdmin");
+    $messageCreator = $message["user"] === $theTicket["created_by"] ? "ticketCreator" : 
+        ($message["user"] === $theTicket["handled_by"] ? "ticketAdmin" : "otherAdmin");
     $position = $messageCreator === "ticketCreator" ? "start" : "end";
 
     // Selects the message background color by a user's role in the ticket
@@ -34,7 +34,7 @@ foreach ($allMessages as $message):
                 
                 // Editing message
                 if (
-                    $ticket["statusId"] !== 3 && 
+                    $theTicket["statusId"] !== 3 && 
                     $lastMessage["id"] === $message["id"] && 
                     $message["user"] === $_SESSION['user_id']
                 ) {

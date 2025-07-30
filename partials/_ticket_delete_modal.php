@@ -5,10 +5,10 @@
         <p class="modal-card-title">Delete Ticket</p>
       </header>
       <section class="modal-card-body">
-        <p>Are you sure you want to delete the ticket <span class="font-bold italic ">"<?= $ticket['title'] ?>"</span>?</p>
+        <p>Are you sure you want to delete the ticket <span class="font-bold italic ">"<?= $theTicket['title'] ?>"</span>?</p>
         <div class="p-8">
           <form method="POST" action="../actions/process_delete_ticket.php">
-            <input type="hidden" name="ticket_id" value=<?= $ticket['id'] ?>>
+            <input type="hidden" name="ticket_id" value=<?= $theTicket['id'] ?>>
             <div class="field grouped">
               <div class="control w-full">
                 <input type="submit" name="delete_ticket" value="Delete Ticket" class="button red w-full">

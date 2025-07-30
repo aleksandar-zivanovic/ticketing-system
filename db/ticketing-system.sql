@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jul 23, 2025 at 11:01 PM
+-- Generation Time: Jul 30, 2025 at 06:36 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -173,6 +173,8 @@ CREATE TABLE `tickets` (
   `handled_by` int(11) DEFAULT NULL,
   `priority` tinyint(4) NOT NULL,
   `statusId` tinyint(4) NOT NULL,
+  `was_reopened` tinyint(1) NOT NULL DEFAULT 0,
+  `closing_type` varchar(10) DEFAULT NULL,
   `title` varchar(255) NOT NULL,
   `body` text NOT NULL,
   `url` varchar(255) NOT NULL

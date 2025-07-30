@@ -11,6 +11,15 @@ class Ticket extends BaseModel
     public int $statusId;
     public int $userId;
     public ?array $images;
+    public array $closingTypes = [
+        "normal",    // Ticket was resolved and closed in the usual way.
+        "abandoned", // Ticket was closed automatically due to no response in a set period of time.
+        "canceled",  // Ticket was closed because the user or admin decided it’s no longer needed.
+        "invalid",   // Ticket was closed because it was not valid (e.g. wrong issue, mistake).
+        "duplicate", // Ticket was closed because the same issue exists in another ticket (merged or linked).
+        "spam",      // Ticket was closed because it was spam or irrelevant. 
+        "split",     // Ticket was closed because it was split into new tickets. 
+    ];
 
     /**
      * Fetches all data from priorities table
@@ -399,49 +408,59 @@ class Ticket extends BaseModel
      * Sets ticket status to "closed" or "in progress".
      * Creates a log entry and throws an exception if the process fails.
      * 
-     * @param int $ticketId ID of the ticket should be closed.
-     * @param string $action Detrmines if needs to close or reopen ticket. Allowed values are "close" and "reopen"
+     * @param int $ticketId ID of the ticket that should be closed.
+     * @param string $action Determines if a ticket should be closed or reopened. Allowed values are "close" and "reopen"
      * @return bool Returns true if the process was successful, otherwise returns false.
      */
     public function closeReopenTicket(int $ticketId, string $action): bool
     {
-        // Verifies that the $action parameter contains a valid value ("close" or "reopen").
+        // Checks if the $action parameter contains a valid value ("close" or "reopen").
         if ($action !== "close" && $action !== "reopen") {
             throw new DomainException("The action parameter is invalid!");
         }
+
+        $sql = "UPDATE tickets SET statusId = :si, ";
 
         if ($action === "close") {
             $curentDate = date("Y-m-d H:i:s");
             $curentDateSql = "'{$curentDate}'";
             $statusId = 3;
+
+            if (!isset($_POST['closingSelect']) || empty($_POST['closingSelect'])) {
+                throw new DomainException("Missing closing type value");
+            }
+
+            $closingType = cleanString($_POST['closingSelect']);
+
+            if (!in_array($closingType, $this->closingTypes)) {
+                throw new DomainException("Invalid value for closing type.");
+            }
+
+            $sql .= "closing_type = :ct, ";
         }
 
         if ($action === "reopen") {
             $curentDateSql = "NULL";
             $statusId = 2;
+            $sql .= "closing_type = NULL, was_reopened = TRUE, ";
         }
 
+        $sql .= "closed_date = {$curentDateSql} WHERE id = :tid";
+
         try {
-            $sql = "UPDATE tickets SET statusId = :si, closed_date = {$curentDateSql} WHERE id = :tid";
             $stmt = $this->getConn()->connect()->prepare($sql);
             $stmt->bindValue(":si", $statusId, PDO::PARAM_INT);
+            if ($action === "close") $stmt->bindValue(":ct", $closingType, PDO::PARAM_STR);
             $stmt->bindValue(":tid", $ticketId, PDO::PARAM_INT);
             $stmt->execute();
-            if ($stmt->rowCount() === 1) {
-                if ($action === "close") {
-                    // Add the year in `years` table.
-                    $this->addCurrentYear();
-                }
-                return true;
-            }
-            return false;
+            return $stmt->rowCount() === 1;
         } catch (\PDOException $e) {
             // Logs the error and throws an exception if a PDOException occurs.
             logError(
                 "closeReopenTicket() metod error: Failed to {$action} the ticket",
                 ['message' => $e->getMessage(), 'code' => $e->getCode()]
             );
-            throw new Exception("Something went wrong. Try again to {$action} ticket.");
+            throw new Exception("Something went wrong. Try again to {$action} the ticket.");
         }
     }
 

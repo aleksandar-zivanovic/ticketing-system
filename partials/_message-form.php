@@ -6,7 +6,7 @@
                 <textarea class="textarea" name="error_description" placeholder="Message ..."></textarea>
             </div>
             <input type="number" name="userId" value="<?= $_SESSION['user_id'] ?>" hidden>
-            <input type="number" name="ticketId" value="<?= $ticket['id'] ?>" hidden>
+            <input type="number" name="ticketId" value="<?= $theTicket['id'] ?>" hidden>
             <div class="control">
                 <?php
                 // error image

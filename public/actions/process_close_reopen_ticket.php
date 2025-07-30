@@ -49,20 +49,11 @@ if ($theTicket["handled_by"] == $userIdFromSession) {
     $location = "Location: ../user/user-view-ticket.php?ticket={$ticketIdFromForm}";
 }
 
-// Closes ticket
-if ($action === "close") {
-    $result = $ticket->closeReopenTicket($ticketIdFromForm, "close");
+// Closes / reopens the ticket
+if ($action === "close" || $action === "reopen") {
+    $result = $ticket->closeReopenTicket($ticketIdFromForm, $action);
     if ($result === false) {
-        throw new Exception("Closing ticket failed. Try again!");
-    }
-    die(header($location));
-}
-
-// Reopens ticket
-if ($action === "reopen") {
-    $result = $ticket->closeReopenTicket($ticketIdFromForm, "reopen");
-    if ($result === false) {
-        throw new Exception("Reopening ticket failed. Try again!");
+        throw new Exception("Ticket {$action} failed. Try again!");
     }
     die(header($location));
 }
