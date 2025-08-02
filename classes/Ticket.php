@@ -356,7 +356,7 @@ class Ticket extends BaseModel
             return $stmt->fetch(PDO::FETCH_ASSOC);
         } catch (\PDOException $e) {
             // Logs the error and throws an exception if a PDOException occurs
-            logError("fetchTicketDetails() metod error: Failed to retrive the ticket data", ['message' => $e->getMessage(), 'code' => $e->getCode()]);
+            logError("fetchTicketDetails() method error: Failed to retrive the ticket data", ['message' => $e->getMessage(), 'code' => $e->getCode()]);
             throw new Exception("Something went wrong. Try again later!");
         }
     }
@@ -457,7 +457,7 @@ class Ticket extends BaseModel
         } catch (\PDOException $e) {
             // Logs the error and throws an exception if a PDOException occurs.
             logError(
-                "closeReopenTicket() metod error: Failed to {$action} the ticket",
+                "closeReopenTicket() method error: Failed to {$action} the ticket",
                 ['message' => $e->getMessage(), 'code' => $e->getCode()]
             );
             throw new Exception("Something went wrong. Try again to {$action} the ticket.");
@@ -492,7 +492,7 @@ class Ticket extends BaseModel
         } catch (\PDOException $e) {
             // Logs the error and throws an exception if a PDOException occurs.
             logError(
-                "deleteTicketRow() metod error: Failed to delete the ticket from the database",
+                "deleteTicketRow() method error: Failed to delete the ticket from the database",
                 ['message' => $e->getMessage(), 'code' => $e->getCode()]
             );
             throw new Exception("Something went wrong with deleting the ticket. Try again.");
@@ -577,7 +577,7 @@ class Ticket extends BaseModel
             return true;
         } catch (\PDOException $e) {
             logError(
-                "takeTicket() metod error: Failed to assign the ticket (ID: {$ticketId}) the administrator (ID: {$adminId}).",
+                "takeTicket() method error: Failed to assign the ticket (ID: {$ticketId}) the administrator (ID: {$adminId}).",
                 ['message' => $e->getMessage(), 'code' => $e->getCode()]
             );
             throw new Exception("Something went wrong. The ticket is not assigned to the administrator.");
@@ -679,17 +679,27 @@ class Ticket extends BaseModel
     }
 
     /**
-     * Counts data by a filter for a dashboard card table.
+     * Counts data by a filter for a dashboard table.
      * Returns array in format: 
      *  [
      *      ["FilterNameValue1", int], ["FilterNameValue2", int], ["FilterNameValue3", int], ...
      *  ] 
      * 
-     * @param array $data Array of that returned by `fetchAllTickets` metod.
-     * @param array $filters List of filter name strings.
-     * @param string $ticketFilter Key of a single ticket array from $data, that you want to sort all tickets by.
+     * @param array $data Array of that returned by `fetchAllTickets` method.
+     * @param array $filters List of filter name strings. The list contains possible values 
+     *              those $ticketFilter parametr can have (e.g. "Human Resources", "Marketing", etc.).
+     * @param string $ticketFilter Key in a single ticket array from $data to 
+     *               group tickets by (e.g. "department_name", "status_name", etc.).
      * 
-     * @return array Array of array pairs of ticketFilter names and ticket counts for every ticketFilter name.
+     * @return array Array of array triplets: [filter name, ticket count for the filter, percentage of filtered tickets in total tickets].
+     * Example: 
+     *  [
+     *      ["Human Resources", 23, 11.5], 
+     *      ["Marketing", 4, 2], 
+     *      ["Sales", 186, 9.3], 
+     *      ["Information Technology", 3, 1.5], 
+     *   ...
+     *  ]
      */
     public static function countDataForDashboardTable(array $data, array $filters, string $ticketFilter): array
     {
@@ -704,11 +714,17 @@ class Ticket extends BaseModel
             }
         }
 
+        $totalTickets = count($data);
         $countTicketsByFilters = [];
         for ($i = 0; $i < count($filters); $i++) {
             foreach ($ticketsByFilters as $name => $_) {
                 if (str_contains(haystack: $name, needle: $filters[$i])) {
-                    $countTicketsByFilters[] = [ucfirst($filters[$i]), count($ticketsByFilters[$filters[$i]])];
+                    $totalByFilter = count($ticketsByFilters[$filters[$i]]);
+                    $countTicketsByFilters[] = [
+                        ucfirst($filters[$i]), 
+                        $totalByFilter, 
+                        countPercentage($totalByFilter, $totalTickets)
+                    ];
                     break;
                 }
             }

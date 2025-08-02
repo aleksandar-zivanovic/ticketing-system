@@ -654,10 +654,6 @@ video {
   display: table;
 }
 
-.table-cell {
-  display: table-cell;
-}
-
 .grid {
   display: grid;
 }
@@ -1166,14 +1162,6 @@ video {
 }
 
 @media (min-width: 640px) {
-  .sm\:table-cell {
-    display: table-cell;
-  }
-
-  .sm\:hidden {
-    display: none;
-  }
-
   .sm\:w-3\/4 {
     width: 75%;
   }
@@ -1188,10 +1176,6 @@ video {
 }
 
 @media (min-width: 768px) {
-  .md\:table-cell {
-    display: table-cell;
-  }
-
   .md\:grid-cols-1 {
     grid-template-columns: repeat(1, minmax(0, 1fr));
   }
@@ -1262,12 +1246,6 @@ video {
 
   .lg\:grid-cols-2 {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-@media (min-width: 1280px) {
-  .xl\:table-cell {
-    display: table-cell;
   }
 }
 

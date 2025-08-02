@@ -466,3 +466,16 @@ function dd(mixed $variable, string $function = "var_dump", bool $die = true): v
 
     if ($die === true) die;
 }
+
+/**
+ * Calculates percentage.
+ * 
+ * @param int $part Number of units in the part.
+ * @param int $total Total number of units.
+ * 
+ * @return float Percentage rounded to two decimals.
+ */
+function countPercentage(int $part, int $total): float
+{
+    return $total > 0 ? round($part / $total * 100, 2) : 0;
+}

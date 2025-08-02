@@ -51,7 +51,7 @@ if ($panel === "admin") {
         $hours   = floor(($allSecondsPerTicket % 86400) / 3600);
         $minutes = floor(($allSecondsPerTicket % 3600) / 60);
 
-        $formatedTime = $days > 0 ? "$days d $hours h $minutes m" :"$hours h $minutes m";
+        $formatedTime = $days > 0 ? "$days d $hours h $minutes m" : "$hours h $minutes m";
     }
 }
 
@@ -61,11 +61,17 @@ $countAllTickets           = $allTicketsCountStatuses["all"];
 $countAllInProgressTickets = $allTicketsCountStatuses["in_progress"];
 $countAllSolvedTickets     = $allTicketsCountStatuses["closed"];
 $countAllWaitingTickets    = $allTicketsCountStatuses["waiting"];
+// $countAllWaitingTickets    = $allTicketsCountStatuses["split"]; --- dodati na kraju.
+
+// Counts percentage of tickets per status
+$percInProgressTickets     = countPercentage($countAllInProgressTickets, $countAllTickets);
+$percSolvedTickets         = countPercentage($countAllSolvedTickets, $countAllTickets);
+$percWaitingTickets        = countPercentage($countAllWaitingTickets, $countAllTickets);
 
 if ($panel === "admin" || ($panel === "user" && $countAllTickets > 0)) {
 
     if ($panel === "admin") {
-        // Counts tickets handled by the admin and their statuses
+        // Counts tickets handled by the admin by status
         $handledTicketsCountStatuses   = Status::countStatuses($handledTicketsData);
         $countHandledTickets           = $handledTicketsCountStatuses["all"];
         $countHandledInProgressTickets = $handledTicketsCountStatuses["in_progress"];
@@ -75,6 +81,7 @@ if ($panel === "admin" || ($panel === "user" && $countAllTickets > 0)) {
     // Prepare data for dropdown button
     $year = new Year();
     $years = array_reverse($year->getAllYears());
+    unset($year);
     if (isset($_GET["year"]) && !empty($_GET["year"])) {
         $chosenYear = filter_input(INPUT_GET, "year", FILTER_VALIDATE_INT);
         if (!$chosenYear) {
@@ -110,32 +117,16 @@ if ($panel === "admin" || ($panel === "user" && $countAllTickets > 0)) {
     }
 
     // Prepares data for departments stats table
-    $department = new Department();
-    $departmentNames = $department->getAllDepartmentNames();
-    unset($department);
+    $arrayTables["Tickets by deparmants"] = Ticket::countDataForDashboardTable($allTicketsData, $departments, "department_name");
 
-    $arrayTables["Tickets by deparmants"] = Ticket::countDataForDashboardTable($allTicketsData, $departmentNames, "department_name");
+    // // Prepares data for statuses stats table
+    $arrayTables["Tickets by statuses"] = Ticket::countDataForDashboardTable($allTicketsData, $statuses, "status_name");
+
+    // Prepares data for priority stats table
+    $arrayTables["Tickets by priorities"] = Ticket::countDataForDashboardTable($allTicketsData, $priorities, "priority_name");
 
     // Prepares data for departments chart
     $chartDepartmentdData = preparePieBarChartData($arrayTables["Tickets by deparmants"]);
-
-    // Prepares data for statuses stats table
-    $countAllInProgressTickets = $allTicketsCountStatuses["in_progress"];
-    $countAllSolvedTickets     = $allTicketsCountStatuses["closed"];
-    $countAllWaitingTickets    = $allTicketsCountStatuses["waiting"];
-
-    $arrayTables["Tickets by statuses"] = [
-        ["Waiting", $countAllWaitingTickets],
-        ["In progres", $countAllInProgressTickets],
-        ["Solved", $countAllSolvedTickets],
-    ];
-
-    // Prepares data for priority stats table
-    $priority = new Priority();
-    $priorityNames = $priority->getAllPriorityNames();
-    unset($priority);
-    $arrayTables["Tickets by priorities"] = Ticket::countDataForDashboardTable($allTicketsData, $priorityNames, "priority_name");
-
 
     $user = new User();
     $allUsers = $user->getAllUsers();

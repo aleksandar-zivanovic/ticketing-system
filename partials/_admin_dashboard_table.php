@@ -14,14 +14,16 @@
                 <tr>
                     <th><?= ucfirst($columnName) ?>:</th>
                     <th>Total:</th>
+                    <th>%</th>
                 </tr>
             </thead>
             <tbody>
                 <?php
-                foreach ($items as [$label, $count]) {
+                foreach ($items as [$label, $count, $percentage]) {
                     echo "<tr>";
                     echo "<td>{$label}</td>";
                     echo "<td>{$count}</td>";
+                    echo "<td>{$percentage}%</td>";
                     echo "</tr>";
                 }
                 ?>

@@ -101,17 +101,21 @@ function prepareChartAndTableDataByFilterAndUser(array $allTicketsData, array $a
     arsort($ticketsPerClass);
 
     global $panel;
+    $totalTickets = count($allTicketsData);
     $countsForTable = [];
     $chartData = [];
     $chartData["datasets"][0]["label"][] = "Total";
     foreach ($ticketsPerClass as $userId => $ticketId) {
+        $totalTicketsPerClass = count($ticketId);
         foreach ($allDataForTheClass as $user) {
             if ($userId === $user["id"]) {
                 $countsForTable[] = [
                     "ID: {$user["id"]} | Name: {$user["name"]} {$user["surname"]}",
                     $filter === "created_by"
-                        ? "<a href='#'>" . count($ticketId) . "</a>"
-                        : count($ticketId)
+                        ? "<a href='#'>{$totalTicketsPerClass}</a>"
+                        : $totalTicketsPerClass 
+                    , 
+                    countPercentage($totalTicketsPerClass, $totalTickets)
                 ];
                 $chartData["labels"][] = [
                     $panel === "admin"
