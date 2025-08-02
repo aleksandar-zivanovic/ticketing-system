@@ -1,5 +1,5 @@
 <div class="card">
-    <div class="card-content">
+    <div class="card-content shadow-lg shadow-blue-500/50">
         <div class="flex items-center justify-between">
             <div class="widget-label">
                 <h3>

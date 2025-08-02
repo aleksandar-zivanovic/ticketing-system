@@ -23,7 +23,7 @@
     </p>
 </header>
 
-<div class="grid gap-6 grid-cols-1 md:grid-cols-4 mb-6">
+<div class="grid gap-6 grid-cols-1 md:grid-cols-4 m-6">
 
     <?php
     renderDashboardCard("Tickets (total)", $cardData["total"], "text-orange-500", "mdi-ticket");

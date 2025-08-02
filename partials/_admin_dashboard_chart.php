@@ -16,7 +16,7 @@
                         <div></div>
                     </div>
                 </div>
-                <canvas id="<?= $chartId ?>" style="width:100%" class="chartjs-render-monitor block"></canvas>
+                <canvas id="<?= $chartId ?>" style="width:100%" class="chartjs-render-monitor block shadow-lg shadow-blue-500/50"></canvas>
             </div>
         </div>
     </div>

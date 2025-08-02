@@ -55,7 +55,7 @@ require_once '../../config/features-config.php';
                         Average ticket resolution time:
                     </p>
                 </header>
-                <div class="grid gap-6 grid-cols-1 md:grid-cols-2 mb-6">
+                <div class="grid gap-6 grid-cols-1 md:grid-cols-2 m-6">
                     <?php
                     renderDashboardCard("Aver. resolution time", $formatedTime, "text-yellow-500", "mdi-timer-check-outline");
                     ?>
@@ -97,7 +97,7 @@ require_once '../../config/features-config.php';
                 renderChart("Tickets you are handling", "line", $chartHandledData);
             }
             ?>
-            <div class="card has-table grid grid-cols-1 gap-6 lg:grid-cols-2 mb-6">
+            <div class="card has-table grid grid-cols-1 gap-6 lg:grid-cols-2 m-6">
                 <?php
                 if (!empty($chartDepartmentdData["datasets"][0]["data"])) {
                     renderChart("Tickets per department", TICKETS_PER_DEPARTMENT_CHART_TYPE, $chartDepartmentdData);
@@ -112,7 +112,7 @@ require_once '../../config/features-config.php';
             <?php if ($countAllTickets !== 0) : // Start renderig tables 
             ?>
                 <!-- Tables -->
-                <div class="card has-table grid grid-cols-1 gap-6 lg:grid-cols-2 mb-6">
+                <div class="card has-table grid grid-cols-1 gap-6 lg:grid-cols-2 m-6">
                     <?php
                     foreach ($arrayTables as $category  => $items) {
                         // Prevents rendering tables without data
