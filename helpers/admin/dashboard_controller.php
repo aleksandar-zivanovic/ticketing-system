@@ -29,6 +29,15 @@ if ($panel === "admin") {
 }
 unset($ticket);
 
+// Removes split tickets from $allTicketsData and counts split tickets
+$spitTicketsCount = 0;
+foreach ($allTicketsData as $key => $value) {
+    if ($allTicketsData[$key]["status_name"] === "split") {
+        $spitTicketsCount++;
+        unset($allTicketsData[$key]);
+    }
+}
+
 // Prepares data for average ticket resolution time stats
 if ($panel === "admin") {
     $allClosedTickets = [];
@@ -61,7 +70,6 @@ $countAllTickets           = $allTicketsCountStatuses["all"];
 $countAllInProgressTickets = $allTicketsCountStatuses["in_progress"];
 $countAllSolvedTickets     = $allTicketsCountStatuses["closed"];
 $countAllWaitingTickets    = $allTicketsCountStatuses["waiting"];
-// $countAllWaitingTickets    = $allTicketsCountStatuses["split"]; --- dodati na kraju.
 
 // Counts percentage of tickets per status
 $percInProgressTickets     = countPercentage($countAllInProgressTickets, $countAllTickets);
@@ -136,6 +144,13 @@ if ($panel === "admin" || ($panel === "user" && $countAllTickets > 0)) {
         // Prepares data for tickets by creators stats table
         $creatorsChartAndTableData = prepareChartAndTableDataByFilterAndUser($allTicketsData, $allUsers, "created_by");
         $arrayTables["Tickets by creators"] = $creatorsChartAndTableData["table_data"];
+    }
+
+    // Removes tickets not assigned to an admin form $allTicketsData
+    foreach ($allTicketsData as $key => $value) {
+        if ($allTicketsData[$key]["handled_by"] === NULL) {
+            unset($allTicketsData[$key]);
+        }
     }
 
     // Prepares data for tickets handled by admins stats table and chart

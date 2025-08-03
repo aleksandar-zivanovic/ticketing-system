@@ -52,13 +52,20 @@ require_once '../../config/features-config.php';
         ?>
                 <header class="card-header">
                     <p class="card-header-title text-xl">
-                        Average ticket resolution time:
+                        Other stats details:
                     </p>
                 </header>
-                <div class="grid gap-6 grid-cols-1 md:grid-cols-2 m-6">
+                <div class="grid gap-6 grid-cols-1 md:grid-cols-2 m-6 mt-1">
                     <?php
-                    renderDashboardCard("Aver. resolution time", $formatedTime, "text-yellow-500", "mdi-timer-check-outline");
+                    renderDashboardCard("Average ticket resolution time", $formatedTime, "text-yellow-500", "mdi-timer-check-outline");
                     ?>
+                    <?php if ($spitTicketsCount > 0) : ?>
+                        <div class="grid gap-6 grid-cols-1 md:grid-cols-2">
+                            <?php
+                            renderDashboardCard("Split", $spitTicketsCount, "text-gray-500", "mdi-table-split-cell");
+                            ?>
+                        </div>
+                    <?php endif; ?>
                 </div>
 
             <?php
