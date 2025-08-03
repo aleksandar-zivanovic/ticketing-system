@@ -156,7 +156,7 @@ INSERT INTO `statuses` (`id`, `name`) VALUES
 (1, 'waiting'),
 (2, 'in progress'),
 (3, 'closed'),
-(4, 'splitted');
+(4, 'split');
 
 -- --------------------------------------------------------
 

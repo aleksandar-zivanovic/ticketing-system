@@ -30,8 +30,8 @@ define("HIGHEST_PRIORITY", "your_highest_priority_value");
  */
 
 define("TICKET_STATUSES", [
-    "waiting" => "color:coral;",            // Waiting status is displayed in coral
-    "in progress" => "color:deepskyblue;",  // In progress status is displayed in deepskyblue
-    "splitted" => "",                       // Splitted status has no style (no additional CSS)
-    "closed" => "color:green; font-style: italic;", // Closed status is displayed in green and italic
+    "waiting"     => "color:coral;",                     // Waiting status is displayed in coral
+    "in progress" => "color:coral; color:deepskyblue;",  // In progress status is displayed in deepskyblue
+    "split"       => "color:grey; font-style: italic;",  // Split status is displayed as grey and italic
+    "closed"      => "color:green; font-style: italic;", // Closed status is displayed as green and italic
 ]);
