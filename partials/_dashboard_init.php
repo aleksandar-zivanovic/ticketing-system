@@ -59,10 +59,16 @@ require_once '../../config/features-config.php';
                     <?php
                     renderDashboardCard("Average ticket resolution time", $formatedTime, "text-yellow-500", "mdi-timer-check-outline");
                     ?>
-                    <?php if ($spitTicketsCount > 0) : ?>
+                    <?php if ($spitTicketsCount > 0 || $reopenedTickets > 0) : ?>
                         <div class="grid gap-6 grid-cols-1 md:grid-cols-2">
                             <?php
-                            renderDashboardCard("Split", $spitTicketsCount, "text-gray-500", "mdi-table-split-cell");
+                            if ($spitTicketsCount > 0) {
+                                renderDashboardCard("Split", $spitTicketsCount, "text-gray-500", "mdi-table-split-cell");
+                            }
+
+                            if ($reopenedTickets > 0) {
+                                renderDashboardCard("Reopened", $reopenedTickets, "text-gray-500", "mdi-lock-open-variant-outline");
+                            }
                             ?>
                         </div>
                     <?php endif; ?>

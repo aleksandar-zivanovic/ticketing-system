@@ -12,15 +12,16 @@ $page = "Dashboard";
 
 // Initializes allowed filter values for tickets
 $allTicketFilterData = loadTicketFilterData();
-$statuses    = $allTicketFilterData["statuses"];
-$priorities  = $allTicketFilterData["priorities"];
-$departments = $allTicketFilterData["departments"];
+$statuses     = $allTicketFilterData["statuses"];
+$priorities   = $allTicketFilterData["priorities"];
+$departments  = $allTicketFilterData["departments"];
+$ticket       = new Ticket();
+$closingTypes = $ticket->closingTypes;
 
 // Sets allowed values list for fetchAllTickets() method
 $allowedValues = buildAllowedTicketValues($allTicketFilterData);
 
 // Calls fetchAllTickets() method
-$ticket = new Ticket();
 if ($panel === "admin") {
     $allTicketsData = $ticket->fetchAllTickets(allowedValues: $allowedValues, images: false);
     $handledTicketsData = $ticket->fetchAllTickets(allowedValues: $allowedValues, images: false, handledByMe: true);
@@ -29,12 +30,19 @@ if ($panel === "admin") {
 }
 unset($ticket);
 
-// Removes split tickets from $allTicketsData and counts split tickets
+// Removes split tickets from $allTicketsData and counts split and reopened tickets separately
 $spitTicketsCount = 0;
+$reopenedTickets  = 0;
 foreach ($allTicketsData as $key => $value) {
     if ($allTicketsData[$key]["status_name"] === "split") {
         $spitTicketsCount++;
         unset($allTicketsData[$key]);
+        continue;
+    }
+
+    // Count reopened tickets
+    if ($allTicketsData[$key]["status_name"] !== "split" && $allTicketsData[$key]["was_reopened"] === 1) {
+        $reopenedTickets++;
     }
 }
 
@@ -52,6 +60,7 @@ if ($panel === "admin") {
     }
 
     $closedTicketsCount = count($allClosedTickets);
+    unset($allClosedTickets);
 
     if ($closedTicketsCount > 0) {
         $allSecondsPerTicket = $solvingTimeTotal / $closedTicketsCount;
@@ -133,9 +142,33 @@ if ($panel === "admin" || ($panel === "user" && $countAllTickets > 0)) {
     // Prepares data for priority stats table
     $arrayTables["Tickets by priorities"] = Ticket::countDataForDashboardTable($allTicketsData, $priorities, "priority_name");
 
+    // Creates closed tickets by closing type table if there are closed tickets
+    if (isset($closedTicketsCount) && $closedTicketsCount > 0) {
+        // Creates array of closed tickets and format it for countDataForDashboardTable() method
+        $closedTickets = [];
+        foreach ($allTicketsData as $ticket) {
+            if ($ticket["status_name"] === "closed") {
+                $closedTickets[] = $ticket["closing_type"];
+            }
+        }
+
+        $closedTicketsPerType = array_count_values($closedTickets);
+        if (!isset($closedTicketsCount)) {
+            $closedTicketsCount = count($closedTickets);
+        }
+
+        // Prepares data for priority stats table
+        $arrayTables["Closed tickets by closing type"] = [];
+        foreach ($closedTicketsPerType as $type => $total) {
+            $percentage = countPercentage($total, $closedTicketsCount);
+            $arrayTables["Closed tickets by closing type"][] = [ucfirst($type), $total, $percentage];
+        }
+    }
+
     // Prepares data for departments chart
     $chartDepartmentdData = preparePieBarChartData($arrayTables["Tickets by deparmants"]);
 
+    // Gets all users for filtering tickets by users
     $user = new User();
     $allUsers = $user->getAllUsers();
     unset($user);
@@ -160,5 +193,4 @@ if ($panel === "admin" || ($panel === "user" && $countAllTickets > 0)) {
     $labelForTicketsPerAdmins = $panel === "admin" ? "Tickets handled by admins" : "Admins who work(ed) on your tickets";
     $arrayTables[$labelForTicketsPerAdmins] = $adminChartAndTableData["table_data"]; // Data for table
     $chartPerAdminData                      = $adminChartAndTableData["chart_data"]; // Data for chart
-
 }
