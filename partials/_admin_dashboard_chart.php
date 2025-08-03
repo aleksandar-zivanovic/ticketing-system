@@ -25,18 +25,27 @@
 <script>
     const data_<?= $chartId ?> = <?php echo json_encode($data); ?>;
     const chartType_<?= $chartId ?> = "<?= $type ?>";
+    const borderWidths_<?= $chartId ?> = [2, 3, 4, 5, 6];
 
     if (chartType_<?= $chartId ?> === "line") {
         var dashStyles_<?= $chartId ?> = [
-            [], // solid line
-            [5, 5], // dashed line
-            [1, 4], // dotted line
+            [],            // solid line
+            [5, 5],        // dashed line
+            [1, 4],        // dotted line
             [10, 2, 2, 2], // mixed pattern
-            [3, 3, 1, 3] // variation
+            [3, 3, 1, 3]   // variation
         ];
     }
 
-    const borderWidths_<?= $chartId ?> = [2, 3, 4, 5, 6];
+    if (chartType_<?= $chartId ?> === "pie") {
+        Chart.Tooltip.positioners.customPosition = function(elements) {
+            const pos = Chart.Tooltip.positioners.average(elements);
+            return {
+                x: pos.x + 30,
+                y: pos.y + 35
+            };
+        };
+    }
 
     new Chart(document.getElementById('<?= $chartId ?>'), {
         type: chartType_<?= $chartId ?>,
@@ -75,6 +84,12 @@
                 ...(chartType_<?= $chartId ?> === "bar" && {
                     legend: {
                         display: false,
+                    }
+                }),
+                ...(chartType_<?= $chartId ?> === "pie" && {
+                    tooltip: {
+                        caretSize: 0, // removes carter
+                        position: 'customPosition',
                     }
                 }),
                 ...(chartType_<?= $chartId ?> !== "bar" && {
