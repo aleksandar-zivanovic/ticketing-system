@@ -44,6 +44,14 @@
 
             // error image
             renderingInputField("Insert error images:", "error_images"  . $brackets . "[]", "file", "");
+
+            if (!empty($split)) {
+                // creator's ID
+                renderingInputField(null, "error_user_id", "hidden", null, $theTicket["created_by"]);
+
+                // ticket's ID
+                renderingInputField(null, "error_ticket_id", "hidden", null, $theTicket["id"]);
+            }
             ?>
         </div>
 
@@ -87,7 +95,10 @@
 
             clone.querySelectorAll('select, input, textarea').forEach(el => {
                 let name = el.getAttribute('name');
-                if (!name) return;
+                // Preserve universal input values and skip unnamed inputs
+                if (!name || el.name === "error_user_id" || el.name === "error_ticket_id") {
+                    return;
+                }
 
                 if (name.match(/\[\d+\]/)) {
                     // Replace existing index with ticketIndex

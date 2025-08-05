@@ -52,6 +52,99 @@ class Ticket extends BaseModel
     }
 
     /**
+     * Collects and sanitizes data from the form for creating a new tickets from the split ticket.
+     * Url, ticket creator ID and ticket status are set to proprties, 
+     * while other parameters are returned in the array formatted as: 
+     *  [
+     *      "error_department"  => [int, ...], 
+     *      "error_priority"    => [int, ...], 
+     *      "error_title"       => [int, ...], 
+     *      "error_description" => [int, ...], 
+     *  ]
+     * 
+     * @return array
+     */
+    public function collectSplitTicketData(): array
+    {
+        // Gets url from $_POST
+        $url = filter_input_array(INPUT_POST, ["error_page" => ['filter' => FILTER_VALIDATE_URL, 'flags' => FILTER_REQUIRE_ARRAY,]]);
+
+        if (empty($url["error_page"][0])) {
+            throw new RuntimeException('URL is not valid!');
+        } else {
+            $this->url = cleanString($url["error_page"][0]);
+        }
+
+        // Gets departments from $_POST
+        $filters = [
+            "error_department" => [
+                "filter" => FILTER_VALIDATE_INT,
+                "flags" => FILTER_REQUIRE_ARRAY,
+            ]
+        ];
+        $values = filter_input_array(INPUT_POST, $filters);
+
+        if (empty($values["error_department"])) throw new DomainException("Empty department ID.");
+
+        foreach ($values["error_department"] as $dep) {
+            if ($dep === false || $dep < 1) {
+                throw new DomainException("Empty department ID.");
+            }
+        }
+
+        // Gets priorities from $_POST
+        $filters = [
+            "error_priority" => [
+                "filter" => FILTER_VALIDATE_INT,
+                "flags" => FILTER_REQUIRE_ARRAY,
+            ]
+        ];
+        $values = $values + filter_input_array(INPUT_POST, $filters);
+
+        if (empty($values["error_priority"])) throw new DomainException("You didn't set priorities");
+
+        foreach ($values["error_priority"] as $pri) {
+            if ($pri === false || $pri < 1) {
+                throw new DomainException("You didn't set priorities.");
+            }
+        }
+
+        // Gets titles from $_POST
+        $values["error_title"] = [];
+        foreach ($_POST["error_title"] as $key => $title) {
+            $values["error_title"][$key] = cleanString($title);
+            if (empty($values["error_title"][$key])) throw new DomainException("You didn't set some title.");
+        }
+
+        // Gets descriptions from $_POST
+        $values["error_description"] = [];
+        foreach ($_POST["error_description"] as $key => $desc) {
+            $values["error_description"][$key] = cleanString($desc);
+            if (empty($values["error_description"][$key])) throw new DomainException("You didn't set some description.");
+        }
+
+        // Gets ID of ticket to split
+        $splitTicketId = filter_input(INPUT_POST, "error_ticket_id", FILTER_VALIDATE_INT);
+        if ($splitTicketId === false || $splitTicketId < 1) {
+            logError("Inserted fake ticket id in `error_ticket_id` input field inside split ticket form by user {$_SESSION["email"]}.");
+            throw new DomainException("False data.");
+        }
+        $values["splitTicketId"] = $splitTicketId;
+
+        // Gets ID of the ticket creator
+        $theCreator = filter_input(INPUT_POST, "error_user_id", FILTER_VALIDATE_INT);
+        if ($theCreator === false || $theCreator < 1) {
+            logError("Inserted fake user id in `created_by` input field inside split ticket form by user {$_SESSION["email"]}.");
+            throw new DomainException("False data.");
+        }
+        $this->userId = $theCreator;
+
+        $this->statusId = 1;
+
+        return $values;
+    }
+
+    /**
      * Creates a new ticket
      */
     public function createTicket(): void
@@ -103,6 +196,21 @@ class Ticket extends BaseModel
         require_once 'Year.php';
         $yearInstance = new Year();
         $yearInstance->createYear(date("Y")); // Add the year in `years` table.
+    }
+
+    /**
+     * Prepares data for multiple creating ticket calls.
+     */
+    public function splitTicket(): void
+    {
+        dd($this->collectSplitTicketData());
+        $this->collectSplitTicketData();
+
+
+
+        // Pripremiti slike
+        // Dodati kolonu `parent_ticket` u tabelu `tickets` i upisati tokom kreiranja tiketa;
+
     }
 
     /**
@@ -721,8 +829,8 @@ class Ticket extends BaseModel
                 if (str_contains(haystack: $name, needle: $filters[$i])) {
                     $totalByFilter = count($ticketsByFilters[$filters[$i]]);
                     $countTicketsByFilters[] = [
-                        ucfirst($filters[$i]), 
-                        $totalByFilter, 
+                        ucfirst($filters[$i]),
+                        $totalByFilter,
                         countPercentage($totalByFilter, $totalTickets)
                     ];
                     break;

@@ -14,9 +14,9 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
         case "Create Ticket":
             $ticket->createTicket();
             break;
-        // case "Split the ticket":
-        //     $ticket->splitTicket();
-        //     break;
+        case "Split the ticket":
+            $ticket->splitTicket();
+            break;
         default:
             logError("Unallowed action on `public/actions/process_creating_ticket.php`");
     }
