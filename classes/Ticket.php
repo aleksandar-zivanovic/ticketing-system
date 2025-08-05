@@ -45,8 +45,8 @@ class Ticket extends BaseModel
         $this->url = $url;
         $this->title = cleanString(filter_input(INPUT_POST, "error_title", FILTER_DEFAULT));
         $this->description = cleanString(filter_input(INPUT_POST, "error_description", FILTER_DEFAULT));
-        $this->departmentId = cleanString(filter_input(INPUT_POST, "department", FILTER_SANITIZE_NUMBER_INT));
-        $this->priorityId = cleanString(filter_input(INPUT_POST, "priority", FILTER_SANITIZE_NUMBER_INT));
+        $this->departmentId = cleanString(filter_input(INPUT_POST, "error_department", FILTER_SANITIZE_NUMBER_INT));
+        $this->priorityId = cleanString(filter_input(INPUT_POST, "error_priority", FILTER_SANITIZE_NUMBER_INT));
         $this->statusId = 1;
         $this->userId = cleanString($_SESSION["user_id"]);
     }

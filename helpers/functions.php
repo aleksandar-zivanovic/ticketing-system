@@ -479,3 +479,26 @@ function countPercentage(int $part, int $total): float
 {
     return $total > 0 ? round($part / $total * 100, 2) : 0;
 }
+
+/**
+ * Gets valid integer bigger than 0 from url query.
+ * Stops execution and redirects if value is invalid or missing.
+ * 
+ * @param string $key Key name from url query.
+ * @param string $url Url to redirect on fail.
+ * 
+ * @return int Validated integer value.
+ */
+function getIntFromUrlQuery(string $key, string $url = "../index.php"): int
+{
+    $value = filter_input(INPUT_GET, $key, FILTER_VALIDATE_INT, [
+        'options' => ['min_range' => 1],
+    ]);
+    
+    if ($value === false) {
+        header("Location:{$url}");
+        die();
+    }
+
+    return $value;
+}
