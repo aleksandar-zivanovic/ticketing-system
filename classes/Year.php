@@ -40,7 +40,7 @@ class Year extends BaseModel
         if ($this->checkIfTheYearExists($year) === false) {
             try {
                 $query = "INSERT INTO years (year) VALUES ($year)";
-                $stmt = $this->getConn()->connect()->prepare($query);
+                $stmt = $this->getConn()->prepare($query);
                 $stmt->execute();
             } catch (\PDOException $e) {
                 logError(

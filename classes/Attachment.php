@@ -25,7 +25,7 @@ class Attachment extends BaseModel
      * @throws Exception If file format is wrong.
      * @throws Exception If file extension is wrong.
      */
-    public function processImages(int $id, string $table, string $fieldName): bool
+    public function processImages(array $ticketAttachments, int $id, string $table, string $fieldName): bool
     {
         // Ensure the provided table name is valid
         if ($table !== "ticket_attachments" && $table !== "message_attachments") {
@@ -34,14 +34,14 @@ class Attachment extends BaseModel
         }
 
         // Check for errors
-        foreach ($_FILES[$fieldName]['error'] as $value) {
+        foreach ($ticketAttachments[$fieldName]['error'] as $value) {
             if ($value !== UPLOAD_ERR_OK) {
-                throw new Exception("Upload failed with error code: " . $_FILES['error'][$value]);
+                throw new Exception("Upload failed with error code: " . $ticketAttachments['error'][$value]);
             }
         }
 
         // Check MIME type
-        foreach ($_FILES[$fieldName]['tmp_name'] as $fileLocation) {
+        foreach ($ticketAttachments[$fieldName]['tmp_name'] as $fileLocation) {
             $finfo = finfo_open(FILEINFO_MIME);
             $mimeType = finfo_file($finfo, $fileLocation);
             finfo_close($finfo);
@@ -53,7 +53,7 @@ class Attachment extends BaseModel
 
         // Check file extension
         $allowedExtensions = ["jpg", "jpeg", "png",];
-        foreach ($_FILES[$fieldName]['name'] as $fileName) {
+        foreach ($ticketAttachments[$fieldName]['name'] as $fileName) {
             $fileExtension = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
 
             if (!in_array($fileExtension, $allowedExtensions)) {
@@ -67,16 +67,16 @@ class Attachment extends BaseModel
         // Prepare names and moving files
         $movingResult = [];
         $imageNames = [];
-        $iterations = count($_FILES[$fieldName]['tmp_name']);
+        $iterations = count($ticketAttachments[$fieldName]['tmp_name']);
 
         // Initializes the array to store successfully uploaded files.
         $uploadedFiles = [];
         
         for ($i = 0; $i < $iterations; $i++) { 
-            $imageName = uniqid() . "-" . strtolower(str_replace(" ", "-", $_FILES[$fieldName]['name'][$i]));
+            $imageName = uniqid() . "-" . strtolower(str_replace(" ", "-", $ticketAttachments[$fieldName]['name'][$i]));
             $imageNames[] = $imageName;
         
-            $movingSuccess = move_uploaded_file($_FILES[$fieldName]['tmp_name'][$i], $this->attachmentDirectory . DS . $imageName);
+            $movingSuccess = move_uploaded_file($ticketAttachments[$fieldName]['tmp_name'][$i], $this->attachmentDirectory . DS . $imageName);
             $movingResult[] = $movingSuccess;
 
             if ($movingSuccess) {
@@ -99,6 +99,43 @@ class Attachment extends BaseModel
             $this->deleteAttachmentsFromServer($imageNames);
             return false;
         }
+    }
+
+    /**
+     * Returns array of files sent by a split ticket form, formatted as: 
+     * [   
+     *     0 => 
+     *         [
+     *             "name"      => [string, string, ...], 
+     *             "full_path" => [string, string, ...], 
+     *             "type"      => [string, string, ...], 
+     *             "tmp_name"  => [string, string, ...], 
+     *             "error"     => [string, string, ...], 
+     *         ],
+     *     1 => 
+     *         [
+     *             "name"      => [string, string, ...], 
+     *             "full_path" => [string, string, ...], 
+     *             "type"      => [string, string, ...], 
+     *             "tmp_name"  => [string, string, ...], 
+     *             "error"     => [string, string, ...], 
+     *         ],
+     * 
+     *     // rest of the array ...
+     * ]
+     */
+    public function processImagesForSplit(): array
+    {
+        $elements = ["name", "full_path", "type", "tmp_name", "error", "size", ];
+        $files = [];
+
+        foreach ($elements as $element) {
+            foreach ($_FILES["error_images"][$element] as $key => $value) {
+                $files[$key]["error_images"][$element] = $value;
+            }
+        }
+
+        return $files;
     }
 
     /**
@@ -130,7 +167,7 @@ class Attachment extends BaseModel
             // Create query.
             $query = "INSERT INTO {$table} (file_name, {$column}) VALUES " . implode(", ", $placeholders);
 
-            $stmt = $this->getConn()->connect()->prepare($query);
+            $stmt = $this->getConn()->prepare($query);
 
             foreach ($params as $key => $param) {
                 $stmt->bindValue(":img{$key}", $param, PDO::PARAM_STR);
@@ -175,7 +212,7 @@ class Attachment extends BaseModel
 
         try {
             $sql = "DELETE FROM {$table} WHERE id in (" . implode(',', $params) . ")";
-            $stmt = $this->getConn()->connect()->prepare($sql);
+            $stmt = $this->getConn()->prepare($sql);
             // Bind values
             $this->bindParamsToQuery($stmt, $params, $integerIds);
 
@@ -269,7 +306,7 @@ class Attachment extends BaseModel
 
         try {
             $sql = "SELECT * FROM {$table} WHERE id in (" . implode(",", $params) . ")";
-            $stmt = $this->getConn()->connect()->prepare($sql);
+            $stmt = $this->getConn()->prepare($sql);
 
             // Bind values
             $this->bindParamsToQuery($stmt, $params, $integerIds);
@@ -324,7 +361,7 @@ class Attachment extends BaseModel
     {
         try {
             $sql = "SELECT id from ticket_attachments WHERE ticket = :id";
-            $stmt = $this->getConn()->connect()->prepare($sql);
+            $stmt = $this->getConn()->prepare($sql);
             $stmt->bindValue(":id", $id, PDO::PARAM_INT);
             return $stmt->fetchAll(PDO::FETCH_COLUMN);
         } catch (\PDOException $e) {

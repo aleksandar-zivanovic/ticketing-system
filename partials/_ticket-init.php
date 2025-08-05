@@ -1,22 +1,27 @@
 <?php
-// Gets file name
-$fileName = basename($_SERVER['SCRIPT_NAME']); 
+if (empty($split)) {
+  // Gets the current script filename (e.g., view-ticket.php)
+  $fileName = basename($_SERVER['SCRIPT_NAME']);
 
-// Sets an appropriate if condition
-if ($fileName === "view-ticket.php") { 
+  // Determine access permission based on script and user role
+  if ($fileName === "view-ticket.php") {
     $accessDenied = ($_SESSION['user_role'] != "admin");
-} elseif ($fileName === "user-view-ticket.php") {
+  } elseif ($fileName === "user-view-ticket.php") {
     $accessDenied = (!isset($_SESSION['user_role']));
+  }
+} else {
+  $accessDenied = false;
 }
 
+// Prevents access to the page for unauthorized visitors
 if (
-    !isset($_GET['ticket']) ||
-    !is_numeric($_GET['ticket']) ||
-    $_GET['ticket'] < 1 ||
-    $accessDenied
+  !isset($_GET['ticket']) ||
+  !is_numeric($_GET['ticket']) ||
+  $_GET['ticket'] < 1 ||
+  $accessDenied
 ) {
-    header("Location:../index.php");
-    die;
+  header("Location:../index.php");
+  die;
 }
 
 require_once '../../helpers/functions.php';
@@ -26,11 +31,20 @@ require_once '../../classes/Message.php';
 // Sets the panel (admin or user)
 $panel = $_SESSION['user_role'] === "admin" ? "admin" : "user";
 
-$ticketID = filter_input(INPUT_GET, "ticket", FILTER_SANITIZE_NUMBER_INT);
+// Gets valid integer from $_GET["ticket"] or redirects to home page if invalid or missing
+$ticketID = getIntFromUrlQuery("ticket");
 
-// Call fetchTicketDetails() method
+// Calls fetchTicketDetails() method
 $ticket = new Ticket();
+
 $theTicket = $ticket->fetchTicketDetails($ticketID);
+
+// Prevents access to ticket split pages for tickets already split or created by splitting.
+if (!empty($split) && ($ticket->isCreatedBySplitting($theTicket) || $ticket->hasChildren($ticketID))) {
+  $_SESSION["fail"] = "The ticket is not eligible for splitting!";
+  header("Location:../index.php");
+  die;
+}
 
 // Prevents users who are not the ticket creator or and admin to access to the ticket
 if ($_SESSION['user_role'] != "admin" && $_SESSION['user_id'] != $theTicket["created_by"]) {
@@ -40,6 +54,9 @@ if ($_SESSION['user_role'] != "admin" && $_SESSION['user_id'] != $theTicket["cre
 
 // Set $page and $data varaiables
 $page = "Ticket: " . $theTicket['title'];
+if (!empty($split)) {
+  $page = "Split " . $page;
+}
 
 // Fetch all messages related to the ticket.
 $message = new Message();
@@ -48,42 +65,45 @@ $allMessages = $message->allMessagesByTicket($ticketID);
 
 <!DOCTYPE html>
 <html lang="en" class="">
+
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title><?= $page ?></title>
+  <title><?= !empty($split) ? "Split $page" :  $page ?></title>
 
   <!-- Tailwind is included -->
   <link rel="stylesheet" href="../css/admin-one-main.css">
   <link rel="stylesheet" href="../css/font-awesome.min.css">
   <link rel="stylesheet" href="../css/tailwind-output.css">
 </head>
+
 <body>
 
-<div id="app">
+  <div id="app">
 
-  <?php 
-  // import header navigation bar
-  include_once '../../partials/_navigation-bar.php';
+    <?php
+    // import header navigation bar
+    include_once '../../partials/_navigation-bar.php';
 
-  // import side menu
-  include_once '../../partials/_side-menu.php';
+    // import side menu
+    include_once '../../partials/_side-menu.php';
 
-  // import breadcrumbs
-  include_once '../../partials/_navigation-breadcrumbs.php';
+    // import breadcrumbs
+    include_once '../../partials/_navigation-breadcrumbs.php';
 
-   // import session messages
-   include_once '../../partials/_session-messages.php';
+    // import session messages
+    include_once '../../partials/_session-messages.php';
 
-  // import table
-  require_once '../../partials/_admin-ticket.php';
+    // import table
+    require_once '../../partials/_admin-ticket.php';
 
-  // import footer
-  include_once '../../partials/_footer.php'; 
-  ?>
+    // import footer
+    include_once '../../partials/_footer.php';
+    ?>
 
-</div>
+  </div>
 
 </body>
+
 </html>

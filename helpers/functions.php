@@ -12,7 +12,7 @@ function cleanString(string $string): string
     return htmlspecialchars(trim($string), ENT_QUOTES, 'UTF-8');
 }
 
-function persist_input(string $sessionName): void 
+function persist_input(string $sessionName): void
 {
     echo isset($_SESSION[$sessionName]) ? cleanString($_SESSION[$sessionName]) : '';
     unset($_SESSION[$sessionName]);
@@ -25,7 +25,7 @@ function persist_input(string $sessionName): void
  */
 function saveFormValuesToSession(?array $exceptions = null): void
 {
-    foreach($_POST as $key => $value) {
+    foreach ($_POST as $key => $value) {
         if ($exceptions && in_array($key, $exceptions)) {
             continue;
         }
@@ -41,7 +41,7 @@ function saveFormValuesToSession(?array $exceptions = null): void
  * @param bool $div If true, wraps the message inside a <div> tag.
  * @param string $class An optional class attribute for the <div> tag. 
  *                      If not empty and $div is true, it is added as a class attribute.
- */ 
+ */
 function handleSessionMessages(string $name, bool $div = false, string $class = ""): void
 {
     if (isset($_SESSION[$name])) {
@@ -53,14 +53,15 @@ function handleSessionMessages(string $name, bool $div = false, string $class = 
 }
 
 // Checks if directory exists and create it if doesn't
-function checkAndCreateDirectory($locationDir): void {
+function checkAndCreateDirectory($locationDir): void
+{
     if (!is_dir($locationDir)) {
         mkdir($locationDir, 0775, true);
     }
 }
 
 // writting down error log
-function logError(string $message, array|string|null $errorInfo = null,  ?string $logFileName = "php_errors.log"): void 
+function logError(string $message, array|string|null $errorInfo = null,  ?string $logFileName = "php_errors.log"): void
 {
     // check if the directory exists and create if not
     $logDirectory = __DIR__ . '../../logs/';
@@ -90,13 +91,12 @@ function logError(string $message, array|string|null $errorInfo = null,  ?string
  * if you intend to use $_SESSION to pre-fill the input with previously submitted data.
  */
 function renderingInputField(
-    ?string $label, 
-    string $name, 
-    string $type, 
-    ?string $placeholder, 
+    ?string $label,
+    string $name,
+    string $type,
+    ?string $placeholder,
     string|int|null $value = null
-): void
-{
+): void {
     $label = $label ? htmlspecialchars($label) : null;
     $name        = htmlspecialchars($name);
     $type        = htmlspecialchars($type);
@@ -110,8 +110,8 @@ function renderingInputField(
     if ($type == 'hidden' && !empty($placeholder)) {
         throw new InvalidArgumentException("placeholder should not exists.");
     }
-    
-    require __DIR__ . '/../partials/input.php';  
+
+    require __DIR__ . '/../partials/input.php';
 }
 
 /** 
@@ -128,20 +128,19 @@ function renderingInputField(
  * renderingCheckboxField('terms', null, 'I agree to the <strong>Terms and Conditions</strong>', 'https://example.com/terms', 'Terms and Conditions');
  */
 function renderingCheckboxField(
-    string $name, 
-    ?string $id = null, 
-    string $agreeText, 
-    ?string $agreeUrl = null, 
+    string $name,
+    ?string $id = null,
+    string $agreeText,
+    ?string $agreeUrl = null,
     ?string $agreeUrlDescription = null
-): void
-{
+): void {
     $name                 = htmlspecialchars($name);
     $id                   = !$id ? $name : htmlspecialchars($id);
     $agreeText            = htmlspecialchars($agreeText);
     $agreeUrl             = $agreeUrl ? htmlspecialchars($agreeUrl) : null;
     $agreeUrlDescription  = $agreeUrlDescription ? htmlspecialchars($agreeUrlDescription) : null;
 
-    require __DIR__ . '/../partials/input-checkbox.php';  
+    require __DIR__ . '/../partials/input-checkbox.php';
 }
 
 /**
@@ -154,13 +153,13 @@ function renderingCheckboxField(
  * @note: Ensure that the name attribute of the input matches the session variable name 
  * if you intend to use $_SESSION to pre-fill the input with previously submitted data.
  */
-function renderingTextArea(?string $label, string $name) : void
+function renderingTextArea(?string $label, string $name): void
 {
     $label = $label ? htmlspecialchars($label) : null;
     $name  = htmlspecialchars($name);
 
-    require __DIR__ . '/../partials/textArea.php'; 
-} 
+    require __DIR__ . '/../partials/textArea.php';
+}
 
 /**
  * Renders a partial text area field using the textArea.php template.
@@ -172,13 +171,13 @@ function renderingTextArea(?string $label, string $name) : void
  * @note: Ensure that the name attribute of the input matches the session variable name 
  * if you intend to use $_SESSION to pre-fill the input with previously submitted data.
  */
-function renderingSelectOption(?string $label, string $name, array $data) : void
+function renderingSelectOption(?string $label, string $name, array $data): void
 {
     $label = $label ? htmlspecialchars($label) : null;
     $name  = htmlspecialchars($name);
 
-    require __DIR__ . '/../partials/select-option.php'; 
-} 
+    require __DIR__ . '/../partials/select-option.php';
+}
 
 /** 
  * Renders a width: 100% submit button.
@@ -190,7 +189,7 @@ function renderingSubmitButton(string $name, string $value): void
     $name       = htmlspecialchars($name);
     $value      = htmlspecialchars($value);
 
-    require __DIR__ . '/../partials/input-submit.php';  
+    require __DIR__ . '/../partials/input-submit.php';
 }
 
 /**
@@ -200,7 +199,7 @@ function renderingSubmitButton(string $name, string $value): void
  * @param string $currentPage The current file path.
  * @return string The formatted page name.
  */
-function fileName($currentPage): string 
+function fileName($currentPage): string
 {
     $pageName = basename($currentPage, '.php');
     $page = str_replace("-", " ", $pageName);
@@ -223,11 +222,10 @@ function fileName($currentPage): string
  * @return string|null Returns "selected" if the values match, otherwise null.
  */
 function addSelectedTag(
-    string $getParam = null, 
-    string $formValue, 
+    string $getParam = null,
+    string $formValue,
     bool|string|null $sessionName = null
-    ): ?string
-{
+): ?string {
     // If $sessionName is true, use $getParam as the session key
     $sessionName = $sessionName === true ? $getParam : $sessionName;
 
@@ -248,7 +246,7 @@ function addSelectedTag(
  * @param string $redirectionUrl The URL which the user will be redirected to after logging out.
  * @return void 
  */
-function logout(string $redirectionUrl): void 
+function logout(string $redirectionUrl): void
 {
     session_unset();
     session_destroy();
@@ -265,14 +263,14 @@ function logout(string $redirectionUrl): void
  * @param mixed $variable The variable to debug (e.g., $_SESSION, an array, or any other variable).
  * @return void
  */
-function formatVar(string $function, mixed $variable) 
+function formatVar(string $function, mixed $variable)
 {
     if ($function !== "d" && $function !== "e") {
         throw new Exception("Wrong function parameter!");
     }
 
     $variableName = "";
-    foreach($GLOBALS as $varName => $value) {
+    foreach ($GLOBALS as $varName => $value) {
         if ($value === $variable) {
             $variableName = "\$" . $varName;
         }
@@ -288,7 +286,8 @@ function formatVar(string $function, mixed $variable)
  * Checks if the user is logged in.
  * If the user is not logged in, redirects to the login page.
  */
-function requireLogin() {
+function requireLogin()
+{
     if (!isset($_SESSION['user_role'])) {
         header("Location: /ticketing-system/public/forms/login.php");
         die;
@@ -304,7 +303,7 @@ function requireLogin() {
  * @param string|array $role The required role or an array of allowed roles.
  * @param string|null $url Optional. The URL to redirect unauthorized users to. If null, execution is terminated.
  */
-function checkAuthorization(string|array $role, ?string $url = null) 
+function checkAuthorization(string|array $role, ?string $url = null)
 {
     // Check if the user is logged in, redirects to the login page if not.
     requireLogin();
@@ -312,7 +311,7 @@ function checkAuthorization(string|array $role, ?string $url = null)
     if (is_array($role)) $authorized = in_array($_SESSION['user_role'], $role);
 
     if (is_string($role)) $authorized = $_SESSION['user_role'] === $role;
-    
+
     // Redirection
     if ($authorized !== true) {
         if ($url === null) {
@@ -345,12 +344,12 @@ function getPanel(): string
  * @param string $icon       Material Design Icon class (e.g. "mdi-ticket").
  */
 
-function renderDashboardCard (
-    string $label, 
-    int|string $count, 
-    string $iconColor, 
-    string $icon)
-{
+function renderDashboardCard(
+    string $label,
+    int|string $count,
+    string $iconColor,
+    string $icon
+) {
     include '../../partials/_admin_dashboard_card_widget.php';
 }
 
@@ -377,9 +376,9 @@ function loadTicketFilterData(): array
     $departments = $department->getAllDepartmentNames();
 
     return [
-        "statuses" => $statuses, 
-        "priorities" => $priorities, 
-        "departments" => $departments, 
+        "statuses" => $statuses,
+        "priorities" => $priorities,
+        "departments" => $departments,
     ];
 }
 
@@ -399,8 +398,8 @@ function buildAllowedTicketValues(array $allTicketFilterData): array
 {
     // Set allowed values list for fetchAllTickets() method
     return array_merge(
-        ["statuses" => $allTicketFilterData["statuses"]], 
-        ["priorities" => $allTicketFilterData["priorities"]], 
+        ["statuses" => $allTicketFilterData["statuses"]],
+        ["priorities" => $allTicketFilterData["priorities"]],
         ["departments" => $allTicketFilterData["departments"]],
     );
 }
@@ -448,7 +447,7 @@ function renderChart(string $title, string $type, array $data): void
  * 
  * @return void
  */
-function dd(mixed $variable, string $function = "var_dump", bool $die = true): void 
+function dd(mixed $variable, string $function = "var_dump", bool $die = true): void
 {
     echo "<pre>";
 
@@ -461,7 +460,7 @@ function dd(mixed $variable, string $function = "var_dump", bool $die = true): v
     } else {
         throw new DomainException("\$function param has unallowed value. Choose `var_dump`, `var_export` or `print_r` value for it.");
     }
-    
+
     echo "</pre>";
 
     if ($die === true) die;
@@ -478,4 +477,37 @@ function dd(mixed $variable, string $function = "var_dump", bool $die = true): v
 function countPercentage(int $part, int $total): float
 {
     return $total > 0 ? round($part / $total * 100, 2) : 0;
+}
+
+/**
+ * Gets valid integer bigger than 0 from url query.
+ * Stops execution and redirects if value is invalid or missing.
+ * 
+ * @param string $key Key name from url query.
+ * @param string $url Url to redirect on fail.
+ * 
+ * @return int Validated integer value.
+ */
+function getIntFromUrlQuery(string $key, string $url = "../index.php"): int
+{
+    $value = filter_input(INPUT_GET, $key, FILTER_VALIDATE_INT, [
+        'options' => ['min_range' => 1],
+    ]);
+
+    if ($value === false) {
+        header("Location:{$url}");
+        die();
+    }
+
+    return $value;
+}
+
+/**
+ * Returns the client IP address.
+ *
+ * @return string Client IP address or 'unknown' if not available.
+ */
+function getIp(): string
+{
+    return $_SERVER['REMOTE_ADDR'] ?? 'unknown';
 }

@@ -18,7 +18,7 @@ $ticket = new Ticket();
 
 if ($ticket->deleteTicket($validId)) {
     // Set success message
-    $_SESSION["deleteTicketSuccess"] = "Ticket wit ID {$validId} is deleted successfully!";
+    $_SESSION["success"] = "Ticket with ID {$validId} is deleted successfully!";
 
     // Redirect if the deletion completed successfully 
     $panel = trim($_SESSION["user_role"] === "admin") ? "admin" : "user";

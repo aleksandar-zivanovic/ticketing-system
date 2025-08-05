@@ -11,13 +11,13 @@ foreach ($allMessages as $message):
     // Selects the message background color by a user's role in the ticket
     switch ($messageCreator) {
         case "ticketCreator":
-            $background = "bg-yellow-100";
+            $background = "bg-yellow-50";
             break;
         case "ticketAdmin":
-            $background = "bg-blue-100";
+            $background = "bg-blue-50";
             break;
         default:
-            $background = "bg-green-100";
+            $background = "bg-green-50";
             break;
     }
 ?>

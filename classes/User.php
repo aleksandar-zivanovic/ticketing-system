@@ -68,7 +68,7 @@ class User extends BaseModel
     // checking if there is a use with the entered email
     public function isEmailOccupied(): void
     {
-        $conn = $this->getConn()->connect();
+        $conn = $this->getConn();
         $queryLookForEmail = "SELECT email FROM users WHERE email = :email";
         $query = $conn->prepare($queryLookForEmail);
         $query->bindValue(':email', $this->email, PDO::PARAM_STR);
@@ -87,7 +87,7 @@ class User extends BaseModel
     // handling invalid data errors during registration process
     public function registrationErrorHandling(string $errorMessage): void
     {
-        $_SESSION['error_message'] = $errorMessage;
+        $_SESSION["fail"] = $errorMessage;
         die(header("Location: ../forms/register.php"));
     }
 
@@ -95,7 +95,7 @@ class User extends BaseModel
     public function addUser(): void
     {
         $addUserQuery = "INSERT INTO users (email, password, name, surname, phone, role_id, department_id, verification_code, verified) VALUES(:em, :pw, :nm, :sn, :pn, 1, NULL, :vc, 0)";
-        $query = $this->getConn()->connect()->prepare($addUserQuery);
+        $query = $this->getConn()->prepare($addUserQuery);
         $query->bindValue(':em', $this->email, PDO::PARAM_STR);
         $query->bindValue(':pw', $this->password, PDO::PARAM_STR);
         $query->bindValue(':nm', $this->name, PDO::PARAM_STR);
@@ -103,7 +103,7 @@ class User extends BaseModel
         $query->bindValue(':pn', $this->phone, PDO::PARAM_STR);
         $query->bindValue(':vc', $this->verificationCode, PDO::PARAM_STR);
         if ($query->execute()) {
-            $_SESSION['error_message'] = "You are registered. We sent verification email to your email addres. Check your email and verify it.";
+            $_SESSION["fail"] = "You are registered. We sent verification email to your email addres. Check your email and verify it.";
             $this->sendingVerificationEmail();
         }
     }
@@ -156,7 +156,7 @@ class User extends BaseModel
             die();
         } catch (Exception $e) {
             logError("Verification email couldn't be sent. Mailer Error: {$mail->ErrorInfo}");
-            $_SESSION['error_message'] = "Verification email couldn't be sent. Ask for a new verification code.";
+            $_SESSION["fail"] = "Verification email couldn't be sent. Ask for a new verification code.";
             header('Location: resend-confirmation-email.php');
             die();
         }
@@ -170,7 +170,7 @@ class User extends BaseModel
 
         if ($this->verificationCode != null && $this->verificationCode == $verificationCodeFromUrl) {
             $makeUserVerifiedQuery = "UPDATE users SET verification_code = null, verified = 1 WHERE email = '{$this->email}'";
-            $query = $this->getConn()->connect()->prepare($makeUserVerifiedQuery);
+            $query = $this->getConn()->prepare($makeUserVerifiedQuery);
             if ($query->execute()) {
                 $_SESSION['verification_status'] = "You are verified successfully.<br>Login in, please.";
                 return true;
@@ -189,7 +189,7 @@ class User extends BaseModel
     {
         $this->email = htmlspecialchars(trim(filter_input(INPUT_GET, 'email', FILTER_DEFAULT)));
         $verificationCodeQuery = "SELECT verification_code FROM users WHERE email = :em";
-        $query = $this->getConn()->connect()->prepare($verificationCodeQuery);
+        $query = $this->getConn()->prepare($verificationCodeQuery);
         $query->bindValue(':em', $this->email, PDO::PARAM_STR);
         $query->execute();
         return $query->rowCount() >= 1 ? $query->fetchColumn() : null;
@@ -206,7 +206,7 @@ class User extends BaseModel
 
                 $user = $this->getUserByEmail();
                 if (!$user) {
-                    $_SESSION['error_message'] = "User with that email doesn't exist. Go to registration page to register with that email address.";
+                    $_SESSION["fail"] = "User with that email doesn't exist. Go to registration page to register with that email address.";
                     header("Location: ../forms/resend-code.php");
                     die();
                 }
@@ -219,7 +219,7 @@ class User extends BaseModel
 
                 // if the new verificaton code isn't added notifying user about the error
                 if (!$this->addVerifcationCodeToUser()) {
-                    $_SESSION['error_message'] = "Something went wrong. Try again, please!";
+                    $_SESSION["fail"] = "Something went wrong. Try again, please!";
                     header("Location: ../forms/resend-code.php");
                     die();
                 }
@@ -227,7 +227,7 @@ class User extends BaseModel
                 // sending the new verification code to the user's email
                 $this->sendingVerificationEmail();
             } else {
-                $_SESSION['error_message'] = "This is not a valid email address! Please insert a valid email address";
+                $_SESSION["fail"] = "This is not a valid email address! Please insert a valid email address";
                 header("Location: ../forms/resend-code.php");
                 die();
             }
@@ -246,7 +246,7 @@ class User extends BaseModel
     public function getAllUsers(): array 
     {
         $query = "SELECT * FROM users";
-        $query = $this->getConn()->connect()->prepare($query);
+        $query = $this->getConn()->prepare($query);
         $query->execute();
         return $query->fetchAll(PDO::FETCH_ASSOC);
     }
@@ -273,7 +273,7 @@ class User extends BaseModel
                                 LEFT JOIN roles as r ON u.role_id = r.id 
                                 WHERE email = :em";
 
-        $query = $this->getConn()->connect()->prepare($getUserByEmailQuery);
+        $query = $this->getConn()->prepare($getUserByEmailQuery);
         $query->bindValue(":em", $this->email, PDO::PARAM_STR);
         $query->execute();
         $result = $query->fetch(PDO::FETCH_ASSOC);
@@ -283,7 +283,7 @@ class User extends BaseModel
     public function getPasswordByEmail(): string|null
     {
         $getPasswordByEmail = "SELECT password FROM users WHERE email = :em";
-        $query = $this->getConn()->connect()->prepare($getPasswordByEmail);
+        $query = $this->getConn()->prepare($getPasswordByEmail);
         $query->bindValue(":em", $this->email, PDO::PARAM_STR);
         $query->execute();
         $result = $query->fetch(PDO::FETCH_ASSOC);
@@ -294,7 +294,7 @@ class User extends BaseModel
     public function addVerifcationCodeToUser(): bool
     {
         $addVerifcationCodeToUserQuery = "UPDATE users SET verification_code = :vc WHERE email = '{$this->email}'";
-        $query = $this->getConn()->connect()->prepare($addVerifcationCodeToUserQuery);
+        $query = $this->getConn()->prepare($addVerifcationCodeToUserQuery);
         $query->bindValue(':vc', $this->verificationCode, PDO::PARAM_STR);
         $query->execute();
         return $query->rowCount() > 0 ? true : false;
@@ -307,14 +307,14 @@ class User extends BaseModel
 
         // checking if the email address is valid
         if (!filter_var($this->email, FILTER_VALIDATE_EMAIL)) {
-            $_SESSION['error_message'] = "Invalid email format.";
+            $_SESSION["fail"] = "Invalid email format.";
             header("Location: ../forms/login.php");
             die();
         }
 
         // checking password length
         if (strlen($this->password) < 6) {
-            $_SESSION['error_message'] = "Wrong password.";
+            $_SESSION["fail"] = "Wrong password.";
             header("Location: ../forms/login.php");
             die();
         }
@@ -322,7 +322,7 @@ class User extends BaseModel
         $passwordFromDb = $this->getPasswordByEmail();
 
         if ($passwordFromDb === null) {
-            $_SESSION['error_message'] = "An account with this email doesn't exist.";
+            $_SESSION["fail"] = "An account with this email doesn't exist.";
             header("Location: ../forms/login.php");
             die();
         }
@@ -333,7 +333,7 @@ class User extends BaseModel
 
             // forbidding login to unverified users
             if ($user['u_verified'] !== 1) {
-                $_SESSION['error_message'] = "Please verify you account before loggin in.";
+                $_SESSION["fail"] = "Please verify you account before loggin in.";
                 header("Location: ../forms/login.php");
                 die();
             }
@@ -347,11 +347,11 @@ class User extends BaseModel
             $_SESSION['user_phone'] = $user['u_phone'];
             $_SESSION['user_department'] = $user['d_name'];
             $_SESSION['isVerified'] = true;
-            $_SESSION['info_message'] = "Logged in successfully!";
+            $_SESSION["info"] = "Logged in successfully!";
             header("Location: ../");
             die();
         } else {
-            $_SESSION['error_message'] = "Wrong password.";
+            $_SESSION["fail"] = "Wrong password.";
             header("Location: ../forms/login.php");
             die();
         }

@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jul 30, 2025 at 06:36 PM
+-- Generation Time: Aug 11, 2025 at 10:48 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -128,18 +128,6 @@ INSERT INTO `roles` (`id`, `role_name`) VALUES
 -- --------------------------------------------------------
 
 --
--- Table structure for table `splited_tickets`
---
-
-CREATE TABLE `splited_tickets` (
-  `id` int(11) NOT NULL,
-  `old_ticket` int(11) NOT NULL,
-  `new_ticket` int(11) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
-
---
 -- Table structure for table `statuses`
 --
 
@@ -155,8 +143,7 @@ CREATE TABLE `statuses` (
 INSERT INTO `statuses` (`id`, `name`) VALUES
 (1, 'waiting'),
 (2, 'in progress'),
-(3, 'closed'),
-(4, 'split');
+(3, 'closed');
 
 -- --------------------------------------------------------
 
@@ -177,7 +164,8 @@ CREATE TABLE `tickets` (
   `closing_type` varchar(10) DEFAULT NULL,
   `title` varchar(255) NOT NULL,
   `body` text NOT NULL,
-  `url` varchar(255) NOT NULL
+  `url` varchar(255) NOT NULL,
+  `parent_ticket` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -267,14 +255,6 @@ ALTER TABLE `roles`
   ADD PRIMARY KEY (`id`);
 
 --
--- Indexes for table `splited_tickets`
---
-ALTER TABLE `splited_tickets`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `fk_splitedtickets_newticket_tickets_id` (`new_ticket`),
-  ADD KEY `fk_splitedtickets_oldticket_tickets_id` (`old_ticket`);
-
---
 -- Indexes for table `statuses`
 --
 ALTER TABLE `statuses`
@@ -289,7 +269,8 @@ ALTER TABLE `tickets`
   ADD KEY `fk_tickets_department_departments_id` (`department`),
   ADD KEY `fk_tickets_handledby_users_id` (`handled_by`),
   ADD KEY `fk_tickets_priority_priorities_id` (`priority`),
-  ADD KEY `fk_tickets_statusId_statuses_id` (`statusId`) USING BTREE;
+  ADD KEY `fk_tickets_statusId_statuses_id` (`statusId`) USING BTREE,
+  ADD KEY `fk_tickets_parent_ticket_tikcets_id` (`parent_ticket`);
 
 --
 -- Indexes for table `ticket_attachments`
@@ -348,12 +329,6 @@ ALTER TABLE `roles`
   MODIFY `id` tinyint(4) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
--- AUTO_INCREMENT for table `splited_tickets`
---
-ALTER TABLE `splited_tickets`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
 -- AUTO_INCREMENT for table `statuses`
 --
 ALTER TABLE `statuses`
@@ -408,19 +383,13 @@ ALTER TABLE `message_attachments`
   ADD CONSTRAINT `fk_messageattachments_message_messages_id` FOREIGN KEY (`message`) REFERENCES `messages` (`id`);
 
 --
--- Constraints for table `splited_tickets`
---
-ALTER TABLE `splited_tickets`
-  ADD CONSTRAINT `fk_splitedtickets_newticket_tickets_id` FOREIGN KEY (`new_ticket`) REFERENCES `tickets` (`id`),
-  ADD CONSTRAINT `fk_splitedtickets_oldticket_tickets_id` FOREIGN KEY (`old_ticket`) REFERENCES `tickets` (`id`);
-
---
 -- Constraints for table `tickets`
 --
 ALTER TABLE `tickets`
   ADD CONSTRAINT `fk_tickets_createdby_users_id` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`),
   ADD CONSTRAINT `fk_tickets_department_departments_id` FOREIGN KEY (`department`) REFERENCES `departments` (`id`),
   ADD CONSTRAINT `fk_tickets_handledby_users_id` FOREIGN KEY (`handled_by`) REFERENCES `users` (`id`),
+  ADD CONSTRAINT `fk_tickets_parent_ticket_tikcets_id` FOREIGN KEY (`parent_ticket`) REFERENCES `tickets` (`id`),
   ADD CONSTRAINT `fk_tickets_priority_priorities_id` FOREIGN KEY (`priority`) REFERENCES `priorities` (`id`),
   ADD CONSTRAINT `fk_tickets_statusId_statuses_id` FOREIGN KEY (`statusId`) REFERENCES `statuses` (`id`);
 

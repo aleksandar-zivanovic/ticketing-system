@@ -34,14 +34,14 @@ unset($ticket);
 $spitTicketsCount = 0;
 $reopenedTickets  = 0;
 foreach ($allTicketsData as $key => $value) {
-    if ($allTicketsData[$key]["status_name"] === "split") {
+    if ($allTicketsData[$key]["closing_type"] === "split") {
         $spitTicketsCount++;
         unset($allTicketsData[$key]);
         continue;
     }
 
-    // Count reopened tickets
-    if ($allTicketsData[$key]["status_name"] !== "split" && $allTicketsData[$key]["was_reopened"] === 1) {
+    // Count reopened tickets. Doesn't count split tickets.
+    if ($allTicketsData[$key]["closing_type"] !== "split" && $allTicketsData[$key]["was_reopened"] === 1) {
         $reopenedTickets++;
     }
 }

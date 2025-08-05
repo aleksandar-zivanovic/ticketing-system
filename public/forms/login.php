@@ -24,11 +24,11 @@ require_once '../../helpers/functions.php';
             <h4 class="text-gray-800 text-base font-semibold mt-6">Login to your account</h4>
         </div>
 
-        <?php if (!empty($_SESSION['error_message'])): ?>
+        <?php if (!empty($_SESSION["fail"])): ?>
         <div class="bg-red-100 m-6 p-2 text-center">
             <?php
             // handling login error message
-            handleSessionMessages('error_message', true);
+            handleSessionMessages("fail", true);
             ?>
         </div>
         <?php endif; ?>

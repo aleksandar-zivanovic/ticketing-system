@@ -10,6 +10,7 @@ class Ticket extends BaseModel
     public int $priorityId;
     public int $statusId;
     public int $userId;
+    public int $parentId;
     public ?array $images;
     public array $closingTypes = [
         "normal",    // Ticket was resolved and closed in the usual way.
@@ -45,24 +46,131 @@ class Ticket extends BaseModel
         $this->url = $url;
         $this->title = cleanString(filter_input(INPUT_POST, "error_title", FILTER_DEFAULT));
         $this->description = cleanString(filter_input(INPUT_POST, "error_description", FILTER_DEFAULT));
-        $this->departmentId = cleanString(filter_input(INPUT_POST, "department", FILTER_SANITIZE_NUMBER_INT));
-        $this->priorityId = cleanString(filter_input(INPUT_POST, "priority", FILTER_SANITIZE_NUMBER_INT));
+        $this->departmentId = cleanString(filter_input(INPUT_POST, "error_department", FILTER_SANITIZE_NUMBER_INT));
+        $this->priorityId = cleanString(filter_input(INPUT_POST, "error_priority", FILTER_SANITIZE_NUMBER_INT));
         $this->statusId = 1;
         $this->userId = cleanString($_SESSION["user_id"]);
     }
 
     /**
-     * Creates a new ticket
+     * Collects and sanitizes data from the form for creating a new tickets from the split ticket.
+     * Url, ticket creator ID, ticket status and parent ticket ID are set to proprties, 
+     * while other parameters are returned in the array formatted as: 
+     *  [
+     *      "error_department"  => [int, ...], 
+     *      "error_priority"    => [int, ...], 
+     *      "error_title"       => [int, ...], 
+     *      "error_description" => [int, ...], 
+     *  ]
+     * 
+     * @return array
      */
-    public function createTicket(): void
+    public function collectSplitTicketData(): array
     {
-        $this->collectTicketData();
-        $conn = $this->getConn()->connect();
+        // Gets url from $_POST
+        $url = filter_input_array(INPUT_POST, ["error_page" => ['filter' => FILTER_VALIDATE_URL, 'flags' => FILTER_REQUIRE_ARRAY,]]);
+
+        if (empty($url["error_page"][0])) {
+            throw new RuntimeException('URL is not valid!');
+        } else {
+            $this->url = cleanString($url["error_page"][0]);
+        }
+
+        // Gets departments from $_POST
+        $filters = [
+            "error_department" => [
+                "filter" => FILTER_VALIDATE_INT,
+                "flags" => FILTER_REQUIRE_ARRAY,
+            ]
+        ];
+        $values = filter_input_array(INPUT_POST, $filters);
+
+        if (empty($values["error_department"])) throw new DomainException("Empty department ID.");
+
+        foreach ($values["error_department"] as $dep) {
+            if ($dep === false || $dep < 1) {
+                throw new DomainException("Empty department ID.");
+            }
+        }
+
+        // Gets priorities from $_POST
+        $filters = [
+            "error_priority" => [
+                "filter" => FILTER_VALIDATE_INT,
+                "flags" => FILTER_REQUIRE_ARRAY,
+            ]
+        ];
+        $values = $values + filter_input_array(INPUT_POST, $filters);
+
+        if (empty($values["error_priority"])) throw new DomainException("You didn't set priorities");
+
+        foreach ($values["error_priority"] as $pri) {
+            if ($pri === false || $pri < 1) {
+                throw new DomainException("You didn't set priorities.");
+            }
+        }
+
+        // Gets titles from $_POST
+        $values["error_title"] = [];
+        foreach ($_POST["error_title"] as $key => $title) {
+            $values["error_title"][$key] = cleanString($title);
+            if (empty($values["error_title"][$key])) throw new DomainException("You didn't set title.");
+        }
+
+        // Gets descriptions from $_POST
+        $values["error_description"] = [];
+        foreach ($_POST["error_description"] as $key => $desc) {
+            $values["error_description"][$key] = cleanString($desc);
+            if (empty($values["error_description"][$key])) throw new DomainException("You didn't set description.");
+        }
+
+        // Gets ID of ticket to split
+        $splitTicketId = filter_input(INPUT_POST, "error_ticket_id", FILTER_VALIDATE_INT);
+        if ($splitTicketId === false || $splitTicketId < 1) {
+            logError("Inserted fake ticket id in `error_ticket_id` input field inside split ticket form by user {$_SESSION["email"]}.");
+            throw new DomainException("False data.");
+        }
+        $this->parentId = $splitTicketId;
+
+        // Gets ID of the ticket creator
+        $theCreator = filter_input(INPUT_POST, "error_user_id", FILTER_VALIDATE_INT);
+        if ($theCreator === false || $theCreator < 1) {
+            logError("Inserted fake user id in `created_by` input field inside split ticket form by user {$_SESSION["email"]}.");
+            throw new DomainException("False data.");
+        }
+        $this->userId = $theCreator;
+
+        $this->statusId = 1;
+
+        return $values;
+    }
+
+    /**
+     * Creates a new ticket or mutliple new tickets.
+     * 
+     * @param bool $split If true used in splitting process, otherwise in creating a new ticket.
+     * @param ?array $ticketAttachments Formatted array of attachments for multiple tickets, null a single ticket. Default is null.
+     * @param ?Attachment $attachment Attachment object or null.
+     * 
+     * @return void
+     */
+    public function createTicket(
+        bool $split               = false,
+        ?array $ticketAttachments = null,
+        ?Attachment $attachment   = null
+    ): void {
+        if ($split === false) {
+            $this->collectTicketData();
+        }
+
+        $conn = $this->getConn();
+
+        $query = "INSERT INTO tickets (department, created_by, priority, statusId, title, body, url";
+        if ($split === true) $query .= ", parent_ticket";
+        $query .= ") VALUES(:de, :us, :pr, :st, :tt, :bd, :ul";
+        $query .= $split === true ? ", :pi)" : ")";
 
         try {
-            $query = "INSERT INTO tickets (department, created_by, priority, statusId, title, body, url) " .
-                "VALUES(:de, :us, :pr, :st, :tt, :bd, :ul)";
-
             $stmt = $conn->prepare($query);
             $stmt->bindValue(":de", $this->departmentId, PDO::PARAM_INT);
             $stmt->bindValue(":us", $this->userId, PDO::PARAM_INT);
@@ -71,6 +179,7 @@ class Ticket extends BaseModel
             $stmt->bindValue(":tt", $this->title, PDO::PARAM_STR);
             $stmt->bindValue(":bd", $this->description, PDO::PARAM_STR);
             $stmt->bindValue(":ul", $this->url, PDO::PARAM_STR);
+            if ($split === true) $stmt->bindValue(":pi", $this->parentId, PDO::PARAM_INT);
             $stmt->execute();
             $ticketId = (int) $conn->lastInsertId();
 
@@ -78,16 +187,25 @@ class Ticket extends BaseModel
             $this->addCurrentYear();
 
             // Proccesses files if they are attached in form:
-            if ($_FILES['error_images']['error'][0] != 4) {
-                require_once 'Attachment.php';
-                $attachment = new Attachment();
-                $attachment->processImages($ticketId, "ticket_attachments", "error_images");
+            if ($ticketAttachments === null) {
+                $ticketAttachments = $_FILES;
+            }
+            unset($_FILES);
+            if ($ticketAttachments['error_images']['error'][0] != 4) {
+                if ($split === false) {
+                    require_once 'Attachment.php';
+                    $attachment = new Attachment();
+                }
+                $attachment->processImages($ticketAttachments, $ticketId, "ticket_attachments", "error_images");
             }
 
-            $_SESSION["info_message"] = "The issue is reported! Thank you!";
+            if ($split === false) {
+                $_SESSION["info"] = "The issue is reported! Thank you!";
 
-            // Redirects the user to the reported page after the successful ticket creation.
-            header("Location: {$this->url}");
+                // Redirects the user to the reported page after the successful ticket creation.
+                header("Location: {$this->url}");
+                die;
+            }
         } catch (\PDOException $e) {
             logError("createTicket error: INSERT query failed!", ["message" => $e->getMessage(), "code" => $e->getCode()]);
 
@@ -103,6 +221,43 @@ class Ticket extends BaseModel
         require_once 'Year.php';
         $yearInstance = new Year();
         $yearInstance->createYear(date("Y")); // Add the year in `years` table.
+    }
+
+    /**
+     * Prepares data for multiple creating ticket calls.
+     */
+    public function splitTicket(): void
+    {
+        require_once 'Attachment.php';
+        $attachment     = new Attachment();
+        $attachments    = $attachment->processImagesForSplit();
+        $splitData      = $this->collectSplitTicketData();
+
+        foreach ($attachments as $key => $ticketAttachments) {
+            $this->title        = $splitData["error_title"][$key];
+            $this->priorityId   = $splitData["error_priority"][$key];
+            $this->description  = $splitData["error_description"][$key];
+            $this->departmentId = $splitData["error_department"][$key];
+            $this->createTicket(true, $ticketAttachments, $attachment);
+
+            $columns = [["statusId" => 3, "closed_date" => date("Y-m-d H:i:s"), "closing_type" => "split"]];
+            $whereClauses = [["id" => $this->parentId]];
+            $this->updateTicket($columns, $whereClauses);
+        }
+
+        unset(
+            $_SESSION["error_department"],
+            $_SESSION["error_priority"],
+            $_SESSION["error_page"],
+            $_SESSION["error_title"],
+            $_SESSION["error_description"],
+            $_SESSION["error_user_id"],
+            $_SESSION["error_ticket_id"],
+        );
+
+        $_SESSION["success"] = "Ticket with ID {$this->parentId} is split!";
+        header("Location: ../admin/admin-ticket-listing.php");
+        die;
     }
 
     /**
@@ -223,7 +378,7 @@ class Ticket extends BaseModel
             }
 
             // Prepares and executes the SQL query
-            $stmt = $this->getConn()->connect()->prepare($query);
+            $stmt = $this->getConn()->prepare($query);
 
             // Binds the value of limit to the query if it is greater than 0
             if ($limit !== 0) $stmt->bindValue("limit", $limit, PDO::PARAM_INT);
@@ -299,7 +454,7 @@ class Ticket extends BaseModel
             }
 
             // Prepares and executes the SQL query
-            $stmt = $this->getConn()->connect()->prepare($query);
+            $stmt = $this->getConn()->prepare($query);
             $stmt->execute();
 
             // Returns the fetched result set
@@ -345,7 +500,7 @@ class Ticket extends BaseModel
                     WHERE t.id = :ticket";
 
             // Prepares and executes the SQL query
-            $stmt = $this->getConn()->connect()->prepare($query);
+            $stmt = $this->getConn()->prepare($query);
 
             // Binds the value of limit to the query if it is greater than 0
             $stmt->bindValue("ticket", $ticketId, PDO::PARAM_INT);
@@ -448,7 +603,7 @@ class Ticket extends BaseModel
         $sql .= "closed_date = {$curentDateSql} WHERE id = :tid";
 
         try {
-            $stmt = $this->getConn()->connect()->prepare($sql);
+            $stmt = $this->getConn()->prepare($sql);
             $stmt->bindValue(":si", $statusId, PDO::PARAM_INT);
             if ($action === "close") $stmt->bindValue(":ct", $closingType, PDO::PARAM_STR);
             $stmt->bindValue(":tid", $ticketId, PDO::PARAM_INT);
@@ -483,7 +638,7 @@ class Ticket extends BaseModel
 
         try {
             $sql = "DELETE FROM tickets WHERE id IN (" . implode(",", $params) . ")";
-            $stmt = $this->getConn()->connect()->prepare($sql);
+            $stmt = $this->getConn()->prepare($sql);
             foreach ($params as $key => $value) {
                 $stmt->bindValue($value, $ids[$key], PDO::PARAM_INT);
             }
@@ -571,7 +726,7 @@ class Ticket extends BaseModel
 
         try {
             $sql = "UPDATE tickets SET handled_by = :adm, statusId = 2 WHERE id = {$ticketId}";
-            $stmt = $this->getConn()->connect()->prepare($sql);
+            $stmt = $this->getConn()->prepare($sql);
             $stmt->bindValue(":adm", $adminId, PDO::PARAM_INT);
             $stmt->execute();
             return true;
@@ -721,8 +876,8 @@ class Ticket extends BaseModel
                 if (str_contains(haystack: $name, needle: $filters[$i])) {
                     $totalByFilter = count($ticketsByFilters[$filters[$i]]);
                     $countTicketsByFilters[] = [
-                        ucfirst($filters[$i]), 
-                        $totalByFilter, 
+                        ucfirst($filters[$i]),
+                        $totalByFilter,
                         countPercentage($totalByFilter, $totalTickets)
                     ];
                     break;
@@ -731,5 +886,39 @@ class Ticket extends BaseModel
         }
 
         return $countTicketsByFilters;
+    }
+
+    public function updateTicket(array $columns, array $whereClauses): void
+    {
+        $this->updateRows("tickets", $columns, $whereClauses);
+    }
+
+    /**
+     * Checks if the ticket was created by splitting another ticket.
+     * 
+     * @param array $ticket Ticket data array.
+     * @return bool True if the tickets has a parent ticket, otherwise false.
+     */
+    public function isCreatedBySplitting(array $ticket): bool
+    {
+        return $ticket["parent_ticket"] !== null;
+    }
+
+    /**
+     * Checks if the ticket has children tickets.
+     * 
+     * @param int $parentId Id of ticket whose children is lookng for.
+     * 
+     * @return bool True if there are children, otherwise false.
+     */
+    public function hasChildren(int $parentId): bool
+    {
+        $sql = "SELECT COUNT(id) FROM tickets WHERE parent_ticket = :pt";
+        $stmt = $this->getConn()->prepare($sql);
+        $stmt->bindValue(":pt", $parentId, PDO::PARAM_INT);
+        $stmt->execute();
+        $count = $stmt->fetchColumn();
+
+        return $count > 0;
     }
 }

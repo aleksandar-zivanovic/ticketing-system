@@ -33,8 +33,8 @@ $userIdFromSession = $_SESSION['user_id'];
 $ticket = new Ticket();
 $theTicket = $ticket->fetchTicketDetails($ticketIdFromForm);
 
-// Verifies whether the ticket has "in progress" or "closed" status.
-if ($theTicket["statusId"] === 1 || $theTicket["statusId"] === 4) {
+// Verifies whether the ticket has "in progress".
+if ($theTicket["statusId"] === 2) {
     throw new Exception("Only tickets with `in progress` status can be deleted!");
 }
 
