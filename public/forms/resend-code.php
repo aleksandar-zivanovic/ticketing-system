@@ -17,10 +17,10 @@
     <div class="form_wrapper">
         <?php
             // handling registration error message
-            handleSessionMessages('error_message', true);
+            handleSessionMessages("fail", true);
 
             // handling email verification error message
-            handleSessionMessages('verification_status', true);
+            handleSessionMessages("verification_status", true);
         ?>
         <div class="form_container">
             <div class="title_container">

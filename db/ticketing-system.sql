@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jul 30, 2025 at 06:36 PM
+-- Generation Time: Aug 06, 2025 at 06:54 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -177,7 +177,8 @@ CREATE TABLE `tickets` (
   `closing_type` varchar(10) DEFAULT NULL,
   `title` varchar(255) NOT NULL,
   `body` text NOT NULL,
-  `url` varchar(255) NOT NULL
+  `url` varchar(255) NOT NULL,
+  `parent_ticket` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -289,7 +290,8 @@ ALTER TABLE `tickets`
   ADD KEY `fk_tickets_department_departments_id` (`department`),
   ADD KEY `fk_tickets_handledby_users_id` (`handled_by`),
   ADD KEY `fk_tickets_priority_priorities_id` (`priority`),
-  ADD KEY `fk_tickets_statusId_statuses_id` (`statusId`) USING BTREE;
+  ADD KEY `fk_tickets_statusId_statuses_id` (`statusId`) USING BTREE,
+  ADD KEY `fk_tickets_parent_ticket_tikcets_id` (`parent_ticket`);
 
 --
 -- Indexes for table `ticket_attachments`
@@ -421,6 +423,7 @@ ALTER TABLE `tickets`
   ADD CONSTRAINT `fk_tickets_createdby_users_id` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`),
   ADD CONSTRAINT `fk_tickets_department_departments_id` FOREIGN KEY (`department`) REFERENCES `departments` (`id`),
   ADD CONSTRAINT `fk_tickets_handledby_users_id` FOREIGN KEY (`handled_by`) REFERENCES `users` (`id`),
+  ADD CONSTRAINT `fk_tickets_parent_ticket_tikcets_id` FOREIGN KEY (`parent_ticket`) REFERENCES `tickets` (`id`),
   ADD CONSTRAINT `fk_tickets_priority_priorities_id` FOREIGN KEY (`priority`) REFERENCES `priorities` (`id`),
   ADD CONSTRAINT `fk_tickets_statusId_statuses_id` FOREIGN KEY (`statusId`) REFERENCES `statuses` (`id`);
 

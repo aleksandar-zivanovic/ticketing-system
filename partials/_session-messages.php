@@ -1,4 +1,7 @@
 <?php
 // Display session messages.
-handleSessionMessages("deleteTicketSuccess", true, "my-6 p-2 text-center bg-green-300 p-2");
-handleSessionMessages("general_nfo", true, "my-6 p-2 text-white font-bold text-center bg-blue-400 p-2");
+$style = "my-6 font-bold text-white text-center p-2";
+handleSessionMessages("success", true, "bg-green-300 {$style}");
+handleSessionMessages("fail", true, "bg-red-300 {$style}");
+handleSessionMessages("info", true, "bg-blue-400 {$style}");
+handleSessionMessages("verification_status", true, "bg-orange-400 {$style}");

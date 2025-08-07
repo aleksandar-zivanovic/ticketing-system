@@ -3,6 +3,20 @@ session_start();
 require_once '../../helpers/functions.php';
 require_once '../../classes/Department.php';
 require_once '../../classes/Ticket.php';
+
+unset(
+    $_SESSION["error_priority"],
+    $_SESSION["error_page"],
+    $_SESSION["error_department"],
+    $_SESSION["error_title"],
+    $_SESSION["error_description"],
+    $_SESSION["error_user_id"],
+    $_SESSION["error_ticket_id"],
+    $_SESSION["limit"],
+    $_SESSION["info"],
+    $_SESSION["success"],
+    $_SESSION["fail"]
+);
 ?>
 
 <!DOCTYPE html>

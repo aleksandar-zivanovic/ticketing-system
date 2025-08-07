@@ -10,6 +10,7 @@ class Ticket extends BaseModel
     public int $priorityId;
     public int $statusId;
     public int $userId;
+    public int $parentId;
     public ?array $images;
     public array $closingTypes = [
         "normal",    // Ticket was resolved and closed in the usual way.
@@ -53,7 +54,7 @@ class Ticket extends BaseModel
 
     /**
      * Collects and sanitizes data from the form for creating a new tickets from the split ticket.
-     * Url, ticket creator ID and ticket status are set to proprties, 
+     * Url, ticket creator ID, ticket status and parent ticket ID are set to proprties, 
      * while other parameters are returned in the array formatted as: 
      *  [
      *      "error_department"  => [int, ...], 
@@ -129,7 +130,7 @@ class Ticket extends BaseModel
             logError("Inserted fake ticket id in `error_ticket_id` input field inside split ticket form by user {$_SESSION["email"]}.");
             throw new DomainException("False data.");
         }
-        $values["splitTicketId"] = $splitTicketId;
+        $this->parentId = $splitTicketId;
 
         // Gets ID of the ticket creator
         $theCreator = filter_input(INPUT_POST, "error_user_id", FILTER_VALIDATE_INT);
@@ -147,15 +148,23 @@ class Ticket extends BaseModel
     /**
      * Creates a new ticket
      */
-    public function createTicket(): void
-    {
-        $this->collectTicketData();
+    public function createTicket(
+        bool $split               = false,
+        ?array $ticketAttachments = null,
+        ?Attachment $attachment   = null
+    ): void {
+        if ($split === false) {
+            $this->collectTicketData();
+        }
+
         $conn = $this->getConn()->connect();
 
-        try {
-            $query = "INSERT INTO tickets (department, created_by, priority, statusId, title, body, url) " .
-                "VALUES(:de, :us, :pr, :st, :tt, :bd, :ul)";
+        $query = "INSERT INTO tickets (department, created_by, priority, statusId, title, body, url";
+        if ($split === true) $query .= ", parent_ticket";
+        $query .= ") VALUES(:de, :us, :pr, :st, :tt, :bd, :ul";
+        $query .= $split === true ? ", :pi)" : ")";
 
+        try {
             $stmt = $conn->prepare($query);
             $stmt->bindValue(":de", $this->departmentId, PDO::PARAM_INT);
             $stmt->bindValue(":us", $this->userId, PDO::PARAM_INT);
@@ -164,6 +173,7 @@ class Ticket extends BaseModel
             $stmt->bindValue(":tt", $this->title, PDO::PARAM_STR);
             $stmt->bindValue(":bd", $this->description, PDO::PARAM_STR);
             $stmt->bindValue(":ul", $this->url, PDO::PARAM_STR);
+            if ($split === true) $stmt->bindValue(":pi", $this->parentId, PDO::PARAM_INT);
             $stmt->execute();
             $ticketId = (int) $conn->lastInsertId();
 
@@ -171,16 +181,24 @@ class Ticket extends BaseModel
             $this->addCurrentYear();
 
             // Proccesses files if they are attached in form:
-            if ($_FILES['error_images']['error'][0] != 4) {
-                require_once 'Attachment.php';
-                $attachment = new Attachment();
-                $attachment->processImages($ticketId, "ticket_attachments", "error_images");
+            if ($ticketAttachments === null) {
+                $ticketAttachments = $_FILES;
+            }
+            unset($_FILES);
+            if ($ticketAttachments['error_images']['error'][0] != 4) {
+                if ($split === false) {
+                    require_once 'Attachment.php';
+                    $attachment = new Attachment();
+                }
+                $attachment->processImages($ticketAttachments, $ticketId, "ticket_attachments", "error_images");
             }
 
-            $_SESSION["info_message"] = "The issue is reported! Thank you!";
+            if ($split === false) {
+                $_SESSION["info"] = "The issue is reported! Thank you!";
 
-            // Redirects the user to the reported page after the successful ticket creation.
-            header("Location: {$this->url}");
+                // Redirects the user to the reported page after the successful ticket creation.
+                header("Location: {$this->url}");
+            }
         } catch (\PDOException $e) {
             logError("createTicket error: INSERT query failed!", ["message" => $e->getMessage(), "code" => $e->getCode()]);
 
@@ -203,14 +221,21 @@ class Ticket extends BaseModel
      */
     public function splitTicket(): void
     {
-        dd($this->collectSplitTicketData());
-        $this->collectSplitTicketData();
+        require_once 'Attachment.php';
+        $attachment     = new Attachment();
+        $attachments    = $attachment->processImagesForSplit();
+        $splitData      = $this->collectSplitTicketData();
 
+        foreach ($attachments as $key => $ticketAttachments) {
+            $this->title        = $splitData["error_title"][$key];
+            $this->priorityId   = $splitData["error_priority"][$key];
+            $this->description  = $splitData["error_description"][$key];
+            $this->departmentId = $splitData["error_department"][$key];
+            $this->createTicket(true, $ticketAttachments, $attachment);
+        }
 
-
-        // Pripremiti slike
-        // Dodati kolonu `parent_ticket` u tabelu `tickets` i upisati tokom kreiranja tiketa;
-
+        $_SESSION["succes"] = "Ticket with ID {$this->parentId} is split!";
+        header("Location: ../admin/admin-ticket-listing.php");
     }
 
     /**

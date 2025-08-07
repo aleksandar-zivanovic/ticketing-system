@@ -26,11 +26,11 @@ $theTicket = $ticket->fetchTicketDetails($ticketID);
 
 // Validate user's permission to delete the ticket
 if((trim($_SESSION["user_role"]) !== "admin") || trim($_SESSION["user_id"]) === $theTicket["created_by"]) {
-    $_SESSION["general_nfo"] = "You don't have the permission for this action!";
+    $_SESSION["info"] = "You don't have the permission for this action!";
     die(header("Location: ../user/user-view-ticket.php?ticket={$ticketID}"));
 }
 
 if ($ticket->takeTicket($ticketID)) {
-    $_SESSION["general_nfo"] = "The ticket ID:{$ticketID} is assigned to you!";
+    $_SESSION["info"] = "The ticket ID:{$ticketID} is assigned to you!";
     die(header("Location: ../admin/view-ticket.php?ticket={$ticketID}"));
 }

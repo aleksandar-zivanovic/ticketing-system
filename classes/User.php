@@ -87,7 +87,7 @@ class User extends BaseModel
     // handling invalid data errors during registration process
     public function registrationErrorHandling(string $errorMessage): void
     {
-        $_SESSION['error_message'] = $errorMessage;
+        $_SESSION["fail"] = $errorMessage;
         die(header("Location: ../forms/register.php"));
     }
 
@@ -103,7 +103,7 @@ class User extends BaseModel
         $query->bindValue(':pn', $this->phone, PDO::PARAM_STR);
         $query->bindValue(':vc', $this->verificationCode, PDO::PARAM_STR);
         if ($query->execute()) {
-            $_SESSION['error_message'] = "You are registered. We sent verification email to your email addres. Check your email and verify it.";
+            $_SESSION["fail"] = "You are registered. We sent verification email to your email addres. Check your email and verify it.";
             $this->sendingVerificationEmail();
         }
     }
@@ -156,7 +156,7 @@ class User extends BaseModel
             die();
         } catch (Exception $e) {
             logError("Verification email couldn't be sent. Mailer Error: {$mail->ErrorInfo}");
-            $_SESSION['error_message'] = "Verification email couldn't be sent. Ask for a new verification code.";
+            $_SESSION["fail"] = "Verification email couldn't be sent. Ask for a new verification code.";
             header('Location: resend-confirmation-email.php');
             die();
         }
@@ -206,7 +206,7 @@ class User extends BaseModel
 
                 $user = $this->getUserByEmail();
                 if (!$user) {
-                    $_SESSION['error_message'] = "User with that email doesn't exist. Go to registration page to register with that email address.";
+                    $_SESSION["fail"] = "User with that email doesn't exist. Go to registration page to register with that email address.";
                     header("Location: ../forms/resend-code.php");
                     die();
                 }
@@ -219,7 +219,7 @@ class User extends BaseModel
 
                 // if the new verificaton code isn't added notifying user about the error
                 if (!$this->addVerifcationCodeToUser()) {
-                    $_SESSION['error_message'] = "Something went wrong. Try again, please!";
+                    $_SESSION["fail"] = "Something went wrong. Try again, please!";
                     header("Location: ../forms/resend-code.php");
                     die();
                 }
@@ -227,7 +227,7 @@ class User extends BaseModel
                 // sending the new verification code to the user's email
                 $this->sendingVerificationEmail();
             } else {
-                $_SESSION['error_message'] = "This is not a valid email address! Please insert a valid email address";
+                $_SESSION["fail"] = "This is not a valid email address! Please insert a valid email address";
                 header("Location: ../forms/resend-code.php");
                 die();
             }
@@ -307,14 +307,14 @@ class User extends BaseModel
 
         // checking if the email address is valid
         if (!filter_var($this->email, FILTER_VALIDATE_EMAIL)) {
-            $_SESSION['error_message'] = "Invalid email format.";
+            $_SESSION["fail"] = "Invalid email format.";
             header("Location: ../forms/login.php");
             die();
         }
 
         // checking password length
         if (strlen($this->password) < 6) {
-            $_SESSION['error_message'] = "Wrong password.";
+            $_SESSION["fail"] = "Wrong password.";
             header("Location: ../forms/login.php");
             die();
         }
@@ -322,7 +322,7 @@ class User extends BaseModel
         $passwordFromDb = $this->getPasswordByEmail();
 
         if ($passwordFromDb === null) {
-            $_SESSION['error_message'] = "An account with this email doesn't exist.";
+            $_SESSION["fail"] = "An account with this email doesn't exist.";
             header("Location: ../forms/login.php");
             die();
         }
@@ -333,7 +333,7 @@ class User extends BaseModel
 
             // forbidding login to unverified users
             if ($user['u_verified'] !== 1) {
-                $_SESSION['error_message'] = "Please verify you account before loggin in.";
+                $_SESSION["fail"] = "Please verify you account before loggin in.";
                 header("Location: ../forms/login.php");
                 die();
             }
@@ -347,11 +347,11 @@ class User extends BaseModel
             $_SESSION['user_phone'] = $user['u_phone'];
             $_SESSION['user_department'] = $user['d_name'];
             $_SESSION['isVerified'] = true;
-            $_SESSION['info_message'] = "Logged in successfully!";
+            $_SESSION["info"] = "Logged in successfully!";
             header("Location: ../");
             die();
         } else {
-            $_SESSION['error_message'] = "Wrong password.";
+            $_SESSION["fail"] = "Wrong password.";
             header("Location: ../forms/login.php");
             die();
         }

@@ -25,15 +25,15 @@ require_once '../../helpers/functions.php';
         </div>
 
         <?php
-        if (!empty($_SESSION['error_message']) || isset($_SESSION['verification_status'])):
+        if (!empty($_SESSION["fail"]) || isset($_SESSION['verification_status'])):
         ?>
         <div class="bg-red-100 m-6 p-2 text-center">
             <?php
             // handling registration error message
-            handleSessionMessages('error_message', true);
+            handleSessionMessages("fail", true);
 
             // handling email verification error message
-            handleSessionMessages('verification_status', true);
+            handleSessionMessages("verification_status", true);
             ?>
         </div>
         <?php endif; ?>
