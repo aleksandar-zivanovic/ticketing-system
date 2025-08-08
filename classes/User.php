@@ -68,7 +68,7 @@ class User extends BaseModel
     // checking if there is a use with the entered email
     public function isEmailOccupied(): void
     {
-        $conn = $this->getConn()->connect();
+        $conn = $this->getConn();
         $queryLookForEmail = "SELECT email FROM users WHERE email = :email";
         $query = $conn->prepare($queryLookForEmail);
         $query->bindValue(':email', $this->email, PDO::PARAM_STR);
@@ -95,7 +95,7 @@ class User extends BaseModel
     public function addUser(): void
     {
         $addUserQuery = "INSERT INTO users (email, password, name, surname, phone, role_id, department_id, verification_code, verified) VALUES(:em, :pw, :nm, :sn, :pn, 1, NULL, :vc, 0)";
-        $query = $this->getConn()->connect()->prepare($addUserQuery);
+        $query = $this->getConn()->prepare($addUserQuery);
         $query->bindValue(':em', $this->email, PDO::PARAM_STR);
         $query->bindValue(':pw', $this->password, PDO::PARAM_STR);
         $query->bindValue(':nm', $this->name, PDO::PARAM_STR);
@@ -170,7 +170,7 @@ class User extends BaseModel
 
         if ($this->verificationCode != null && $this->verificationCode == $verificationCodeFromUrl) {
             $makeUserVerifiedQuery = "UPDATE users SET verification_code = null, verified = 1 WHERE email = '{$this->email}'";
-            $query = $this->getConn()->connect()->prepare($makeUserVerifiedQuery);
+            $query = $this->getConn()->prepare($makeUserVerifiedQuery);
             if ($query->execute()) {
                 $_SESSION['verification_status'] = "You are verified successfully.<br>Login in, please.";
                 return true;
@@ -189,7 +189,7 @@ class User extends BaseModel
     {
         $this->email = htmlspecialchars(trim(filter_input(INPUT_GET, 'email', FILTER_DEFAULT)));
         $verificationCodeQuery = "SELECT verification_code FROM users WHERE email = :em";
-        $query = $this->getConn()->connect()->prepare($verificationCodeQuery);
+        $query = $this->getConn()->prepare($verificationCodeQuery);
         $query->bindValue(':em', $this->email, PDO::PARAM_STR);
         $query->execute();
         return $query->rowCount() >= 1 ? $query->fetchColumn() : null;
@@ -246,7 +246,7 @@ class User extends BaseModel
     public function getAllUsers(): array 
     {
         $query = "SELECT * FROM users";
-        $query = $this->getConn()->connect()->prepare($query);
+        $query = $this->getConn()->prepare($query);
         $query->execute();
         return $query->fetchAll(PDO::FETCH_ASSOC);
     }
@@ -273,7 +273,7 @@ class User extends BaseModel
                                 LEFT JOIN roles as r ON u.role_id = r.id 
                                 WHERE email = :em";
 
-        $query = $this->getConn()->connect()->prepare($getUserByEmailQuery);
+        $query = $this->getConn()->prepare($getUserByEmailQuery);
         $query->bindValue(":em", $this->email, PDO::PARAM_STR);
         $query->execute();
         $result = $query->fetch(PDO::FETCH_ASSOC);
@@ -283,7 +283,7 @@ class User extends BaseModel
     public function getPasswordByEmail(): string|null
     {
         $getPasswordByEmail = "SELECT password FROM users WHERE email = :em";
-        $query = $this->getConn()->connect()->prepare($getPasswordByEmail);
+        $query = $this->getConn()->prepare($getPasswordByEmail);
         $query->bindValue(":em", $this->email, PDO::PARAM_STR);
         $query->execute();
         $result = $query->fetch(PDO::FETCH_ASSOC);
@@ -294,7 +294,7 @@ class User extends BaseModel
     public function addVerifcationCodeToUser(): bool
     {
         $addVerifcationCodeToUserQuery = "UPDATE users SET verification_code = :vc WHERE email = '{$this->email}'";
-        $query = $this->getConn()->connect()->prepare($addVerifcationCodeToUserQuery);
+        $query = $this->getConn()->prepare($addVerifcationCodeToUserQuery);
         $query->bindValue(':vc', $this->verificationCode, PDO::PARAM_STR);
         $query->execute();
         return $query->rowCount() > 0 ? true : false;

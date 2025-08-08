@@ -8,7 +8,7 @@ class Database
     private $host = "localhost";
     private $conn = null;
     
-    public function connect()
+    public function connect(): PDO
     {
       if ($this->conn === null) {
         try {

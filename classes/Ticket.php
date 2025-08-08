@@ -157,7 +157,7 @@ class Ticket extends BaseModel
             $this->collectTicketData();
         }
 
-        $conn = $this->getConn()->connect();
+        $conn = $this->getConn();
 
         $query = "INSERT INTO tickets (department, created_by, priority, statusId, title, body, url";
         if ($split === true) $query .= ", parent_ticket";
@@ -232,9 +232,23 @@ class Ticket extends BaseModel
             $this->description  = $splitData["error_description"][$key];
             $this->departmentId = $splitData["error_department"][$key];
             $this->createTicket(true, $ticketAttachments, $attachment);
+
+            $columns = [["statusId" => 3, "closed_date" => date("Y-m-d H:i:s"), "closing_type" => "split"]];
+            $whereClauses = [["id" => $this->parentId]];
+            $this->updateTicket($columns, $whereClauses);
         }
 
-        $_SESSION["succes"] = "Ticket with ID {$this->parentId} is split!";
+        unset(
+            $_SESSION["error_department"], 
+            $_SESSION["error_priority"], 
+            $_SESSION["error_page"], 
+            $_SESSION["error_title"], 
+            $_SESSION["error_description"], 
+            $_SESSION["error_user_id"], 
+            $_SESSION["error_ticket_id"], 
+        );
+
+        $_SESSION["success"] = "Ticket with ID {$this->parentId} is split!";
         header("Location: ../admin/admin-ticket-listing.php");
     }
 
@@ -356,7 +370,7 @@ class Ticket extends BaseModel
             }
 
             // Prepares and executes the SQL query
-            $stmt = $this->getConn()->connect()->prepare($query);
+            $stmt = $this->getConn()->prepare($query);
 
             // Binds the value of limit to the query if it is greater than 0
             if ($limit !== 0) $stmt->bindValue("limit", $limit, PDO::PARAM_INT);
@@ -432,7 +446,7 @@ class Ticket extends BaseModel
             }
 
             // Prepares and executes the SQL query
-            $stmt = $this->getConn()->connect()->prepare($query);
+            $stmt = $this->getConn()->prepare($query);
             $stmt->execute();
 
             // Returns the fetched result set
@@ -478,7 +492,7 @@ class Ticket extends BaseModel
                     WHERE t.id = :ticket";
 
             // Prepares and executes the SQL query
-            $stmt = $this->getConn()->connect()->prepare($query);
+            $stmt = $this->getConn()->prepare($query);
 
             // Binds the value of limit to the query if it is greater than 0
             $stmt->bindValue("ticket", $ticketId, PDO::PARAM_INT);
@@ -581,7 +595,7 @@ class Ticket extends BaseModel
         $sql .= "closed_date = {$curentDateSql} WHERE id = :tid";
 
         try {
-            $stmt = $this->getConn()->connect()->prepare($sql);
+            $stmt = $this->getConn()->prepare($sql);
             $stmt->bindValue(":si", $statusId, PDO::PARAM_INT);
             if ($action === "close") $stmt->bindValue(":ct", $closingType, PDO::PARAM_STR);
             $stmt->bindValue(":tid", $ticketId, PDO::PARAM_INT);
@@ -616,7 +630,7 @@ class Ticket extends BaseModel
 
         try {
             $sql = "DELETE FROM tickets WHERE id IN (" . implode(",", $params) . ")";
-            $stmt = $this->getConn()->connect()->prepare($sql);
+            $stmt = $this->getConn()->prepare($sql);
             foreach ($params as $key => $value) {
                 $stmt->bindValue($value, $ids[$key], PDO::PARAM_INT);
             }
@@ -704,7 +718,7 @@ class Ticket extends BaseModel
 
         try {
             $sql = "UPDATE tickets SET handled_by = :adm, statusId = 2 WHERE id = {$ticketId}";
-            $stmt = $this->getConn()->connect()->prepare($sql);
+            $stmt = $this->getConn()->prepare($sql);
             $stmt->bindValue(":adm", $adminId, PDO::PARAM_INT);
             $stmt->execute();
             return true;
@@ -864,5 +878,10 @@ class Ticket extends BaseModel
         }
 
         return $countTicketsByFilters;
+    }
+
+    public function updateTicket(array $columns, array $whereClauses): void
+    {
+        $this->updateRows("tickets", $columns, $whereClauses);
     }
 }

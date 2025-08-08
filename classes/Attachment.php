@@ -167,7 +167,7 @@ class Attachment extends BaseModel
             // Create query.
             $query = "INSERT INTO {$table} (file_name, {$column}) VALUES " . implode(", ", $placeholders);
 
-            $stmt = $this->getConn()->connect()->prepare($query);
+            $stmt = $this->getConn()->prepare($query);
 
             foreach ($params as $key => $param) {
                 $stmt->bindValue(":img{$key}", $param, PDO::PARAM_STR);
@@ -212,7 +212,7 @@ class Attachment extends BaseModel
 
         try {
             $sql = "DELETE FROM {$table} WHERE id in (" . implode(',', $params) . ")";
-            $stmt = $this->getConn()->connect()->prepare($sql);
+            $stmt = $this->getConn()->prepare($sql);
             // Bind values
             $this->bindParamsToQuery($stmt, $params, $integerIds);
 
@@ -306,7 +306,7 @@ class Attachment extends BaseModel
 
         try {
             $sql = "SELECT * FROM {$table} WHERE id in (" . implode(",", $params) . ")";
-            $stmt = $this->getConn()->connect()->prepare($sql);
+            $stmt = $this->getConn()->prepare($sql);
 
             // Bind values
             $this->bindParamsToQuery($stmt, $params, $integerIds);
@@ -361,7 +361,7 @@ class Attachment extends BaseModel
     {
         try {
             $sql = "SELECT id from ticket_attachments WHERE ticket = :id";
-            $stmt = $this->getConn()->connect()->prepare($sql);
+            $stmt = $this->getConn()->prepare($sql);
             $stmt->bindValue(":id", $id, PDO::PARAM_INT);
             return $stmt->fetchAll(PDO::FETCH_COLUMN);
         } catch (\PDOException $e) {

@@ -8,7 +8,7 @@ class Message extends BaseModel
     public function createMessage(int $ticketId): void
     {
         $this->message = cleanString(filter_input(INPUT_POST, "error_description", FILTER_DEFAULT));
-        $conn = $this->getConn()->connect();
+        $conn = $this->getConn();
 
         try {
             $sql = "INSERT INTO messages (ticket, user, body) VALUES (:tk, :us, :bd)";
@@ -24,7 +24,7 @@ class Message extends BaseModel
             if ($_FILES['error_images']['error'][0] != 4) {
                 require_once 'Attachment.php';
                 $attachment = new Attachment();
-                $attachment->processImages($messageId, "message_attachments", "error_images");
+                $attachment->processImages($_FILES, $messageId, "message_attachments", "error_images");
             }
 
             header("Location: ../user/user-view-ticket.php?ticket={$ticketId}");
@@ -60,7 +60,7 @@ class Message extends BaseModel
                 WHERE m.ticket = :tk 
                 GROUP BY m.id";
 
-            $stmt = $this->getConn()->connect()->prepare($sql);
+            $stmt = $this->getConn()->prepare($sql);
             $stmt->bindValue(":tk", $ticketId, PDO::PARAM_INT);
             $stmt->execute();
 
@@ -93,7 +93,7 @@ class Message extends BaseModel
                 LEFT JOIN message_attachments ma ON ma.message = m.id 
                 LEFT JOIN users u ON u.id = m.user 
                 WHERE m.id = :id";
-            $stmt = $this->getConn()->connect()->prepare($sql);
+            $stmt = $this->getConn()->prepare($sql);
             $stmt->bindValue(":id", $id, PDO::PARAM_INT);
             $stmt->execute();
             return $stmt->fetch(PDO::FETCH_ASSOC);
@@ -110,7 +110,7 @@ class Message extends BaseModel
     {
         try {
             $sql = "SELECT id FROM messages WHERE ticket = :ti";
-            $stmt = $this->getConn()->connect()->prepare($sql);
+            $stmt = $this->getConn()->prepare($sql);
             $stmt->bindValue(":ti", $ticketId, PDO::PARAM_INT);
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_COLUMN);
@@ -133,7 +133,7 @@ class Message extends BaseModel
     {
         try {
             $sql = "UPDATE messages SET body = :msg WHERE id = :id";
-            $stmt = $this->getConn()->connect()->prepare($sql);
+            $stmt = $this->getConn()->prepare($sql);
             $stmt->bindValue(":msg", $message, PDO::PARAM_STR);
             $stmt->bindValue("id", $id, PDO::PARAM_INT);
             $stmt->execute();
