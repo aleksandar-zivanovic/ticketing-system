@@ -48,71 +48,35 @@
           </a>
         </li>
       <?php endif; ?>
-      
-      <li class="--set-active-tables-html">
-        <a href="tables.php">
-          <span class="icon"><i class="mdi mdi-table"></i></span>
-          <span class="menu-item-label">Tables</span>
-        </a>
-      </li>
-      <li class="--set-active-forms-html">
-        <a href="forms.php">
-          <span class="icon"><i class="mdi mdi-square-edit-outline"></i></span>
-          <span class="menu-item-label">Forms</span>
-        </a>
-      </li>
       <li class="--set-active-profile-html">
         <a href="profile.php">
           <span class="icon"><i class="mdi mdi-account-circle"></i></span>
           <span class="menu-item-label">Profile</span>
         </a>
       </li>
-      <li>
-        <a href="login.php">
-          <span class="icon"><i class="mdi mdi-lock"></i></span>
-          <span class="menu-item-label">Login</span>
-        </a>
-      </li>
-      <li>
-        <a class="dropdown">
-          <span class="icon"><i class="mdi mdi-view-list"></i></span>
-          <span class="menu-item-label">Submenus</span>
-          <span class="icon"><i class="mdi mdi-plus"></i></span>
-        </a>
-        <ul>
-          <li>
-            <a href="#void">
-              <span>Sub-item One</span>
-            </a>
-          </li>
-          <li>
-            <a href="#void">
-              <span>Sub-item Two</span>
-            </a>
-          </li>
-        </ul>
-      </li>
     </ul>
-    <p class="menu-label">About</p>
+    <p class="menu-label">Contact</p>
     <ul class="menu-list">
       <li>
-        <a href="https://justboil.me" onclick="alert('Coming soon'); return false" target="_blank" class="has-icon">
-          <span class="icon"><i class="mdi mdi-credit-card-outline"></i></span>
-          <span class="menu-item-label">Premium Demo</span>
-        </a>
-      </li>
-      <li>
-        <a href="https://justboil.me/tailwind-admin-templates" class="has-icon">
-          <span class="icon"><i class="mdi mdi-help-circle"></i></span>
-          <span class="menu-item-label">About</span>
-        </a>
-      </li>
-      <li>
-        <a href="https://github.com/justboil/admin-one-tailwind" class="has-icon">
-          <span class="icon"><i class="mdi mdi-github-circle"></i></span>
-          <span class="menu-item-label">GitHub</span>
+        <a href="" onclick="showContact(); return false" class="has-icon">
+          <span class="icon"><i class="mdi mdi-phone-outgoing-outline"></i></span>
+          <span class="menu-item-label">Contact</span>
         </a>
       </li>
     </ul>
   </div>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script>
+    function showContact() {
+      Swal.fire({
+        title: "<strong>Contact</strong>",
+        icon: "info",
+        html: `
+        <span class="mdi mdi-cellphone-check"></span> 012 3456789</br>
+        <span class="mdi mdi-email"></span> example@example.com</br>
+  `,
+        showCloseButton: true,
+      });
+    }
+  </script>
 </aside>
