@@ -8,4 +8,4 @@
     </div>
   </footer>
 
-<?php require_once '../../partials/_footer-scripts.php'; ?>
+<?php require_once __DIR__ . '/../partials/_footer-scripts.php'; ?>

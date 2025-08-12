@@ -26,4 +26,4 @@ if (str_ends_with($currentPage, "index.php") || str_ends_with($currentPage, "/")
 
 <!-- Material Design Icons (MDI) - Local copy v7.4.47 -->
 <!-- Downloaded from: https://github.com/Templarian/MaterialDesign-Webfont/releases/tag/v7.4.47 -->
-<link rel="stylesheet" href="../css/materialdesignicons.min.css">
+<link rel="stylesheet" href="/ticketing-system/public/css/materialdesignicons.min.css">

@@ -1,5 +1,5 @@
 <?php
-require_once('BaseModel.php');
+require_once 'BaseModel.php';
 
 //Import PHPMailer classes into the global namespace
 use PHPMailer\PHPMailer\PHPMailer;
@@ -41,7 +41,9 @@ class User extends BaseModel
             }
 
             // checks if the email is already in use
-            $this->isEmailOccupied();
+            if ($this->isEmailOccupied()) {
+                $this->registrationErrorHandling("Email is already in use!");
+            }
 
             // checking password
             if (strlen($this->password) >= 6) {
@@ -66,16 +68,14 @@ class User extends BaseModel
     }
 
     // checking if there is a use with the entered email
-    public function isEmailOccupied(): void
+    public function isEmailOccupied(): bool
     {
         $conn = $this->getConn();
         $queryLookForEmail = "SELECT email FROM users WHERE email = :email";
         $query = $conn->prepare($queryLookForEmail);
         $query->bindValue(':email', $this->email, PDO::PARAM_STR);
         $query->execute();
-        if ($query->rowCount() >= 1) {
-            $this->registrationErrorHandling("Email is already in use!");
-        }
+        return $query->rowCount() >= 1;
     }
 
     // hashing password
@@ -88,7 +88,8 @@ class User extends BaseModel
     public function registrationErrorHandling(string $errorMessage): void
     {
         $_SESSION["fail"] = $errorMessage;
-        die(header("Location: ../forms/register.php"));
+        header("Location: /ticketing-system/public/forms/register.php");
+        die;
     }
 
     // saving new user data to the database
@@ -280,6 +281,18 @@ class User extends BaseModel
         return !empty($result) ? $result : null;
     }
 
+    /**
+     * Fetches row from user table by row id.
+     * 
+     * @param int $id ID column from users table.
+     * 
+     * @return array
+     */
+    public function getUserById(int $id): array
+    {
+        return $this->getAllWhere("users", "id = {$id}")[0];
+    }
+
     public function getPasswordByEmail(): string|null
     {
         $getPasswordByEmail = "SELECT password FROM users WHERE email = :em";
@@ -360,5 +373,67 @@ class User extends BaseModel
             header("Location: ../forms/login.php");
             die();
         }
+    }
+
+    public function updateUserRow(): void
+    {
+        // prepare data for update user
+        $data = $this->prepareDataForUserUpdate();
+        $profileId = $data['id'];
+        unset($data["id"]);
+        $where = ["id" => $profileId];
+
+        if (!empty($data["email"])) {
+            $this->email = $data["email"];
+            $theUser = $this->getUserById($profileId);
+            if ($theUser["email"] === $data["email"]) {
+                // If the same email is already set to the account, don't update the email 
+                unset($data["email"]);
+            } else {
+                if ($this->isEmailOccupied()) {
+                    $_SESSION["fail"] = "Email is aready in use!";
+                    header("Location: /ticketing-system/public/profile.php?user={$profileId}");
+                    die;
+                };
+            }
+        }
+
+        $this->updateRows("users", [$data], [$where]);
+        $_SESSION["success"] = "Profile is updated!";
+        header("Location: /ticketing-system/public/profile.php?user={$profileId}");
+        die;
+    }
+
+    private function prepareDataForUserUpdate(): array
+    {
+        $profileId = (int) $_POST["profile_id"];
+
+        $firstName = cleanString($_POST["fname"]);
+        if (strlen($firstName) < 3) {
+            $_SESSION["fail"] = "Your first name must be at least 3 characters long!";
+            header("Location: " . ROOT . DS . "public" . DS . "profile.php?profile={$profileId}");
+            die;
+        }
+
+        $familyName = cleanString($_POST["sname"]);
+        if (strlen($familyName) < 3) {
+            $_SESSION["fail"] = "Your family name must be at least 3 characters long!";
+            header("Location: " . ROOT . DS . "public" . DS . "profile.php?profile={$profileId}");
+            die;
+        }
+
+        $result = ["id" => $profileId, "name" => $firstName, "surname" => $familyName];
+
+        if (!empty($_POST["email"])) {
+            $email = filter_input(INPUT_POST, "email", FILTER_VALIDATE_EMAIL);
+            if ($email === false) {
+                $_SESSION["fail"] = "Email is not valid!";
+                header("Location: " . ROOT . DS . "public" . DS . "profile.php?profile={$profileId}");
+                die;
+            }
+            $result += ["email" => $email];
+        }
+
+        return $result;
     }
 }

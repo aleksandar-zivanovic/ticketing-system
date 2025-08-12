@@ -119,7 +119,6 @@ fail:
 $_SESSION["fail"] = ucfirst(str_replace("error_", "", $errorField)) . " field must not be empty!";
 if ($_POST['user_action'] === "Split Ticket") {
     header("Location: ../admin/split-ticket.php?ticket=" . cleanString($_POST["error_ticket_id"]));
-    dd("fail blok");
 } else {
     header("Location: ../forms/create-ticket.php?source=" . cleanString($_POST["error_page"]));
 }
