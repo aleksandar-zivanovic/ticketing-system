@@ -24,8 +24,6 @@ if (!isset($_POST["error_page"]) || empty($_POST["error_page"])) {
     die('Forbidden action!');
 }
 
-// saving POST values from the registration form to SESSION
-// TODO: napraviti sa split ticket formu
 saveFormValuesToSession();
 
 $errors = ["error_department", "error_priority", "error_title", "error_description"];

@@ -243,7 +243,7 @@ class User extends BaseModel
      * 
      * @return array[] Array of user arrays.
      */
-    public function getAllUsers(): array 
+    public function getAllUsers(): array
     {
         $query = "SELECT * FROM users";
         $query = $this->getConn()->prepare($query);
@@ -348,8 +348,13 @@ class User extends BaseModel
             $_SESSION['user_department'] = $user['d_name'];
             $_SESSION['isVerified'] = true;
             $_SESSION["info"] = "Logged in successfully!";
-            header("Location: ../");
-            die();
+
+            if ($user['r_name'] === "admin") {
+                header("Location: ../admin/admin-ticket-listing.php");
+            } else {
+                header("Location: ../user/user-ticket-listing.php");
+            }
+            die;
         } else {
             $_SESSION["fail"] = "Wrong password.";
             header("Location: ../forms/login.php");
