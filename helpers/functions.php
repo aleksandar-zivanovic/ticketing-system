@@ -86,6 +86,8 @@ function logError(string $message, array|string|null $errorInfo = null,  ?string
  * @param string $name: The name attribute for the input field. It should match the corresponding session variable if using $_SESSION for persistent input.
  * @param string $type: The type of the input field (e.g., text, password).
  * @param string|null $placeholder: The placeholder text for the input field.
+ * @param string|int|null $value Value of a `value` atribute.
+ * @param string|null $atributes HTML atributte for adding to input (e.g. pattern="[0-9]{3}-[0-9]{2}-[0-9]{3}" required).
  * 
  * @note: Ensure that the name attribute of the input matches the session variable name 
  * if you intend to use $_SESSION to pre-fill the input with previously submitted data.
@@ -95,13 +97,15 @@ function renderingInputField(
     string $name,
     string $type,
     ?string $placeholder,
-    string|int|null $value = null
+    string|int|null $value = null, 
+    ?string $atributes = null
 ): void {
-    $label = $label ? htmlspecialchars($label) : null;
+    $label       = $label ? htmlspecialchars($label) : null;
     $name        = htmlspecialchars($name);
     $type        = htmlspecialchars($type);
     $placeholder = $placeholder ? htmlspecialchars($placeholder) : null;
-    $value = $value ? htmlspecialchars($value) : null;
+    $value       = $value ? htmlspecialchars($value) : null;
+    $atributes   = $atributes ? htmlspecialchars($atributes) : null;
 
     if ($type == 'hidden' && empty($value)) {
         throw new InvalidArgumentException("If type='hidden', value must be string or integer.");

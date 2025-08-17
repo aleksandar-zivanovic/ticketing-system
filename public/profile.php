@@ -1,7 +1,10 @@
 <?php
 session_start();
 require_once '../config/config.php';
-require_once ROOT .'helpers/functions.php';
+require_once ROOT . 'helpers/functions.php';
+
+// Checks if a visitor is logged in.
+requireLogin();
 
 if ($_SESSION["user_role"] !== "admin") {
   if (!isset($_SESSION["user_id"]) || empty($_GET["user"]) || trim($_GET["user"]) != $_SESSION["user_id"]) {
@@ -10,8 +13,7 @@ if ($_SESSION["user_role"] !== "admin") {
   }
 }
 
-
-require_once ROOT .'classes/User.php';
+require_once ROOT . 'classes/User.php';
 
 $id = (int) trim($_GET["user"]);
 $user = new User();
@@ -92,7 +94,7 @@ $page  = "Profile page"
                 <div class="field-body">
                   <div class="field">
                     <div class="control">
-                      <input type="text" autocomplete="on" name="fname" placeholder="<?= $theUser['name'] ?>" class="input">
+                      <?php renderingInputField(null, "fname", "text", $theUser['name'], $theUser['name']) ?>
                     </div>
                     <p class="help">Required. Your first name (at least 3 characters long)</p>
                   </div>
@@ -103,9 +105,28 @@ $page  = "Profile page"
                 <div class="field-body">
                   <div class="field">
                     <div class="control">
-                      <input type="text" autocomplete="on" name="sname" placeholder="<?= $theUser['surname'] ?>" class="input">
+                      <?php renderingInputField(null, "sname", "text", $theUser['surname'], $theUser['surname']) ?>
                     </div>
                     <p class="help">Required. Your family name (at least 3 characters long)</p>
+                  </div>
+                </div>
+              </div>
+              <div class="field">
+                <label class="label">Phone</label>
+                <div class="field-body">
+                  <div class="field">
+                    <div class="control">
+                      <?php renderingInputField(
+                        null,
+                        "phone",
+                        "tel",
+                        $theUser['phone'],
+                        $theUser['phone'],
+                        'pattern=\+?[0-9]{7,15}'
+                      )
+                      ?>
+                    </div>
+                    <p class="help">Required. Format: +381612345678 or 061234567.</p>
                   </div>
                 </div>
               </div>
@@ -123,9 +144,8 @@ $page  = "Profile page"
                   <div class="field-body">
                     <div class="field">
                       <div class="control">
-                        <input type="email" autocomplete="on" name="email" placeholder="<?= $theUser['email'] ?>" class="input">
+                        <input type="text" autocomplete="on" name="email" value="<?php persist_input($theUser['email']) ?>" class="input">
                       </div>
-                      <p class="help">Required. Your e-mail</p>
                     </div>
                   </div>
                 </div>
@@ -166,6 +186,12 @@ $page  = "Profile page"
                 <input type="text" readonly value="<?= $theUser['surname'] ?>" class="input is-static">
               </div>
             </div>
+            <div class="field">
+              <label class="label">Phone</label>
+              <div class="control">
+                <input type="text" readonly value="<?= $theUser['phone'] ?>" class="input is-static">
+              </div>
+            </div>
             <hr>
             <div class="field">
               <label class="label">E-mail</label>
@@ -176,48 +202,51 @@ $page  = "Profile page"
           </div>
         </div>
       </div>
-      <div class="card">
-        <header class="card-header">
-          <p class="card-header-title">
-            <span class="icon"><i class="mdi mdi-lock"></i></span>
-            Change Password
-          </p>
-        </header>
-        <div class="card-content">
-          <form>
-            <div class="field">
-              <label class="label">Current password</label>
-              <div class="control">
-                <input type="password" name="password_current" autocomplete="current-password" class="input" required>
+      <?php if ($id === $_SESSION["user_id"]) : ?>
+        <div class="card">
+          <header class="card-header">
+            <p class="card-header-title">
+              <span class="icon"><i class="mdi mdi-lock"></i></span>
+              Change Password
+            </p>
+          </header>
+          <div class="card-content">
+            <form method="POST" action="actions/process_update_profile.php">
+              <div class="field">
+                <label class="label">Current password</label>
+                <div class="control">
+                  <input type="password" name="password_current" class="input" minlength="6" required>
+                </div>
+                <p class="help">Required. Your current password</p>
               </div>
-              <p class="help">Required. Your current password</p>
-            </div>
-            <hr>
-            <div class="field">
-              <label class="label">New password</label>
-              <div class="control">
-                <input type="password" autocomplete="new-password" name="password" class="input" required>
+              <hr>
+              <div class="field">
+                <label class="label">New password</label>
+                <div class="control">
+                  <input type="password" name="password_new" class="input" minlength="6" required>
+                </div>
+                <p class="help">Required. New password</p>
               </div>
-              <p class="help">Required. New password</p>
-            </div>
-            <div class="field">
-              <label class="label">Confirm password</label>
-              <div class="control">
-                <input type="password" autocomplete="new-password" name="password_confirmation" class="input" required>
+              <div class="field">
+                <label class="label">Confirm password</label>
+                <div class="control">
+                  <input type="password" name="password_confirmation" class="input" minlength="6" required>
+                </div>
+                <p class="help">Required. New password one more time</p>
               </div>
-              <p class="help">Required. New password one more time</p>
-            </div>
-            <hr>
-            <div class="field">
-              <div class="control">
-                <button type="submit" class="button green">
-                  Submit
-                </button>
+              <input type="text" name="profile_id" value="<?= $id ?>" hidden>
+              <hr>
+              <div class="field">
+                <div class="control">
+                  <button type="submit" name="update_pwd" value="updatePassword" class="button green">
+                    Submit
+                  </button>
+                </div>
               </div>
-            </div>
-          </form>
+            </form>
+          </div>
         </div>
-      </div>
+      <?php endif; ?>
     </section>
 
     <?php

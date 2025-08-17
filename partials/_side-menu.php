@@ -49,7 +49,7 @@
         </li>
       <?php endif; ?>
       <li class="--set-active-profile-html">
-        <a href="profile.php">
+        <a href="/ticketing-system/public/profile.php?user=<?= cleanString($_SESSION["user_id"]) ?>">
           <span class="icon"><i class="mdi mdi-account-circle"></i></span>
           <span class="menu-item-label">Profile</span>
         </a>

@@ -9,6 +9,10 @@
     type="<?= $type ?>" 
 
     <?php 
+    if ($atributes !== null) {
+        echo $atributes;
+    }
+    
     // Attributes for non file data
     if ($type != "file") {       
         if (empty($value)): ?>

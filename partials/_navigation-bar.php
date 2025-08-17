@@ -11,10 +11,10 @@
   <div class="navbar-menu" id="navbar-menu">
     <div class="navbar-end">
       <!-- profile menu -->
-      <?php require_once '_navigation-profile-menu.php'; ?>
+      <?php require_once ROOT . DS . "partials" . DS . "_navigation-profile-menu.php"; ?>
 
       <!-- navigation buttons -->
-      <?php require_once '_navigation-buttons.php'; ?>
+      <?php require_once ROOT . DS . "partials" . DS . "_navigation-buttons.php"; ?>
     </div>
   </div>
 </nav>

@@ -318,14 +318,14 @@ class User extends BaseModel
         $this->email = htmlspecialchars(trim(filter_input(INPUT_POST, 'email', FILTER_SANITIZE_EMAIL)), ENT_QUOTES, 'UTF-8');
         $this->password = htmlspecialchars(trim(filter_input(INPUT_POST, 'password', FILTER_DEFAULT)), ENT_QUOTES, 'UTF-8');
 
-        // checking if the email address is valid
+        // Checking if the email address is valid
         if (!filter_var($this->email, FILTER_VALIDATE_EMAIL)) {
             $_SESSION["fail"] = "Invalid email format.";
             header("Location: ../forms/login.php");
             die();
         }
 
-        // checking password length
+        // Checking password length
         if (strlen($this->password) < 6) {
             $_SESSION["fail"] = "Wrong password.";
             header("Location: ../forms/login.php");
@@ -341,17 +341,17 @@ class User extends BaseModel
         }
 
         if (password_verify($this->password, $passwordFromDb)) {
-            // getting all details for the user
+            // Getting all details for the user
             $user = $this->getUserByEmail();
 
-            // forbidding login to unverified users
+            // Forbidding login to unverified users
             if ($user['u_verified'] !== 1) {
                 $_SESSION["fail"] = "Please verify you account before loggin in.";
                 header("Location: ../forms/login.php");
                 die();
             }
 
-            // initializing session data for the authenticated user
+            // Initializing session data for the authenticated user
             $_SESSION['user_email'] = $user['u_email'];
             $_SESSION['user_id'] = $user['u_id'];
             $_SESSION['user_name'] = $user['u_name'];
@@ -375,10 +375,21 @@ class User extends BaseModel
         }
     }
 
-    public function updateUserRow(): void
+    /**
+     * Updates user data in the database.
+     *
+     * @return true Returns true if the update succeeds.
+     * @throws RuntimeException If the database update fails.
+     */
+    public function updateUserRow(): bool
     {
-        // prepare data for update user
-        $data = $this->prepareDataForUserUpdate();
+        try {
+            // Prepares data for update user
+            $data = $this->prepareDataForUserUpdate();
+        } catch (\InvalidArgumentException $e) {
+            throw $e;
+        }
+
         $profileId = $data['id'];
         unset($data["id"]);
         $where = ["id" => $profileId];
@@ -391,49 +402,65 @@ class User extends BaseModel
                 unset($data["email"]);
             } else {
                 if ($this->isEmailOccupied()) {
-                    $_SESSION["fail"] = "Email is aready in use!";
-                    header("Location: /ticketing-system/public/profile.php?user={$profileId}");
-                    die;
+                    throw new InvalidArgumentException("Email is aready in use!");
                 };
             }
         }
 
         $this->updateRows("users", [$data], [$where]);
-        $_SESSION["success"] = "Profile is updated!";
-        header("Location: /ticketing-system/public/profile.php?user={$profileId}");
-        die;
+        return true;
     }
 
+    /**
+     * Prepares data for updateUserRow() method.
+     * 
+     * @return array
+     */
     private function prepareDataForUserUpdate(): array
     {
-        $profileId = (int) $_POST["profile_id"];
-
-        $firstName = cleanString($_POST["fname"]);
-        if (strlen($firstName) < 3) {
-            $_SESSION["fail"] = "Your first name must be at least 3 characters long!";
-            header("Location: " . ROOT . DS . "public" . DS . "profile.php?profile={$profileId}");
-            die;
-        }
-
+        $profileId  = (int) $_POST["profile_id"];
+        $firstName  = cleanString($_POST["fname"]);
         $familyName = cleanString($_POST["sname"]);
-        if (strlen($familyName) < 3) {
-            $_SESSION["fail"] = "Your family name must be at least 3 characters long!";
-            header("Location: " . ROOT . DS . "public" . DS . "profile.php?profile={$profileId}");
-            die;
-        }
+        $result     = ["id" => $profileId, "name" => $firstName, "surname" => $familyName];
 
-        $result = ["id" => $profileId, "name" => $firstName, "surname" => $familyName];
+        if (!empty($_POST["phone"])) {
+            $phone = cleanString($_POST["phone"]);
+            $regex = preg_match("/^\\+?[0-9]{7,15}$/", $phone);
+
+            if ($regex !== 1) {
+                throw new InvalidArgumentException("Phone number must contain at least 7 and maximum 15 characters!");
+            }
+
+            $result += ["phone" => $phone];
+        }
 
         if (!empty($_POST["email"])) {
             $email = filter_input(INPUT_POST, "email", FILTER_VALIDATE_EMAIL);
+
             if ($email === false) {
-                $_SESSION["fail"] = "Email is not valid!";
-                header("Location: " . ROOT . DS . "public" . DS . "profile.php?profile={$profileId}");
-                die;
+                throw new InvalidArgumentException("Email is not valid!");
             }
+
             $result += ["email" => $email];
         }
 
         return $result;
+    }
+
+    /**
+     * Updates user password.
+     * 
+     * @param int $id User id.
+     * @return bool Returns true if update is successful.
+     * @throws InvalidArgumentException If data and where counts mismatch.
+     * @throws RuntimeException If the database update fails.
+     */
+    public function updatePassword(int $id): bool
+    {
+        $data  = [["password" => $this->passwordHashing()]];
+        $where = [["id" => $id]];
+
+        $this->updateRows('users', $data, $where);
+        return true;
     }
 }
