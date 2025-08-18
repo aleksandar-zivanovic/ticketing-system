@@ -34,3 +34,7 @@ define("TICKET_STATUSES", [
     "in progress" => "color:coral; color:deepskyblue;",  // In progress status is displayed in deepskyblue
     "closed"      => "color:green; font-style: italic;", // Closed status is displayed as green and italic
 ]);
+
+// Session refresh interval in seconds.
+// Defines how often user session data is revalidated against the database.
+define('SESSION_REFRESH_INTERVAL', 300); // 5 minutes

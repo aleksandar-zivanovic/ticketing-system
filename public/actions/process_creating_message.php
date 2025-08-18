@@ -4,6 +4,9 @@ require_once('../../config/config.php');
 require_once('../../classes/Message.php');
 require_once('../../helpers/functions.php');
 
+// Checks if a visitor is logged in.
+requireLogin();
+
 if ($_SERVER['REQUEST_METHOD'] == "POST") {
     if (isset($_POST['create_message']) && ($_POST['create_message'] === "Send Message")) {
         $ticketId = filter_input(INPUT_POST, "ticketId", FILTER_VALIDATE_INT);

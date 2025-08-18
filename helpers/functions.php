@@ -97,7 +97,7 @@ function renderingInputField(
     string $name,
     string $type,
     ?string $placeholder,
-    string|int|null $value = null, 
+    string|int|null $value = null,
     ?string $atributes = null
 ): void {
     $label       = $label ? htmlspecialchars($label) : null;
@@ -288,13 +288,32 @@ function formatVar(string $function, mixed $variable)
 
 /**
  * Checks if the user is logged in.
- * If the user is not logged in, redirects to the login page.
+ * If the user is not logged in or refresh interval is expired, 
+ * redirects to the login page.
  */
 function requireLogin()
 {
     if (!isset($_SESSION['user_role'])) {
-        header("Location: /ticketing-system/public/forms/login.php");
-        die;
+        logout("/ticketing-system/public/forms/login.php");
+    }
+
+    $expirationTime = 300; // 5 minutes
+    $timeDiffetence = time() - $expirationTime;
+
+    if (empty($_SESSION["last_check"]) || $_SESSION["last_check"] < $timeDiffetence) {
+        require_once ROOT . DS . "classes" . DS . "User.php";
+        $userId  = (int) $_SESSION["user_id"];
+        $user    = new User();
+        $theUser = $user->getUserById($userId);
+
+        if (empty($theUser) || (int) $_SESSION["session_version"] !== $theUser["session_version"]) {
+            logout("/ticketing-system/public/forms/login.php");
+        }
+
+        $_SESSION['last_check']      = time();
+        $_SESSION["session_version"] = $theUser["session_version"];
+        $_SESSION['user_id']         = $theUser['u_id'];
+        $_SESSION['user_role']       = $theUser['r_name'];
     }
 }
 

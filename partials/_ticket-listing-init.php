@@ -1,6 +1,9 @@
 <?php
 require_once '../../helpers/functions.php';
 
+// Checks if a visitor is logged in.
+requireLogin();
+
 // Gets file name
 $fileName = basename($_SERVER['SCRIPT_NAME']); 
 

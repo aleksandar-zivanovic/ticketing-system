@@ -4,6 +4,9 @@ require_once '../../config/config.php';
 require_once '../../helpers/functions.php';
 require_once '../../classes/Ticket.php';
 
+// Checks if a visitor is logged in.
+requireLogin();
+
 if (!isset($_POST["delete_ticket"]) || $_POST["delete_ticket"] !== "Delete Ticket") {
     die(header("Location: ../index.php"));
 }

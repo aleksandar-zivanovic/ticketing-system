@@ -96,7 +96,7 @@ abstract class BaseModel
      *      ["column1" => "value3", "column2" => "value4"], 
      *  ]
      * @param array $whereClauses Each sub-array must have one or more key-value pairs 
-     * representing column(s) and their match value(s), e.g.: [["id" => 5], ["id" => 6]]
+     * representing column(s) and their match value(s), e.g.: [["id" => 5], ["statusId" => 3]]
      * 
      * @return void
      */

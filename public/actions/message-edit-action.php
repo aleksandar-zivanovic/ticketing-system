@@ -1,6 +1,7 @@
 <?php
 
 /**
+ * TODO:
  * Dodacu zastitu u akciji gde cu ponovo da fetchujem tu poruku iz baze, zajedno sa 
  * fajlovima i korisnikom koji ju je kreirao i uporedicu id slika iz baze sa 
  * id-jevima slika iz forme, kao i proverom da li je to post tog korisnika i ponovo 
@@ -13,6 +14,9 @@ require_once '../../helpers/functions.php';
 require_once '../../classes/Message.php';
 require_once '../../classes/Attachment.php';
 require_once '../../config/config.php';
+
+// Checks if a visitor is logged in.
+requireLogin();
 
 if (
     $_SERVER["REQUEST_METHOD"] !== "POST"
@@ -121,6 +125,7 @@ if (!empty($sanitizedIds)) {
 }
 
 // Upload files process
+// TODO: fix error
 if (!empty($_FILES["error_images"]["name"][0])) {
     if ($attachment->processImages($messageId, "message_attachments", "error_images") === false) {
         throw new \RuntimeException("Files upload failed!");

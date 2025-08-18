@@ -265,6 +265,7 @@ class User extends BaseModel
                                     u.phone AS u_phone,  
                                     u.department_id AS u_department_id, 
                                     u.verified AS u_verified, 
+                                    u.session_version AS u_session_version, 
                                     d.id AS d_id, 
                                     d.name AS d_name, 
                                     r.id AS r_id, 
@@ -286,11 +287,11 @@ class User extends BaseModel
      * 
      * @param int $id ID column from users table.
      * 
-     * @return array
+     * @return array|null Returns user row as associative array, or null if not found.
      */
-    public function getUserById(int $id): array
+    public function getUserById(int $id): ?array
     {
-        return $this->getAllWhere("users", "id = {$id}")[0];
+        return $this->getAllWhere("users", "id = {$id}")[0] ?? null;
     }
 
     public function getPasswordByEmail(): string|null
@@ -351,16 +352,28 @@ class User extends BaseModel
                 die();
             }
 
+            $newSession = $user["u_session_version"] + 1;
+
+            try {
+                $this->updateRows('users', [["session_version" => $newSession]], [["id" => $user["u_id"]]]);
+            } catch (\InvalidArgumentException $e) {
+                throw $e->getMessage();
+            } catch (\PDOException $e) {
+                throw $e->getMessage();
+            }
+
             // Initializing session data for the authenticated user
-            $_SESSION['user_email'] = $user['u_email'];
-            $_SESSION['user_id'] = $user['u_id'];
-            $_SESSION['user_name'] = $user['u_name'];
-            $_SESSION['user_surname'] = $user['u_surname'];
-            $_SESSION['user_role'] = $user['r_name'];
-            $_SESSION['user_phone'] = $user['u_phone'];
+            $_SESSION['user_email']      = $user['u_email'];
+            $_SESSION['user_id']         = $user['u_id'];
+            $_SESSION['user_name']       = $user['u_name'];
+            $_SESSION['user_surname']    = $user['u_surname'];
+            $_SESSION['user_role']       = $user['r_name'];
+            $_SESSION['user_phone']      = $user['u_phone'];
             $_SESSION['user_department'] = $user['d_name'];
-            $_SESSION['isVerified'] = true;
-            $_SESSION["info"] = "Logged in successfully!";
+            $_SESSION['isVerified']      = true;
+            $_SESSION['last_check']      = time();
+            $_SESSION["session_version"] = $newSession;
+            $_SESSION["info"]            = "Logged in successfully!";
 
             if ($user['r_name'] === "admin") {
                 header("Location: ../admin/admin-ticket-listing.php");

@@ -6,6 +6,9 @@ require_once '../../classes/Priority.php';
 require_once '../../classes/Status.php';
 require_once '../../classes/Pagination.php';
 
+// Checks if a visitor is logged in.
+requireLogin();
+
 // Sets the panel (admin or user)
 $panel = "user";
 

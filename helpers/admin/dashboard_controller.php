@@ -10,6 +10,9 @@ require_once '../../helpers/functions.php';
 require_once '../../helpers/chart_helpers.php';
 $page = "Dashboard";
 
+// Checks if a visitor is logged in.
+requireLogin();
+
 // Initializes allowed filter values for tickets
 $allTicketFilterData = loadTicketFilterData();
 $statuses     = $allTicketFilterData["statuses"];

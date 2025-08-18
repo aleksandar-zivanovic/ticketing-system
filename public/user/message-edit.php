@@ -1,5 +1,9 @@
 <?php
 session_start();
+require_once '../../helpers/functions.php';
+
+// Checks if a visitor is logged in.
+requireLogin();
 
 if (!isset($_GET['message']) || !is_numeric($_GET['message'])) {
     header("Location: ../");
@@ -7,6 +11,7 @@ if (!isset($_GET['message']) || !is_numeric($_GET['message'])) {
 }
 
 require_once '../../classes/Message.php';
+require_once '../../config/config.php';
 
 $id = filter_input(INPUT_GET, "message", FILTER_VALIDATE_INT, ["options" => ["min_range" => 1]]);
 
@@ -18,8 +23,6 @@ $currentMessage = $message->getMessageWithAttachments($id);
 
 // Allow access only to the message creator
 if ($currentMessage["creator_id"] !== $_SESSION['user_id']) die(header("Location: ../index.php"));
-
-require_once '../../helpers/functions.php';
 
 $page = "Edit message";
 $panel = $_SESSION['user_role'] === "admin" ? "admin" : "user";

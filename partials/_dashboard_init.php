@@ -1,6 +1,11 @@
 <?php
 require_once '../../helpers/admin/dashboard_controller.php';
 require_once '../../config/features-config.php';
+require_once '../../config/config.php';
+require_once ROOT . DS . "helpers" . DS . "functions.php";
+
+// Checks if a visitor is logged in.
+requireLogin();
 ?>
 
 <!DOCTYPE html>

@@ -1,7 +1,8 @@
 <?php
 session_start();
-require_once('../../classes/User.php');
-require_once('../../helpers/functions.php');
+require_once '../../config/config.php';
+require_once ROOT . DS . "classes" . DS . "User.php";
+require_once ROOT . DS . "helpers" . DS . "functions.php";
 
 if ($_SERVER['REQUEST_METHOD'] == "POST") {
 
@@ -23,7 +24,17 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
             $user->register();
         } elseif ($action === "Login") {
             $user = new User;
-            $user->login();
+            try {
+                $user->login();
+            } catch (\InvalidArgumentException $e) {
+                $_SESSION["fail"] = $e->getMessage();
+                header("Location: ../forms/register.php");
+                die;
+            } catch (\PDOException $e) {
+                $_SESSION["fail"] = $e->getMessage();
+                header("Location: ../forms/register.php");
+                die;
+            }
         }
     } else {
         $_SESSION["fail"] = "Invalid action!";

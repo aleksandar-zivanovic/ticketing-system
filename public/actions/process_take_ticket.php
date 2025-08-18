@@ -4,6 +4,9 @@ require_once "../../classes/Ticket.php";
 require_once "../../classes/Message.php";
 require_once "../../helpers/functions.php";
 
+// Checks if a visitor is logged in.
+requireLogin();
+
 $location = "../user/user-ticket-listing.php";
 if (!isset($_POST["take_ticket"]) || $_POST["take_ticket"] !== "Take the Ticket") 
 {

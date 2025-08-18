@@ -3,6 +3,9 @@ session_start();
 require_once('../../classes/Ticket.php');
 require_once('../../helpers/functions.php');
 
+// Checks if a visitor is logged in.
+requireLogin();
+
 $action = null;
 
 if (isset($_POST["close_ticket"]) && $_POST["close_ticket"] === "Close Ticket") {
