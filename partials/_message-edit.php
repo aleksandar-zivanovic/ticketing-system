@@ -1,17 +1,5 @@
 <?php
-session_start();
-require_once '../../helpers/functions.php';
-
-// Checks if a visitor is logged in.
-requireLogin();
-
-if (!isset($_GET['message']) || !is_numeric($_GET['message'])) {
-    header("Location: ../");
-    die();
-}
-
-require_once '../../classes/Message.php';
-require_once '../../config/config.php';
+require_once ROOT . DS . "classes" . DS . "Message.php";
 
 $id = filter_input(INPUT_GET, "message", FILTER_VALIDATE_INT, ["options" => ["min_range" => 1]]);
 
@@ -48,19 +36,19 @@ $panel = $_SESSION['user_role'] === "admin" ? "admin" : "user";
 
         <?php
         // import header navigation bar
-        include_once '../../partials/_navigation-bar.php';
+        include_once ROOT . DS . "partials" . DS . "_navigation-bar.php";
 
         // import side menu
-        include_once '../../partials/_side-menu.php';
+        include_once ROOT . DS . "partials" . DS . "_side-menu.php";
 
         // import breadcrumbs
-        include_once '../../partials/_navigation-breadcrumbs.php';
+        include_once ROOT . DS . "partials" . DS . "_navigation-breadcrumbs.php";
         ?>
 
         <section class="section main-section">
             <div class="card mb-6">
                 <div class="card-content">
-                    <form id="editMessageForm" method="POST" action="../actions/message-edit-action.php" enctype="multipart/form-data">
+                    <form id="editMessageForm" method="POST" action="../actions/process_message-edit.php" enctype="multipart/form-data">
 
                         <div class="field">
                             <label class="label">Message</label>
@@ -122,7 +110,7 @@ $panel = $_SESSION['user_role'] === "admin" ? "admin" : "user";
 
         <?php
         // Import footer
-        include_once '../../partials/_footer.php';
+        include_once ROOT . DS . "partials" . DS . "_footer.php";
         ?>
 
     </div>
@@ -132,6 +120,9 @@ $panel = $_SESSION['user_role'] === "admin" ? "admin" : "user";
 
     <script>
         document.addEventListener("DOMContentLoaded", function() {
+            // Clear old attachment IDs from sessionStorage
+            sessionStorage.removeItem("attachmentIds");
+
             let form = document.getElementById('editMessageForm');
             let idsInput = document.getElementById('image_ids');
 

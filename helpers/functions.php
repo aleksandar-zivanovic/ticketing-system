@@ -297,7 +297,8 @@ function requireLogin()
         logout("/ticketing-system/public/forms/login.php");
     }
 
-    $expirationTime = 300; // 5 minutes
+    require_once __DIR__ . "/../config/config.php";
+    $expirationTime = SESSION_REFRESH_INTERVAL;
     $timeDiffetence = time() - $expirationTime;
 
     if (empty($_SESSION["last_check"]) || $_SESSION["last_check"] < $timeDiffetence) {

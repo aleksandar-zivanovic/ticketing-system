@@ -14,6 +14,7 @@ class Attachment extends BaseModel
      * Inserts image names to the database.
      * Uploads images to the designated folder.
      * 
+     * @param array $ticketAttachments ????? TODO:
      * @param int $id ID of a ticket or message related to the files.
      * @param string $table Name of the table (`ticket_attachments` or `message_attachments`).
      * @param string $fieldName The name of the file input field in the form.

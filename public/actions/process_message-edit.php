@@ -1,14 +1,4 @@
 <?php
-
-/**
- * TODO:
- * Dodacu zastitu u akciji gde cu ponovo da fetchujem tu poruku iz baze, zajedno sa 
- * fajlovima i korisnikom koji ju je kreirao i uporedicu id slika iz baze sa 
- * id-jevima slika iz forme, kao i proverom da li je to post tog korisnika i ponovo 
- * povuci sve poruke za taj post i proveriti da je to stvarno poslednja poruka, 
- * posto je u aplikaciji dozvoljeno editovanje poruke, samo ako je poslednja u 
- * konverzaciji.
- */
 session_start();
 require_once '../../helpers/functions.php';
 require_once '../../classes/Message.php';
@@ -91,14 +81,6 @@ if ($userIdFromSession < 1) throw new Exception('Invalid user ID offset from the
 // Forbid editing to non creator users
 if ($userIdFromSession !== $theMessage["user"]) throw new Exception('Not authorized!');
 
-?>
-
-<script>
-    // Clear JavaScript sessionStorage
-    sessionStorage.clear();
-</script>
-
-<?php
 // Update text message
 if ($theMessage['body'] !== $body) $message->editMessage($messageId, $body);
 
@@ -125,12 +107,18 @@ if (!empty($sanitizedIds)) {
 }
 
 // Upload files process
-// TODO: fix error
 if (!empty($_FILES["error_images"]["name"][0])) {
-    if ($attachment->processImages($messageId, "message_attachments", "error_images") === false) {
+    if ($attachment->processImages($_FILES, $messageId, "message_attachments", "error_images") === false) {
         throw new \RuntimeException("Files upload failed!");
     }
 }
 
-header("Location: .." . DS . "user" . DS . "user-view-ticket.php?ticket={$ticketId}");
+if (str_contains($_SERVER["HTTP_REFERER"], "admin")) {
+    header("Location: .." . DS . "admin" . DS . "view-ticket.php?ticket={$ticketId}");
+    die;
+} else {
+    header("Location: .." . DS . "user" . DS . "user-view-ticket.php?ticket={$ticketId}");
+    die;
+}
+
 ?>
