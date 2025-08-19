@@ -37,8 +37,8 @@ $ticket = new Ticket();
 $theTicket = $ticket->fetchTicketDetails($ticketIdFromForm);
 
 // Verifies whether the ticket has "in progress".
-if ($theTicket["statusId"] === 2) {
-    throw new Exception("Only tickets with `in progress` status can be deleted!");
+if ($theTicket["statusId"] !== 2) {
+    throw new Exception("Only tickets with `in progress` status can be closed!");
 }
 
 // Verifies whether the user is the creator of the ticket or the admin who handles the ticket.
