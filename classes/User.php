@@ -375,12 +375,18 @@ class User extends BaseModel
             $_SESSION["session_version"] = $newSession;
             $_SESSION["info"]            = "Logged in successfully!";
 
-            if ($user['r_name'] === "admin") {
-                header("Location: ../admin/admin-ticket-listing.php");
+            if (!empty($_SESSION["redirect_after_login"])) {
+                header("Location: " . $_SESSION["redirect_after_login"]);
+                unset($_SESSION["redirect_after_login"]);
+                die;
             } else {
-                header("Location: ../user/user-ticket-listing.php");
+                if ($user['r_name'] === "admin") {
+                    header("Location: ../admin/admin-ticket-listing.php");
+                } else {
+                    header("Location: ../user/user-ticket-listing.php");
+                }
+                die;
             }
-            die;
         } else {
             $_SESSION["fail"] = "Wrong password.";
             header("Location: ../forms/login.php");

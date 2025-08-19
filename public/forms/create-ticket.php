@@ -1,5 +1,12 @@
 <?php
 session_start();
+
+if (empty($_SESSION["user_role"]) && !empty($_GET["source"]) && strlen(trim($_GET["source"])) > 11) {
+    $_SESSION["redirect_after_login"] = $_SERVER["REQUEST_SCHEME"] . "://" . $_SERVER["HTTP_HOST"] . $_SERVER["REQUEST_URI"];
+    header("Location: /ticketing-system/public/forms/login.php");
+    die;
+}
+
 require_once '../../helpers/functions.php';
 require_once '../../classes/Department.php';
 require_once '../../classes/Ticket.php';

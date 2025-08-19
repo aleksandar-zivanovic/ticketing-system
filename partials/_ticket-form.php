@@ -15,7 +15,7 @@
         require_once '_session-messages.php';
 
         // cleaning soruce error page URL
-        $sourceUrl = trim(htmlspecialchars(filter_input(INPUT_GET, "source", FILTER_SANITIZE_URL)));
+        $sourceUrl = cleanString(filter_input(INPUT_GET, "source", FILTER_SANITIZE_URL));
     endif;
 
     $brackets = !empty($split) ? "[0]" : "";
