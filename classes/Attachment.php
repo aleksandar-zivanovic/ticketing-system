@@ -3,7 +3,7 @@ require_once 'BaseModel.php';
 
 class Attachment extends BaseModel
 {
-    public string $attachmentDirectory = ROOT . DS . "public" . DS . "img" . DS . "ticket_images";
+    public string $attachmentDirectory = ROOT . "public" . DS . "img" . DS . "ticket_images";
 
     /**
      * Processes images from the form.
@@ -14,7 +14,7 @@ class Attachment extends BaseModel
      * Inserts image names to the database.
      * Uploads images to the designated folder.
      * 
-     * @param array $ticketAttachments ????? TODO:
+     * @param ?array $ticketAttachments Formatted array of attachments for multiple tickets, null a single ticket. Default is null.
      * @param int $id ID of a ticket or message related to the files.
      * @param string $table Name of the table (`ticket_attachments` or `message_attachments`).
      * @param string $fieldName The name of the file input field in the form.
@@ -22,16 +22,14 @@ class Attachment extends BaseModel
      * @return bool Returns true on success, otherwise false. 
      * 
      * @throws UnexpectedValueException If the table name is invalid.
-     * @throws Exception If there is an error in upload process.
-     * @throws Exception If file format is wrong.
-     * @throws Exception If file extension is wrong.
+     * @throws Exception If there is an error in upload process, file format or file extension is wrong.
      */
     public function processImages(array $ticketAttachments, int $id, string $table, string $fieldName): bool
     {
         // Ensure the provided table name is valid
         if ($table !== "ticket_attachments" && $table !== "message_attachments") {
             logError("processImages() method error: Invalid table name: {$table}. Allowed values are 'ticket_attachments' and 'message_attachments'.");
-            throw new UnexpectedValueException ("Invalid table name provided.");
+            throw new UnexpectedValueException("Invalid table name provided.");
         }
 
         // Check for errors
@@ -72,20 +70,19 @@ class Attachment extends BaseModel
 
         // Initializes the array to store successfully uploaded files.
         $uploadedFiles = [];
-        
-        for ($i = 0; $i < $iterations; $i++) { 
+
+        for ($i = 0; $i < $iterations; $i++) {
             $imageName = uniqid() . "-" . strtolower(str_replace(" ", "-", $ticketAttachments[$fieldName]['name'][$i]));
             $imageNames[] = $imageName;
-        
+
             $movingSuccess = move_uploaded_file($ticketAttachments[$fieldName]['tmp_name'][$i], $this->attachmentDirectory . DS . $imageName);
             $movingResult[] = $movingSuccess;
 
             if ($movingSuccess) {
                 $uploadedFiles[] = $imageName;
             }
-            
         }
-        
+
         // Rolls back the process by deleting successfully uploaded files if any file fails to upload.
         if (in_array(false, $movingResult)) {
             $this->deleteAttachmentsFromServer($uploadedFiles);
@@ -127,7 +124,7 @@ class Attachment extends BaseModel
      */
     public function processImagesForSplit(): array
     {
-        $elements = ["name", "full_path", "type", "tmp_name", "error", "size", ];
+        $elements = ["name", "full_path", "type", "tmp_name", "error", "size",];
         $files = [];
 
         foreach ($elements as $element) {
@@ -150,7 +147,7 @@ class Attachment extends BaseModel
      * 
      * @return bool Returns true on success, otherwise false.
      */
-    public function addImagesToDatabase(string|array $images, int $id, string $table): bool 
+    public function addImagesToDatabase(string|array $images, int $id, string $table): bool
     {
         $column = $table === "message_attachments" ? "message" : "ticket";
 
@@ -184,7 +181,7 @@ class Attachment extends BaseModel
             $this->deleteAttachmentsFromDbById($ids, "ticket_attachments");
 
             logError(
-                "addImagesToDatabase() metod error: Adding images to the database failed! ", 
+                "addImagesToDatabase() metod error: Adding images to the database failed! ",
                 ['message' => $e->getMessage(), 'code' => $e->getCode()]
             );
             return false;
@@ -218,12 +215,11 @@ class Attachment extends BaseModel
             $this->bindParamsToQuery($stmt, $params, $integerIds);
 
             $stmt->execute();
-            
-            return $stmt->rowCount() > 0;
 
+            return $stmt->rowCount() > 0;
         } catch (\PDOException $e) {
             logError(
-                "deleteAttachmentsFromDbById() metod error: Failed to delete attachments for the ticket/message ID in this range of IDs: " . implode(", ", $params), 
+                "deleteAttachmentsFromDbById() metod error: Failed to delete attachments for the ticket/message ID in this range of IDs: " . implode(", ", $params),
                 ['message' => $e->getMessage(), 'code' => $e->getCode()]
             );
             return false;
@@ -239,11 +235,13 @@ class Attachment extends BaseModel
      * If there are undeleted files at the end RuntimeException will be thrown.
      * 
      * @param string|array $attachments Name or names of file(s) should be removed.
+     * @return void
+     * @throws RuntimeException If failed to delete.
      */
     public function deleteAttachmentsFromServer(string|array $attachments): void
     {
         // Convert a string to an array to unify processing for both types.
-        $deleteFiles = is_string($attachments) ? explode(",", $attachments) : $attachments; 
+        $deleteFiles = is_string($attachments) ? explode(",", $attachments) : $attachments;
 
         $allowedAttempts = 3; // Maximum number of deletion attempts allowed.
         $failedToDelete = []; // Array of files failed to delete.
@@ -294,7 +292,7 @@ class Attachment extends BaseModel
      *               Allowed table names are "message_attachments" and "ticket_attachments"
      * @return array Returns an associative array of attachments' details.
      */
-    public function getAttachmentsByIds(array $ids, string $table): array 
+    public function getAttachmentsByIds(array $ids, string $table): array
     {
         // Validate the database ticket name.
         if ($table !== "message_attachments" && $table !== "ticket_attachments") {
@@ -313,16 +311,14 @@ class Attachment extends BaseModel
             $this->bindParamsToQuery($stmt, $params, $integerIds);
 
             $stmt->execute();
-            $attachments = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (\PDOException $e) {
             logError(
-                "getAttachmentsByIds() metod error: Failed to fetch attachments", 
+                "getAttachmentsByIds() metod error: Failed to fetch attachments",
                 ['message' => $e->getMessage(), 'code' => $e->getCode()]
             );
             throw new Exception("Error Fetching Request!");
         }
-
-        return $attachments;
     }
 
     /** 
@@ -358,7 +354,7 @@ class Attachment extends BaseModel
      * @return array An array of attachment IDs related to the specified ticket. 
      *               Returns an empty array if no attachments are found.
      */
-    public function getAttachmentsIdsForTicket(int $id): array 
+    public function getAttachmentsIdsForTicket(int $id): array
     {
         try {
             $sql = "SELECT id from ticket_attachments WHERE ticket = :id";
@@ -367,7 +363,7 @@ class Attachment extends BaseModel
             return $stmt->fetchAll(PDO::FETCH_COLUMN);
         } catch (\PDOException $e) {
             logError(
-                "getAttachmentsIdsForTicket() metod error: Failed to fetch attachments IDs for ticket ID: {$id}", 
+                "getAttachmentsIdsForTicket() metod error: Failed to fetch attachments IDs for ticket ID: {$id}",
                 ['message' => $e->getMessage(), 'code' => $e->getCode()]
             );
             throw new Exception("Error Fetching Request!");
@@ -384,7 +380,7 @@ class Attachment extends BaseModel
      *               The scructure of the array: 
      *               ["exist" => array of existing attachments, "missing" => array of missing attachments]
      */
-    public function isAttachmentExisting(string|array $attachment): array 
+    public function isAttachmentExisting(string|array $attachment): array
     {
         // If attachment is a string, convert it to an array.
         $attachments = is_string($attachment) ? explode(",", $attachment) : $attachment;

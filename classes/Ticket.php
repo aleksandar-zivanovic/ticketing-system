@@ -1,5 +1,5 @@
 <?php
-require_once 'BaseModel.php';
+require_once ROOT . 'classes' . DS . 'BaseModel.php';
 
 class Ticket extends BaseModel
 {
@@ -10,7 +10,6 @@ class Ticket extends BaseModel
     public int $priorityId;
     public int $statusId;
     public int $userId;
-    public int $parentId;
     public ?array $images;
     public array $closingTypes = [
         "normal",    // Ticket was resolved and closed in the usual way.
@@ -26,6 +25,8 @@ class Ticket extends BaseModel
      * Fetches all data from priorities table
      * 
      * @return array Return associative array of priorities
+     * @throws RuntimeException if request failed.
+     * @see BaseModel::getAll()
      */
     public function getAllPriorities(): array
     {
@@ -33,263 +34,91 @@ class Ticket extends BaseModel
     }
 
     /**
-     * Collects and sanitizes data from the form for creating a new ticket.
-     */
-    public function collectTicketData(): void
-    {
-        // Validates the URL from the form input.
-        $url = cleanString(filter_input(INPUT_POST, "error_page", FILTER_SANITIZE_URL));
-        if (!filter_var($url, FILTER_VALIDATE_URL)) {
-            throw new RuntimeException('URL is not valid!');
-        }
-
-        $this->url = $url;
-        $this->title = cleanString(filter_input(INPUT_POST, "error_title", FILTER_DEFAULT));
-        $this->description = cleanString(filter_input(INPUT_POST, "error_description", FILTER_DEFAULT));
-        $this->departmentId = cleanString(filter_input(INPUT_POST, "error_department", FILTER_SANITIZE_NUMBER_INT));
-        $this->priorityId = cleanString(filter_input(INPUT_POST, "error_priority", FILTER_SANITIZE_NUMBER_INT));
-        $this->statusId = 1;
-        $this->userId = cleanString($_SESSION["user_id"]);
-    }
-
-    /**
-     * Collects and sanitizes data from the form for creating a new tickets from the split ticket.
-     * Url, ticket creator ID, ticket status and parent ticket ID are set to proprties, 
-     * while other parameters are returned in the array formatted as: 
-     *  [
-     *      "error_department"  => [int, ...], 
-     *      "error_priority"    => [int, ...], 
-     *      "error_title"       => [int, ...], 
-     *      "error_description" => [int, ...], 
-     *  ]
+     * Fetches all data from departments table
      * 
-     * @return array
+     * @return array Return associative array of departments
+     * @throws RuntimeException if request failed.
+     * @see BaseModel::getAll()
      */
-    public function collectSplitTicketData(): array
+    public function getAllDepartments(): array
     {
-        // Gets url from $_POST
-        $url = filter_input_array(INPUT_POST, ["error_page" => ['filter' => FILTER_VALIDATE_URL, 'flags' => FILTER_REQUIRE_ARRAY,]]);
-
-        if (empty($url["error_page"][0])) {
-            throw new RuntimeException('URL is not valid!');
-        } else {
-            $this->url = cleanString($url["error_page"][0]);
-        }
-
-        // Gets departments from $_POST
-        $filters = [
-            "error_department" => [
-                "filter" => FILTER_VALIDATE_INT,
-                "flags" => FILTER_REQUIRE_ARRAY,
-            ]
-        ];
-        $values = filter_input_array(INPUT_POST, $filters);
-
-        if (empty($values["error_department"])) throw new DomainException("Empty department ID.");
-
-        foreach ($values["error_department"] as $dep) {
-            if ($dep === false || $dep < 1) {
-                throw new DomainException("Empty department ID.");
-            }
-        }
-
-        // Gets priorities from $_POST
-        $filters = [
-            "error_priority" => [
-                "filter" => FILTER_VALIDATE_INT,
-                "flags" => FILTER_REQUIRE_ARRAY,
-            ]
-        ];
-        $values = $values + filter_input_array(INPUT_POST, $filters);
-
-        if (empty($values["error_priority"])) throw new DomainException("You didn't set priorities");
-
-        foreach ($values["error_priority"] as $pri) {
-            if ($pri === false || $pri < 1) {
-                throw new DomainException("You didn't set priorities.");
-            }
-        }
-
-        // Gets titles from $_POST
-        $values["error_title"] = [];
-        foreach ($_POST["error_title"] as $key => $title) {
-            $values["error_title"][$key] = cleanString($title);
-            if (empty($values["error_title"][$key])) throw new DomainException("You didn't set title.");
-        }
-
-        // Gets descriptions from $_POST
-        $values["error_description"] = [];
-        foreach ($_POST["error_description"] as $key => $desc) {
-            $values["error_description"][$key] = cleanString($desc);
-            if (empty($values["error_description"][$key])) throw new DomainException("You didn't set description.");
-        }
-
-        // Gets ID of ticket to split
-        $splitTicketId = filter_input(INPUT_POST, "error_ticket_id", FILTER_VALIDATE_INT);
-        if ($splitTicketId === false || $splitTicketId < 1) {
-            logError("Inserted fake ticket id in `error_ticket_id` input field inside split ticket form by user {$_SESSION["email"]}.");
-            throw new DomainException("False data.");
-        }
-        $this->parentId = $splitTicketId;
-
-        // Gets ID of the ticket creator
-        $theCreator = filter_input(INPUT_POST, "error_user_id", FILTER_VALIDATE_INT);
-        if ($theCreator === false || $theCreator < 1) {
-            logError("Inserted fake user id in `created_by` input field inside split ticket form by user {$_SESSION["email"]}.");
-            throw new DomainException("False data.");
-        }
-        $this->userId = $theCreator;
-
-        $this->statusId = 1;
-
-        return $values;
+        return $this->getAll("departments");
     }
 
     /**
      * Creates a new ticket or mutliple new tickets.
      * 
-     * @param bool $split If true used in splitting process, otherwise in creating a new ticket.
-     * @param ?array $ticketAttachments Formatted array of attachments for multiple tickets, null a single ticket. Default is null.
-     * @param ?Attachment $attachment Attachment object or null.
+     * @param ?array $data Associative array of ticket data or null. Default is null
+     * @param bool $split If true used in splitting process, otherwise in creating a new ticket. Default is false
+     * @param ?int $parentId ID of the parent ticket when splitting tickets, otherwise null. Default is null
+     * @return int Returns the ID of the newly created ticket. Throws exception if the process fails.
      * 
-     * @return void
+     * @throws RuntimeException If the query execution fails.
+     * @throws UnexpectedValueException If the table name is invalid.
+     * @throws Exception Exception If there is an error in images upload.
+     * @see Attachment::processImages()
      */
     public function createTicket(
-        bool $split               = false,
-        ?array $ticketAttachments = null,
-        ?Attachment $attachment   = null
-    ): void {
-        if ($split === false) {
-            $this->collectTicketData();
-        }
-
-        $conn = $this->getConn();
-
-        $query = "INSERT INTO tickets (department, created_by, priority, statusId, title, body, url";
-        if ($split === true) $query .= ", parent_ticket";
-        $query .= ") VALUES(:de, :us, :pr, :st, :tt, :bd, :ul";
-        $query .= $split === true ? ", :pi)" : ")";
-
+        ?array $data,
+        bool $split = false,
+        ?int $parentId = null
+    ): int {
         try {
+            $data['statusId'] = 1;
+
+            $conn = $this->getConn();
+
+            $query = "INSERT INTO tickets (department, created_by, priority, statusId, title, body, url";
+            if ($split === true) $query .= ", parent_ticket";
+            $query .= ") VALUES(:de, :us, :pr, :st, :tt, :bd, :ul";
+            $query .= $split === true ? ", :pi)" : ")";
+
+
             $stmt = $conn->prepare($query);
-            $stmt->bindValue(":de", $this->departmentId, PDO::PARAM_INT);
-            $stmt->bindValue(":us", $this->userId, PDO::PARAM_INT);
-            $stmt->bindValue(":pr", $this->priorityId, PDO::PARAM_INT);
-            $stmt->bindValue(":st", $this->statusId, PDO::PARAM_INT);
-            $stmt->bindValue(":tt", $this->title, PDO::PARAM_STR);
-            $stmt->bindValue(":bd", $this->description, PDO::PARAM_STR);
-            $stmt->bindValue(":ul", $this->url, PDO::PARAM_STR);
-            if ($split === true) $stmt->bindValue(":pi", $this->parentId, PDO::PARAM_INT);
+            $stmt->bindValue(":de", $data['departmentId'], PDO::PARAM_INT);
+            $stmt->bindValue(":us", $data['userId'], PDO::PARAM_INT);
+            $stmt->bindValue(":pr", $data['priorityId'], PDO::PARAM_INT);
+            $stmt->bindValue(":st", $data['statusId'], PDO::PARAM_INT);
+            $stmt->bindValue(":tt", $data['title'], PDO::PARAM_STR);
+            $stmt->bindValue(":bd", $data['description'], PDO::PARAM_STR);
+            $stmt->bindValue(":ul", $data['url'], PDO::PARAM_STR);
+            if ($split === true) $stmt->bindValue(":pi", $parentId, PDO::PARAM_INT);
             $stmt->execute();
-            $ticketId = (int) $conn->lastInsertId();
 
-            // Add the year in `years` table.
-            $this->addCurrentYear();
-
-            // Proccesses files if they are attached in form:
-            if ($ticketAttachments === null) {
-                $ticketAttachments = $_FILES;
-            }
-            unset($_FILES);
-            if ($ticketAttachments['error_images']['error'][0] != 4) {
-                if ($split === false) {
-                    require_once 'Attachment.php';
-                    $attachment = new Attachment();
-                }
-                $attachment->processImages($ticketAttachments, $ticketId, "ticket_attachments", "error_images");
-            }
-
-            if ($split === false) {
-                $_SESSION["info"] = "The issue is reported! Thank you!";
-
-                // Redirects the user to the reported page after the successful ticket creation.
-                header("Location: {$this->url}");
-                die;
-            }
+            return (int) $conn->lastInsertId();
         } catch (\PDOException $e) {
             logError("createTicket error: INSERT query failed!", ["message" => $e->getMessage(), "code" => $e->getCode()]);
-
             throw new \RuntimeException("createTicket method query execution failed");
         }
     }
 
     /**
-     * Inserts a year in 'years' table.
-     */
-    private function addCurrentYear(): void
-    {
-        require_once 'Year.php';
-        $yearInstance = new Year();
-        $yearInstance->createYear(date("Y")); // Add the year in `years` table.
-    }
-
-    /**
-     * Prepares data for multiple creating ticket calls.
-     */
-    public function splitTicket(): void
-    {
-        require_once 'Attachment.php';
-        $attachment     = new Attachment();
-        $attachments    = $attachment->processImagesForSplit();
-        $splitData      = $this->collectSplitTicketData();
-
-        foreach ($attachments as $key => $ticketAttachments) {
-            $this->title        = $splitData["error_title"][$key];
-            $this->priorityId   = $splitData["error_priority"][$key];
-            $this->description  = $splitData["error_description"][$key];
-            $this->departmentId = $splitData["error_department"][$key];
-            $this->createTicket(true, $ticketAttachments, $attachment);
-
-            $columns = [["statusId" => 3, "closed_date" => date("Y-m-d H:i:s"), "closing_type" => "split"]];
-            $whereClauses = [["id" => $this->parentId]];
-            $this->updateTicket($columns, $whereClauses);
-        }
-
-        unset(
-            $_SESSION["error_department"],
-            $_SESSION["error_priority"],
-            $_SESSION["error_page"],
-            $_SESSION["error_title"],
-            $_SESSION["error_description"],
-            $_SESSION["error_user_id"],
-            $_SESSION["error_ticket_id"],
-        );
-
-        $_SESSION["success"] = "Ticket with ID {$this->parentId} is split!";
-        header("Location: ../admin/admin-ticket-listing.php");
-        die;
-    }
-
-    /**
      * Fetches ticket data and associated details from related tables.
      *
-     * This method builds and executes a SQL query to retrieve ticket data.
+     * Builds and executes a SQL query with optional filtering, sorting, 
+     * and inclusion of attachments.
      *
-     * @param array $allowedValues An array of allowed values for ordering tickets.
-     * @param string $orderBy The value by which to order the tickets, default is "newest".
-     * @param ?string $sortBy The table name for sorting, defaults to null if not provided.
-     * @param int $limit Value for LIMIT clause in the SQL query. If 0, no limit is applied. Default value is 0.
+     * @param string  $action Action type for the listing (e.g., "all", "my", "handling")
+     * @param int     $userId The ID of the user whose tickets are to be fetched.
+     * @param string  $orderBy Order direction: "newest" (default) or "oldest".
+     * @param ?string $sortBy Column value used for filtering, depends on $table.
+     * @param ?string $table Table name for filtering ("statuses", "priorities", "departments", "users").
+     * @param ?string $table The table name for sorting, defaults to null if not provided and will look in user table.
+     * @param int  $limit Maximum number of tickets to fetch. 0 = no limit.
      * @param bool $images A flag to include image attachments in the result, default is true.
-     * @param ?int $userId The ID of the user whose tickets are to be fetched. If `null`, all tickets will be fetched (default).
-     * @param bool $handledByMe If true, fetches only tickets handled by the currently logged-in admin.
-     * 
      * @return array The result set containing ticket information, including optional image attachments.
-     * 
-     * @throws DomainException If the provided $sortBy or $orderBy value is not in the allowed values.
-     * @throws Exception If there is a PDOException while executing the SQL query.
+     * @throws RuntimeException If a database query fails.
      */
     public function fetchAllTickets(
-        array $allowedValues,
+        string $action,
+        int $userId,
+        int $currentPage,
         string $orderBy = "newest",
         ?string $sortBy = null,
+        ?string $table = null,
         int $limit = 0,
-        bool $images = true,
-        ?int $userId = null,
-        bool $handledByMe = false
+        bool $images = true
     ): array {
-        // Validates sorting and ordering values and sets $table value.
-        $table = $this->validateSortingAndOrdering($allowedValues, $orderBy, $sortBy);
-
         try {
             // Initial query to select ticket data and associated table names for join.
             $query = "SELECT 
@@ -334,31 +163,26 @@ class Ticket extends BaseModel
                         break;
                     case 'departments':
                         $tableAllias = "d";
+                        break;
                     default:
                         $tableAllias = "u";
                 }
 
                 $column = (in_array($tableAllias, ["s", "p", "d"])) ? "name" : "id";
                 $query .= " WHERE " . $tableAllias . "." . $column . " = '" . $sortBy . "'";
-
-                // Fetches only tickets opened by a specified user if $table is specified
-                if ($userId != null) $query .= " AND t.created_by = " . $userId;
             }
 
-            // Fetches only tickets opened by a specified user $table is not specified
-            if ($userId != null && (!isset($table) || $table == null)) $query .= " WHERE t.created_by = " . $userId;
+            // Fetches only tickets created by the user
+            if ($action === "my") {
+                if (!isset($table) || $table == null) $query .= " WHERE t.created_by = " . $userId;
+            }
 
-            // Fetch only tickets handled by the current admin role user
-            if ($handledByMe === true) {
-                if (trim($_SESSION["user_role"]) !== "admin") {
-                    logError("Error: Non admin users can't have tickets they handle!");
-                    throw new Exception("User doesn't have permission for this action!");
-                }
-
+            // Fetches only tickets handled by the current admin role user
+            if ($action === "handling") {
                 if (isset($table) && $table !== null) {
-                    $query .= " AND t.handled_by = " . trim($_SESSION["user_id"]);
+                    $query .= " AND t.handled_by = " . $userId;
                 } else {
-                    $query .= " WHERE t.handled_by = " . trim($_SESSION["user_id"]);
+                    $query .= " WHERE t.handled_by = " . $userId;
                 }
             }
 
@@ -371,9 +195,7 @@ class Ticket extends BaseModel
 
             // Setting limit and offset value
             if ($limit !== 0) {
-                $page = isset($_GET['page']) ? filter_input(INPUT_GET, "page", FILTER_SANITIZE_NUMBER_INT) : 1;
-                $offset = $page * $limit - $limit;
-
+                $offset = $currentPage * $limit - $limit;
                 $query .= " LIMIT :limit OFFSET {$offset}";
             }
 
@@ -388,25 +210,30 @@ class Ticket extends BaseModel
             // Returns the fetched result set
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (\PDOException $e) {
-            // Logs the error and throws an exception if a PDOException occurs
-            logError($e->getMessage() . $e->getCode());
-            throw new Exception($e->getMessage() . $e->getCode());
+            // Logs the error and throws RuntimeException if a PDOException occurs
+            logError("Ticket::fetchAllTickets() error!", ["message" => $e->getMessage(), "code" => $e->getCode()]);
+            throw new \RuntimeException("Something went wrong. Try again later!");
         }
     }
 
     /**
-     * Counts all tickets in the database by criteria.
+     * Counts total tickets based on optional filtering criteria.
+     * 
+     * @param string  $action Action type for the listing (e.g., "all", "my", "handling")
+     * @param int     $userId The ID of the user whose tickets are to be counted.
+     * @param ?string $sortBy Column value used for filtering, depends on $table.
+     * @param ?string $table Table name for filtering ("statuses", "priorities", "departments", "users").
+     * 
+     * @return int The total number of tickets matching the specified criteria.
+     * @throws Exception If user doesn't have permission for this action.
+     * @throws RuntimeException If a database query fails.
      */
     public function countAllTickets(
-        array $allowedValues,
-        string $orderBy = "newest",
+        string $action,
+        int $userId,
         ?string $sortBy = null,
-        ?int $userId = null,
-        bool $handledByMe = false
+        ?string $table = null,
     ): int {
-        // Validates sorting and ordering values and sets $table value.
-        $table = $this->validateSortingAndOrdering($allowedValues, $orderBy, $sortBy);
-
         try {
             // Initial query to select ticket data and associated table names for join.
             $query = "SELECT COUNT(*) FROM tickets t LEFT JOIN users u ON t.handled_by = u.id";
@@ -432,24 +259,23 @@ class Ticket extends BaseModel
 
                 $column = (in_array($tableAllias, ["s", "p", "d"])) ? "name" : "id";
                 $query .= " WHERE " . $tableAllias . "." . $column . " = '" . $sortBy . "'";
-                // Fetches only tickets opened by a specified user if $table is specified
-                if ($userId != null) $query .= " AND t.created_by = " . $userId;
             }
 
-            // Fetches only tickets opened by a specified user $table is not specified
-            if ($userId != null && (!isset($table) || $table == null)) $query .= " WHERE t.created_by = " . $userId;
-
-            // Fetch only tickets handled by the current admin role user
-            if ($handledByMe === true) {
-                if (trim($_SESSION["user_role"]) !== "admin") {
-                    logError("Error: Non admin users can't have tickets they handle!");
-                    throw new Exception("User doesn't have permission for this action!");
+            if ($action === "my") {
+                if (isset($table) && $table !== null) {
+                    $query .= " AND t.created_by = " . $userId;
                 }
 
+                // Fetches only tickets opened by a specified user $table is not specified
+                if (!isset($table) || $table == null) $query .= " WHERE t.created_by = " . $userId;
+            }
+
+            // Fetch only tickets handled by the current admin role user
+            if ($action === "handling") {
                 if (isset($table) && $table !== null) {
-                    $query .= " AND t.handled_by = " . trim($_SESSION["user_id"]);
+                    $query .= " AND t.handled_by = " . $userId;
                 } else {
-                    $query .= " WHERE t.handled_by = " . trim($_SESSION["user_id"]);
+                    $query .= " WHERE t.handled_by = " . $userId;
                 }
             }
 
@@ -461,9 +287,22 @@ class Ticket extends BaseModel
             return $stmt->fetchColumn();
         } catch (\PDOException $e) {
             // Logs the error and throws an exception if a PDOException occurs
-            logError($e->getMessage() . $e->getCode());
-            throw new Exception($e->getMessage() . $e->getCode());
+            logError("Ticket::countAllTickets() error!", ["message" => $e->getMessage(), "code" => $e->getCode()]);
+            throw new RuntimeException("Something went wrong. Try again later!");
         }
+    }
+
+    /**
+     * Fetches row from `tickets` table by ID.
+     * 
+     * @param int $ticketId Ticket ID.
+     * @return array|false Returns associative array of ticket data or false if ticket is not found.
+     * @throws RuntimeException if request failed.
+     * @see BaseModel::getAllWhere()
+     */
+    public function fetchTicketById(int $ticketId): array|false
+    {
+        return $this->getAllWhere("tickets", "id = {$ticketId}")[0] ?? false;
     }
 
     /**
@@ -471,10 +310,10 @@ class Ticket extends BaseModel
      * This method builds and executes a SQL query to retrieve a ticket data.
      *
      * @param int $ticketId A ticket id.
-     * @return array The result contains ticket information, including optional image attachments.
-     * @throws Exception If there is a PDOException while executing the SQL query.
+     * @return array|false The result set containing ticket information, including optional image attachments, or false if ticket is not found.
+     * @throws RuntimeException If there is a PDOException while executing the SQL query.
      */
-    public function fetchTicketDetails(int $ticketId): array
+    public function fetchTicketDetails(int $ticketId): array|false
     {
         try {
             // Initial query to select ticket data and associated table names for join.
@@ -512,51 +351,8 @@ class Ticket extends BaseModel
         } catch (\PDOException $e) {
             // Logs the error and throws an exception if a PDOException occurs
             logError("fetchTicketDetails() method error: Failed to retrive the ticket data", ['message' => $e->getMessage(), 'code' => $e->getCode()]);
-            throw new Exception("Something went wrong. Try again later!");
+            throw new RuntimeException("Something went wrong. Try again later!");
         }
-    }
-
-    /**
-     * Validates sorting and ordiering values.  
-     * This method is used in methods for making queries for ticket listings. 
-     * Provides table name for the WHERE clause in a query.
-     * 
-     * @param array $allowedValues An associative array of allowed values for ordering tickets.
-     * @param ?string $sortBy The table name for sorting, defaults to null if not provided.
-     * @return string|null Returns table name or null if everything is valid, otherwise throws exception;
-     * @throws DomainException If the provided $sortBy or $orderBy value is not in the allowed values.
-     */
-    private function validateSortingAndOrdering(
-        array $allowedValues,
-        string $orderBy = "newest",
-        ?string $sortBy = null
-    ): string|null {
-        // Checks if the $sortBy value is valid.
-        $allowedSort = false;
-        if ($sortBy === null || $sortBy === "all") {
-            $allowedSort = true;
-            $table = null;
-        } else {
-            foreach ($allowedValues as $key => $value) {
-                if (in_array($sortBy, $value)) {
-                    $allowedSort = true;
-                    $table = $key;
-                }
-            }
-        }
-
-        // Checks if the $orderBy value is valid.
-        $allowedOrder = false;
-        if ($orderBy === "newest" || $orderBy === "oldest") {
-            $allowedOrder = true;
-        }
-
-        // Throws an exception if either $sortBy or $orderBy is invalid.
-        if ($allowedSort !== true ||  $allowedOrder !== true) {
-            throw new DomainException("Invalid order/sort value!");
-        }
-
-        return $table;
     }
 
     /**
@@ -565,44 +361,31 @@ class Ticket extends BaseModel
      * 
      * @param int $ticketId ID of the ticket that should be closed.
      * @param string $action Determines if a ticket should be closed or reopened. Allowed values are "close" and "reopen"
-     * @return bool Returns true if the process was successful, otherwise returns false.
+     * @return bool Returns true if the process was successful, otherwise throws RuntimeException.
+     * @throws RuntimeException If there is a PDOException while executing the SQL query.
      */
     public function closeReopenTicket(int $ticketId, string $action): bool
     {
-        // Checks if the $action parameter contains a valid value ("close" or "reopen").
-        if ($action !== "close" && $action !== "reopen") {
-            throw new DomainException("The action parameter is invalid!");
-        }
-
-        $sql = "UPDATE tickets SET statusId = :si, ";
-
-        if ($action === "close") {
-            $curentDate = date("Y-m-d H:i:s");
-            $curentDateSql = "'{$curentDate}'";
-            $statusId = 3;
-
-            if (!isset($_POST['closingSelect']) || empty($_POST['closingSelect'])) {
-                throw new DomainException("Missing closing type value");
-            }
-
-            $closingType = cleanString($_POST['closingSelect']);
-
-            if (!in_array($closingType, $this->closingTypes)) {
-                throw new DomainException("Invalid value for closing type.");
-            }
-
-            $sql .= "closing_type = :ct, ";
-        }
-
-        if ($action === "reopen") {
-            $curentDateSql = "NULL";
-            $statusId = 2;
-            $sql .= "closing_type = NULL, was_reopened = TRUE, ";
-        }
-
-        $sql .= "closed_date = {$curentDateSql} WHERE id = :tid";
-
         try {
+            $sql = "UPDATE tickets SET statusId = :si, ";
+
+            if ($action === "close") {
+                $curentDate = date("Y-m-d H:i:s");
+                $curentDateSql = "'{$curentDate}'";
+                $statusId = 3;
+                $closingType = cleanString($_POST['closingSelect']);
+
+                $sql .= "closing_type = :ct, ";
+            }
+
+            if ($action === "reopen") {
+                $curentDateSql = "NULL";
+                $statusId = 2;
+                $sql .= "closing_type = NULL, was_reopened = TRUE, ";
+            }
+
+            $sql .= "closed_date = {$curentDateSql} WHERE id = :tid";
+
             $stmt = $this->getConn()->prepare($sql);
             $stmt->bindValue(":si", $statusId, PDO::PARAM_INT);
             if ($action === "close") $stmt->bindValue(":ct", $closingType, PDO::PARAM_STR);
@@ -615,27 +398,20 @@ class Ticket extends BaseModel
                 "closeReopenTicket() method error: Failed to {$action} the ticket",
                 ['message' => $e->getMessage(), 'code' => $e->getCode()]
             );
-            throw new Exception("Something went wrong. Try again to {$action} the ticket.");
+            throw new RuntimeException("Something went wrong. Try again to {$action} the ticket.");
         }
     }
 
     /**
-     * Delete a ticket from database. 
-     * If the ticket ID is int or string it will be converted to array type.
+     * Deletes one or multiple tickets from the database.
+     * Accepts ticket ID(s) as int, string (comma-separated), or array.
      * 
-     * @param int|string|array $ticketId Ticket ID(s) for delation.
+     * @param int|string|array $id Ticket ID(s) for deletion.
+     * @return void
+     * @throws Exception If database deletion fails
      */
-    public function deleteTicketRow($id): bool
+    public function deleteTicketRow(array $ids, array $params): void
     {
-        // Convert string to array type.
-        if (is_string($id)) $id = explode(",", $id);
-
-        // Convert integer to array type.
-        if (is_int($id)) $id = [$id];
-
-        require_once "helpers/IdValidator.php";
-        list($ids, $params) = IdValidator::prepareIdsForQuery($id);
-
         try {
             $sql = "DELETE FROM tickets WHERE id IN (" . implode(",", $params) . ")";
             $stmt = $this->getConn()->prepare($sql);
@@ -643,7 +419,7 @@ class Ticket extends BaseModel
                 $stmt->bindValue($value, $ids[$key], PDO::PARAM_INT);
             }
 
-            return $stmt->execute();
+            $stmt->execute();
         } catch (\PDOException $e) {
             // Logs the error and throws an exception if a PDOException occurs.
             logError(
@@ -655,270 +431,68 @@ class Ticket extends BaseModel
     }
 
     /**
-     * Deletes the attachment(s) from the server and the database.
-     * 
-     * @param int $id ID of the ticket whose attachment(s) should be deleted.
-     * @return bool Returns true on success. Throws an exception on failure.
-     */
-    public function deleteTicket(int $id): bool
-    {
-        // Get ticket data.
-        $ticket = $this->fetchTicketDetails($id);
-
-        // Validate user's deletion premission. 
-        if (
-            $ticket["statusId"] !== 1 &&
-            $ticket["handled_by"] != null &&
-            !empty($allMessages) &&
-            ($ticket["created_by"] !== trim($_SESSION['user_id']) && trim($_SESSION["user_role"] !== "admin"))
-        ) {
-            $panel = $ticket["created_by"] !== trim($_SESSION['user_id']) && trim($_SESSION["user_role"] === "admin") ? "admin" : "user";
-            $redirectionUrl = $panel === "admin" ? "../public/admin/admin-ticket-listing.php" : "../public/user/user-ticket-listing.php";
-            die(header("Location: {$redirectionUrl}"));
-        }
-
-        // Delete attachments from the database and the server.
-        if (!empty($ticket["attachment_id"])) {
-            require_once 'Attachment.php';
-            $attachment = new Attachment();
-
-            // Convert string of IDs to an array of IDs.
-            $idsArray = explode(",", $ticket["attachment_id"]);
-
-            $attachments = $attachment->getAttachmentsByIds($idsArray, "ticket_attachments");
-
-            // Get attachment names for deleteAttachmentsFromServer() method.
-            $attachmentNames = [];
-            foreach ($attachments as $anAttachment) {
-                $attachmentNames[] = $anAttachment["file_name"];
-            }
-
-            // Collect data about existing and missing files.
-            $attachmentFilesStatus = $attachment->isAttachmentExisting($attachmentNames);
-
-            if (!empty($attachmentFilesStatus["exist"])) {
-                // Delete attachments from the server.
-                $attachment->deleteAttachmentsFromServer($attachmentNames);
-            }
-
-            // Delete attachments from the database.
-            if ($attachment->deleteAttachmentsFromDbById($idsArray, "ticket_attachments") === false) {
-                throw new RuntimeException("Deleting attachments from the database failed");
-            };
-        }
-
-        // Delete the ticket from the database.
-        return $this->deleteTicketRow($id);
-    }
-
-    /**
      * Set an admin as the ticket handler.
      * This method allows an admin to take the administration over the ticket.
      * 
      * @param int $ticketId ID of the ticket that will be assigned to an admin.
-     * @return bool True on success, otherwise throws an exception.
-     * @throws Exception If the assignment fails.
+     * @param int $adminId ID of the admin who is taking the ticket.
+     * @return void
+     * @throws RuntimeException If there is a PDOException while executing the SQL query.
      */
-    public function takeTicket(int $ticketId): bool
+    public function takeTicket(int $ticketId, int $adminId): void
     {
-        $adminId = trim($_SESSION["user_role"]) === "admin" ? trim($_SESSION["user_id"]) : false;
-        if ($adminId === false) die(header("Location: ../user/user-ticket-listing.php"));
-
         try {
             $sql = "UPDATE tickets SET handled_by = :adm, statusId = 2 WHERE id = {$ticketId}";
             $stmt = $this->getConn()->prepare($sql);
             $stmt->bindValue(":adm", $adminId, PDO::PARAM_INT);
             $stmt->execute();
-            return true;
         } catch (\PDOException $e) {
             logError(
                 "takeTicket() method error: Failed to assign the ticket (ID: {$ticketId}) the administrator (ID: {$adminId}).",
                 ['message' => $e->getMessage(), 'code' => $e->getCode()]
             );
-            throw new Exception("Something went wrong. The ticket is not assigned to the administrator.");
+            throw new RuntimeException("Something went wrong. The ticket is not assigned to the administrator.");
         }
     }
 
     /**
-     * Gets an array of tickets filtered by a given parameter and year, grouped by months.
+     * Updates ticket data in the database (wrapper for "tickets" table).
      * 
-     * Returns an array formatted like: 
-     * [
-     *    ["Jan" => [
-     *        "parameter_name" => array  // Contains values of any type (int, string, bool, null, etc.) 
-     *    ],
-     *    ["Feb" => [
-     *        "parameter_name" => array  // Contains values of any type (int, string, bool, null, etc.)  
-     *    ],
-     *    // ... rest of the months
-     * ]
-     * 
-     * @param string $param Parameter name that exists as a key in each ticket returned by the fetchAllTickets() method.
-     * @param array $allTicketsData The array of all tickets returned by the `fetchAllTickets` method.
-     * @param int $year The year to filter tickets by.
-     * 
-     * @return array Array with month abbreviations as keys.
-     *     Each month key maps to an array of values of mixed types (int, string, bool, null)
-     *     corresponding to the specified parameter.
+     * @param array $columns An array of associative arrays, each containing column-value pairs to update.
+     * @param array $whereClauses An array of associative arrays, each containing column-value pairs for the WHERE clause.
+     * @throws InvalidArgumentException if the number of rows and where values do not match,
+     * or if unsupported parameter types are provided.
+     * @throws RuntimeException if the update fails.
+     * @see BaseModel::updateRows()
      */
-    public static function getMonthlyTicketsByParameter(string $param, array $allTicketsData, int $year): array
-    {
-        $months = [
-            'Jan' => '01',
-            'Feb' => '02',
-            'Mar' => '03',
-            'Apr' => '04',
-            'May' => '05',
-            'Jun' => '06',
-            'Jul' => '07',
-            'Avg' => '08',
-            'Sep' => '09',
-            'Oct' => '10',
-            'Nov' => '11',
-            'Dec' => '12',
-        ];
-
-        // Prepares empty array buckets to prevent undefined keys
-        $monthsData = [];
-        foreach ($months as $monthName => $_) {
-            $monthsData[$monthName] = [];
-        }
-
-        // Fills buckets with tickets grouped by month
-        foreach ($allTicketsData as $ticket) {
-            foreach ($months as $monthName => $MonthNumber) {
-                if (str_contains(haystack: $ticket[$param], needle: "{$year}-{$MonthNumber}-")) {
-                    $monthsData[$monthName][$param][] = $ticket;
-                    break; // stop looping months when matched
-                }
-            }
-        }
-
-        return $monthsData;
-    }
-
-    /**
-     * Counts tickets received from `getMonthlyTicketsByParameter` and groupes them by months.
-     * Returns an array formatted like: 
-     * [
-     *    "Jan" => [
-     *        "parameter_name" => int
-     *    ],
-     *    "Feb" => [
-     *        "parameter_name" => int 
-     *    ],
-     *    // ... rest of the months
-     * ]
-     * 
-     * @param string $param Parameter name that exists as a key in each ticket returned by the `fetchAllTickets` method.
-     * @param array $allTicketsData The array of all tickets returned by the `fetchAllTickets` method.
-     * @param int $year The year to filter tickets by.
-     * 
-     * @return array Array with month abbreviations as keys.
-     *     Each month key maps specified parameter name as a key and integer as value.
-     */
-    public static function countMonthlyTicketsByParameter(string $param, array $allTicketsData, int $year): array
-    {
-        $counts = [];
-        $tickets = static::getMonthlyTicketsByParameter($param, $allTicketsData, $year);
-        foreach ($tickets as $month => $arraysByParamNames) {
-            if (empty($arraysByParamNames)) {
-                $counts[$month][$param] = 0;
-            }
-            foreach ($arraysByParamNames as $tickets) {
-                $counts[$month][$param] = count($tickets);
-            }
-        }
-
-        return $counts;
-    }
-
-    /**
-     * Counts data by a filter for a dashboard table.
-     * Returns array in format: 
-     *  [
-     *      ["FilterNameValue1", int], ["FilterNameValue2", int], ["FilterNameValue3", int], ...
-     *  ] 
-     * 
-     * @param array $data Array of that returned by `fetchAllTickets` method.
-     * @param array $filters List of filter name strings. The list contains possible values 
-     *              those $ticketFilter parametr can have (e.g. "Human Resources", "Marketing", etc.).
-     * @param string $ticketFilter Key in a single ticket array from $data to 
-     *               group tickets by (e.g. "department_name", "status_name", etc.).
-     * 
-     * @return array Array of array triplets: [filter name, ticket count for the filter, percentage of filtered tickets in total tickets].
-     * Example: 
-     *  [
-     *      ["Human Resources", 23, 11.5], 
-     *      ["Marketing", 4, 2], 
-     *      ["Sales", 186, 9.3], 
-     *      ["Information Technology", 3, 1.5], 
-     *   ...
-     *  ]
-     */
-    public static function countDataForDashboardTable(array $data, array $filters, string $ticketFilter): array
-    {
-        $ticketsByFilters = [];
-        // Prepares array of tickets sorted by appropriate filters
-        foreach ($data as $ticket) {
-            foreach ($filters as $filterName) {
-                if (str_contains(haystack: $ticket[$ticketFilter], needle: $filterName)) {
-                    $ticketsByFilters[$filterName][] = $ticket;
-                    break; // stop looping filters when matched
-                }
-            }
-        }
-
-        $totalTickets = count($data);
-        $countTicketsByFilters = [];
-        for ($i = 0; $i < count($filters); $i++) {
-            foreach ($ticketsByFilters as $name => $_) {
-                if (str_contains(haystack: $name, needle: $filters[$i])) {
-                    $totalByFilter = count($ticketsByFilters[$filters[$i]]);
-                    $countTicketsByFilters[] = [
-                        ucfirst($filters[$i]),
-                        $totalByFilter,
-                        countPercentage($totalByFilter, $totalTickets)
-                    ];
-                    break;
-                }
-            }
-        }
-
-        return $countTicketsByFilters;
-    }
-
     public function updateTicket(array $columns, array $whereClauses): void
     {
         $this->updateRows("tickets", $columns, $whereClauses);
     }
 
     /**
-     * Checks if the ticket was created by splitting another ticket.
-     * 
-     * @param array $ticket Ticket data array.
-     * @return bool True if the tickets has a parent ticket, otherwise false.
-     */
-    public function isCreatedBySplitting(array $ticket): bool
-    {
-        return $ticket["parent_ticket"] !== null;
-    }
-
-    /**
      * Checks if the ticket has children tickets.
      * 
      * @param int $parentId Id of ticket whose children is lookng for.
-     * 
      * @return bool True if there are children, otherwise false.
+     * @throws RuntimeException if the query execution fails.
      */
     public function hasChildren(int $parentId): bool
     {
-        $sql = "SELECT COUNT(id) FROM tickets WHERE parent_ticket = :pt";
-        $stmt = $this->getConn()->prepare($sql);
-        $stmt->bindValue(":pt", $parentId, PDO::PARAM_INT);
-        $stmt->execute();
-        $count = $stmt->fetchColumn();
+        try {
+            $sql = "SELECT COUNT(id) FROM tickets WHERE parent_ticket = :pt";
+            $stmt = $this->getConn()->prepare($sql);
+            $stmt->bindValue(":pt", $parentId, PDO::PARAM_INT);
+            $stmt->execute();
+            $count = $stmt->fetchColumn();
 
-        return $count > 0;
+            return $count > 0;
+        } catch (\PDOException $e) {
+            logError(
+                "Ticket::hasChildren() method error: Query failed when checking for child tickets of parent ticket ID: {$parentId}",
+                ['message' => $e->getMessage(), 'code' => $e->getCode()]
+            );
+            throw new RuntimeException("Something went wrong. Try again later.");
+        }
     }
 }

@@ -1,0 +1,17 @@
+RewriteEngine On
+
+RewriteCond %{REQUEST_URI} ^.*/tests/.*$ [NC]
+RewriteRule ^ - [L]
+
+# Allows only static files
+RewriteCond %{REQUEST_FILENAME} -f
+RewriteCond %{REQUEST_FILENAME} !\.(png|jpg|jpeg|gif|svg|css|js)$ [NC]
+RewriteRule ^ - [L]
+
+# If not on localhost (XAMPP) → public
+RewriteCond %{HTTP_HOST} ^localhost$ [NC]
+RewriteRule ^.*$ public/index.php [L]
+
+# If not on localhost (web hosting) → public_html
+RewriteCond %{HTTP_HOST} !^localhost$ [NC]
+RewriteRule ^.*$ public_html/index.php [L]

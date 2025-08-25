@@ -1,6 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  content: ['./public/**/*.{html,js,php}', './partials/**/*.{html,js,php}', './forms/**/*.{html,js,php}', ],
+  content: ['./public/**/*.{html,js,php}', './views/**/*.{html,js,php}', './forms/**/*.{html,js,php}', ],
   safelist: [
     {
       pattern: /grid-cols-\d+/,

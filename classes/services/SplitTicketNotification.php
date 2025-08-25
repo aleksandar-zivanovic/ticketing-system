@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__ . '/../BaseModel.php';
+require_once ROOT . 'classes' . DS . 'BaseModel.php';
 
 class SplitTicketNotification extends BaseModel
 {
@@ -20,13 +20,13 @@ class SplitTicketNotification extends BaseModel
         $adminSecondName = cleanString($_SESSION["user_surname"]);
         $date            = $parentTicket[0]["closed_date"];
         $parent          = true;
-        require_once '../../partials/_split_message.php';
+        require_once ROOT . 'views' . DS . 'partials' . DS . '_split_message.php';
     }
 
     public function generateChildTicketMessage(int $parentId): void
     {
         $parentTicket    = $this->getAllWhere("tickets", "id = $parentId");
         $child           = true;
-        require_once '../../partials/_split_message.php';
+        require_once ROOT . 'views' . DS . 'partials' . DS . '_split_message.php';
     }
 }

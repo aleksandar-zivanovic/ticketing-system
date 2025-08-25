@@ -22,6 +22,7 @@ function persist_input(string $sessionName): void
  * Saves POST values from a form into SESSION variables, excluding specified exceptions.
  * 
  * @param array|null $exceptions Keys from $_POST that should not be saved in $_SESSION.
+ * @return void
  */
 function saveFormValuesToSession(?array $exceptions = null): void
 {
@@ -64,7 +65,7 @@ function checkAndCreateDirectory($locationDir): void
 function logError(string $message, array|string|null $errorInfo = null,  ?string $logFileName = "php_errors.log"): void
 {
     // check if the directory exists and create if not
-    $logDirectory = __DIR__ . '../../logs/';
+    $logDirectory = ROOT . 'logs/';
     checkAndCreateDirectory($logDirectory);
 
     // preparing final message
@@ -76,124 +77,6 @@ function logError(string $message, array|string|null $errorInfo = null,  ?string
     $logFile = $logDirectory . $logFileName;
     $timestamp = date("Y-m-d H:i:s");
     error_log("[$timestamp]: $message" .  PHP_EOL, 3, $logFile);
-}
-
-/**
- * Renders a partial input field using the input.php template.
- * This function sanitizes the input parameters to prevent XSS attacks.
- * 
- * @param string|null $label: The text label for the input field.
- * @param string $name: The name attribute for the input field. It should match the corresponding session variable if using $_SESSION for persistent input.
- * @param string $type: The type of the input field (e.g., text, password).
- * @param string|null $placeholder: The placeholder text for the input field.
- * @param string|int|null $value Value of a `value` atribute.
- * @param string|null $atributes HTML atributte for adding to input (e.g. pattern="[0-9]{3}-[0-9]{2}-[0-9]{3}" required).
- * 
- * @note: Ensure that the name attribute of the input matches the session variable name 
- * if you intend to use $_SESSION to pre-fill the input with previously submitted data.
- */
-function renderingInputField(
-    ?string $label,
-    string $name,
-    string $type,
-    ?string $placeholder,
-    string|int|null $value = null,
-    ?string $atributes = null
-): void {
-    $label       = $label ? htmlspecialchars($label) : null;
-    $name        = htmlspecialchars($name);
-    $type        = htmlspecialchars($type);
-    $placeholder = $placeholder ? htmlspecialchars($placeholder) : null;
-    $value       = $value ? htmlspecialchars($value) : null;
-    $atributes   = $atributes ? htmlspecialchars($atributes) : null;
-
-    if ($type == 'hidden' && empty($value)) {
-        throw new InvalidArgumentException("If type='hidden', value must be string or integer.");
-    }
-
-    if ($type == 'hidden' && !empty($placeholder)) {
-        throw new InvalidArgumentException("placeholder should not exists.");
-    }
-
-    require __DIR__ . '/../partials/input.php';
-}
-
-/** 
- * Renders a checkbox field with an optional label and link description.
- * This function sanitizes the checkbox parameters to prevent XSS attacks.
- * 
- * @param string $name The name attribute for the checkbox field.
- * @param ?string $id The id attribute for the checkbox field. If null, the id will default to the value of $name.
- * @param string $agreeText The text for the checkbox label.
- * @param ?string $agreeUrl The URL of the link in the label description. (optional)
- * @param ?string $agreeUrlDescription The text for the link in the label description. (optional)
- *
- * Example usage:
- * renderingCheckboxField('terms', null, 'I agree to the <strong>Terms and Conditions</strong>', 'https://example.com/terms', 'Terms and Conditions');
- */
-function renderingCheckboxField(
-    string $name,
-    ?string $id = null,
-    string $agreeText,
-    ?string $agreeUrl = null,
-    ?string $agreeUrlDescription = null
-): void {
-    $name                 = htmlspecialchars($name);
-    $id                   = !$id ? $name : htmlspecialchars($id);
-    $agreeText            = htmlspecialchars($agreeText);
-    $agreeUrl             = $agreeUrl ? htmlspecialchars($agreeUrl) : null;
-    $agreeUrlDescription  = $agreeUrlDescription ? htmlspecialchars($agreeUrlDescription) : null;
-
-    require __DIR__ . '/../partials/input-checkbox.php';
-}
-
-/**
- * Renders a partial text area field using the textArea.php template.
- * This function sanitizes the input parameters to prevent XSS attacks.
- * 
- * @param string|null $label: The text label for the input field.
- * @param string $name: The name attribute for the input field. It should match the corresponding session variable if using $_SESSION for persistent input.
- * 
- * @note: Ensure that the name attribute of the input matches the session variable name 
- * if you intend to use $_SESSION to pre-fill the input with previously submitted data.
- */
-function renderingTextArea(?string $label, string $name): void
-{
-    $label = $label ? htmlspecialchars($label) : null;
-    $name  = htmlspecialchars($name);
-
-    require __DIR__ . '/../partials/textArea.php';
-}
-
-/**
- * Renders a partial text area field using the textArea.php template.
- * This function sanitizes the input parameters to prevent XSS attacks.
- * 
- * @param string|null $label: The text label for the input field.
- * @param string $name: The name attribute for the input field. It should match the corresponding session variable if using $_SESSION for persistent input.
- * 
- * @note: Ensure that the name attribute of the input matches the session variable name 
- * if you intend to use $_SESSION to pre-fill the input with previously submitted data.
- */
-function renderingSelectOption(?string $label, string $name, array $data): void
-{
-    $label = $label ? htmlspecialchars($label) : null;
-    $name  = htmlspecialchars($name);
-
-    require __DIR__ . '/../partials/select-option.php';
-}
-
-/** 
- * Renders a width: 100% submit button.
- * @param string $name The name attribute for the submit button.
- * @param string $value The value attribute for the submit button.
- */
-function renderingSubmitButton(string $name, string $value): void
-{
-    $name       = htmlspecialchars($name);
-    $value      = htmlspecialchars($value);
-
-    require __DIR__ . '/../partials/input-submit.php';
 }
 
 /**
@@ -218,16 +101,15 @@ function fileName($currentPage): string
  * If the $_GET parameter is not set, it checks if the session value matches the form value.
  * If neither match, it returns null (no attribute).
  *
- * @param string|null $getParam The name of the $_GET parameter to check.
  * @param string $formValue The value of the option in the form.
- * @param string|null $sessionName The name of the session variable to check if $_GET is not set.
+ * @param string|null $getParam The name of the $_GET parameter to check.
  * @param string|bool|null $sessionName The name of the session variable to check if $_GET is not set.
  *                                      If `true`, it gets the value of `$getParam`.
- * @return string|null Returns "selected" if the values match, otherwise null.
+ * @return string Returns "selected" if the values match, otherwise empty string.
  */
 function addSelectedTag(
-    string $getParam = null,
     string $formValue,
+    ?string $getParam = null,
     bool|string|null $sessionName = null
 ): ?string {
     // If $sessionName is true, use $getParam as the session key
@@ -241,7 +123,7 @@ function addSelectedTag(
         return "selected";
     }
 
-    return null;
+    return "";
 }
 
 /**
@@ -288,34 +170,92 @@ function formatVar(string $function, mixed $variable)
 
 /**
  * Checks if the user is logged in.
- * If the user is not logged in or refresh interval is expired, 
- * redirects to the login page.
+ * 
+ * @return bool True if the user is logged in, false otherwise.
  */
-function requireLogin()
+function isLoggedIn(): bool
 {
-    if (!isset($_SESSION['user_role'])) {
-        logout("/ticketing-system/public/forms/login.php");
-    }
+    return isset($_SESSION['user_role']);
+}
 
+/**
+ * Retrieves user details from the database based on the user ID stored in the session.
+ * 
+ * @return array|null Returns an associative array of user details if found, or null if the user does not exist.
+ * @throws RuntimeException if request failed.
+ * @see User::getUserById()
+ */
+function getUserFromSession(): ?array
+{
+    require_once ROOT . "classes" . DS . "User.php";
+    $userId  = (int) $_SESSION["user_id"];
+    $user    = new User();
+    return $user->getUserById($userId);
+}
+
+/**
+ * Verifies that the user from the session exists in the database.
+ * If the user does not exist, logs out and redirects to the login page.
+ * 
+ * @return void
+ * @throws RuntimeException if request failed.
+ */
+function verifyUserFromSession(): void
+{
+    $theUser = getUserFromSession();
+    if ($theUser === null) {
+        logout("/ticketing-system/login.php");
+    }
+}
+
+/**
+ * Refreshes the session if the refresh interval has expired.
+ * Checks if the user still exists in the database and updates session variables.
+ * If the user does not exist, logs out and redirects to the login page.
+ * 
+ * @return void
+ * @throws RuntimeException if request failed.
+ */
+function refreshSessionIfNeeded(): void
+{
     require_once __DIR__ . "/../config/config.php";
     $expirationTime = SESSION_REFRESH_INTERVAL;
-    $timeDiffetence = time() - $expirationTime;
+    $timeDifference = time() - $expirationTime;
 
-    if (empty($_SESSION["last_check"]) || $_SESSION["last_check"] < $timeDiffetence) {
-        require_once ROOT . DS . "classes" . DS . "User.php";
-        $userId  = (int) $_SESSION["user_id"];
-        $user    = new User();
-        $theUser = $user->getUserById($userId);
+    if (empty($_SESSION["last_check"]) || $_SESSION["last_check"] < $timeDifference) {
+
+        // Fetch user from the database
+        $theUser = getUserFromSession();
 
         if (empty($theUser) || (int) $_SESSION["session_version"] !== $theUser["session_version"]) {
-            logout("/ticketing-system/public/forms/login.php");
+            logout("/ticketing-system/login.php");
         }
 
         $_SESSION['last_check']      = time();
         $_SESSION["session_version"] = $theUser["session_version"];
         $_SESSION['user_id']         = $theUser['u_id'];
         $_SESSION['user_role']       = $theUser['r_name'];
+        $_SESSION['user_email']      = $theUser['u_email'];
     }
+}
+
+/**
+ * Ensures that the user is logged in.
+ * If the user is not logged in, logs out and redirects to the login page.
+ * Also verifies the user from the session and refreshes the session if needed.
+ * 
+ * @return void
+ * @throws RuntimeException if request failed.
+ * @note Make sure to call this function at the beginning of any page that requires user authentication.
+ */
+function requireLogin(): void
+{
+    if (!isLoggedIn()) {
+        logout("/ticketing-system/login.php");
+    }
+
+    verifyUserFromSession();
+    refreshSessionIfNeeded();
 }
 
 /**
@@ -348,65 +288,6 @@ function checkAuthorization(string|array $role, ?string $url = null)
 }
 
 /**
- * Detrminates whether the user is in the admin or in the user panel
- * 
- * @return string "admin" if the user is in the admin panel, "user" otherwise.
- */
-function getPanel(): string
-{
-    return str_contains($_SERVER["REQUEST_URI"], "public/admin") ? "admin" : "user";
-}
-
-/**
- * Renders a single dashboard card in the admin panel.
- *   
- * @param string $icon. Icon code for Materila Design Icons. 
- * 
- * @param string $label      Name of the ticket category shown on the card (e.g. "Solved").
- * @param int|string $count  Value shown on the card.
- * @param string $iconColor  Tailwind CSS class for icon color (e.g. "text-blue-500").
- * @param string $icon       Material Design Icon class (e.g. "mdi-ticket").
- */
-
-function renderDashboardCard(
-    string $label,
-    int|string $count,
-    string $iconColor,
-    string $icon
-) {
-    include '../../partials/_admin_dashboard_card_widget.php';
-}
-
-/**
- * Loads ticket-related names (statuses, priorities, departments) from the database.
- * Useful for building filter dropdowns and preparing allowed values.
- *
- * @return array{
- *     statuses: string[],
- *     priorities: string[],
- *     departments: string[]
- * }
- */
-function loadTicketFilterData(): array
-{
-    // Initialize allowed filter values for tickets
-    $status = new Status();
-    $statuses = $status->getAllStatusNames();
-
-    $priority = new Priority();
-    $priorities = $priority->getAllPriorityNames();
-
-    $department = new Department();
-    $departments = $department->getAllDepartmentNames();
-
-    return [
-        "statuses" => $statuses,
-        "priorities" => $priorities,
-        "departments" => $departments,
-    ];
-}
-
-/**
  * Prepares the allowed values array used for validating filters in fetchAllTickets().
  * Merges statuses, priorities, and departments arrays into one multidimensional array.
  *
@@ -426,38 +307,6 @@ function buildAllowedTicketValues(array $allTicketFilterData): array
         ["priorities" => $allTicketFilterData["priorities"]],
         ["departments" => $allTicketFilterData["departments"]],
     );
-}
-
-/**
- * Renders chart.
- * 
- * @param string $title Chart name.
- * @param string $type Chart type (e.g. "line", "bar", etc.).
- * @param array $data Array of data prepared for rendering the chart.
- *   Structure:
- *   - 'labels': array of strings — labels for the X-axis (e.g. months).
- *   - 'datasets': array of arrays — each dataset includes:
- *       - 'label': string — name of the dataset (e.g. ticket status).
- *       - 'data': array of integers — integer values matching the labels.
- *
- * Example:
- * [
- *   'labels' => ['Jan', 'Feb', 'Mar', ..., 'Dec'],
- *   'datasets' => [
- *     [
- *       'label' => 'Open',
- *       'data'  => [12, 7, 3, ...]
- *     ],
- *     // More datasets...
- *   ]
- * ]
- * 
- * @return void
- */
-function renderChart(string $title, string $type, array $data): void
-{
-    $chartId = 'chart_' . uniqid();
-    include '../../partials/_admin_dashboard_chart.php';
 }
 
 /**
@@ -504,29 +353,6 @@ function countPercentage(int $part, int $total): float
 }
 
 /**
- * Gets valid integer bigger than 0 from url query.
- * Stops execution and redirects if value is invalid or missing.
- * 
- * @param string $key Key name from url query.
- * @param string $url Url to redirect on fail.
- * 
- * @return int Validated integer value.
- */
-function getIntFromUrlQuery(string $key, string $url = "../index.php"): int
-{
-    $value = filter_input(INPUT_GET, $key, FILTER_VALIDATE_INT, [
-        'options' => ['min_range' => 1],
-    ]);
-
-    if ($value === false) {
-        header("Location:{$url}");
-        die();
-    }
-
-    return $value;
-}
-
-/**
  * Returns the client IP address.
  *
  * @return string Client IP address or 'unknown' if not available.
@@ -534,4 +360,30 @@ function getIntFromUrlQuery(string $key, string $url = "../index.php"): int
 function getIp(): string
 {
     return $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+}
+
+/**
+ * Redirects to a specified path and optionally sets a session message.
+ * 
+ * @param string $sessionMessage The message to store in the session. If empty, no message is set.
+ * @param string $type The type of message (e.g., "success", "fail", "info"). Default is "fail".
+ * @param string $path The URL path to redirect to.
+ * 
+ * @throws InvalidArgumentException If the provided type is not one of the allowed values.
+ */
+function redirectAndDie(string $path, string $sessionMessage = "", string $type = "fail"): void
+{
+    $types = ["success", "fail", "info"];
+
+    // Validate type
+    if (!in_array($type, $types)) {
+        throw new InvalidArgumentException("Type has unallowed value. Choose one of the following: " . implode(", ", $types));
+    }
+
+    if (!empty($sessionMessage)) {
+        $_SESSION[$type] = $sessionMessage;
+    }
+
+    header("Location: {$path}");
+    die;
 }

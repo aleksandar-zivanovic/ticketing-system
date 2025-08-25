@@ -2,7 +2,7 @@ function sendUrl() {
   let currentUrl = window.location.href;
   let encodedUrl = encodeURIComponent(currentUrl);
   window.location.href =
-    "/ticketing-system/public/forms/create-ticket.php?source=" + encodedUrl;
+    "/ticketing-system/public/forms/create_ticket.php?source=" + encodedUrl;
 }
 
 // Function that creates and returns a handler for managing attachment IDs

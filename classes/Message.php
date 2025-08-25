@@ -3,11 +3,18 @@ require_once 'BaseModel.php';
 
 class Message extends BaseModel
 {
-    private string $message;
-
-    public function createMessage(int $ticketId): void
+    /**
+     * Inserts a new message into the messages table.
+     * 
+     * @param int $ticketId ID of the ticket the message is related to.
+     * @param int $userId ID of the user creating the message.
+     * @param string $message Text of the message.
+     * @return int Returns the ID of the newly created message.
+     * 
+     * @throws RuntimeException If there is an error during the database operation.
+     */
+    public function createMessage(int $ticketId, int $userId, string $message): int
     {
-        $this->message = cleanString(filter_input(INPUT_POST, "error_description", FILTER_DEFAULT));
         $conn = $this->getConn();
 
         try {
@@ -15,26 +22,17 @@ class Message extends BaseModel
 
             $stmt = $conn->prepare($sql);
             $stmt->bindValue(":tk", $ticketId, PDO::PARAM_INT);
-            $stmt->bindValue(":us", cleanString($_SESSION["user_id"]), PDO::PARAM_INT);
-            $stmt->bindValue(":bd", $this->message, PDO::PARAM_STR);
+            $stmt->bindValue(":us", $userId, PDO::PARAM_INT);
+            $stmt->bindValue(":bd", $message, PDO::PARAM_STR);
             $stmt->execute();
-            $messageId = (int) $conn->lastInsertId();
-
-            // Proccesses files if they are attached in form:
-            if ($_FILES['error_images']['error'][0] != 4) {
-                require_once 'Attachment.php';
-                $attachment = new Attachment();
-                $attachment->processImages($_FILES, $messageId, "message_attachments", "error_images");
-            }
-
-            header("Location: ../user/user-view-ticket.php?ticket={$ticketId}");
+            return (int) $conn->lastInsertId();
         } catch (\PDOException $e) {
             logError(
                 "createMessage() metod error: Inserting a message to the database failed! ",
                 ['message' => $e->getMessage(), 'code' => $e->getCode()]
             );
 
-            throw new \RuntimeException("createMessage method query execution failed");
+            throw new \RuntimeException("Creating message failed");
         }
     }
 
@@ -79,7 +77,8 @@ class Message extends BaseModel
      * Retrieves the message and its attachments.
      * 
      * @param int $id Message id.
-     * @return array An array with message details.
+     * @return array An array with message details and its attachments or an empty array if not found.
+     * @throws RuntimeException If there is an error during the database operation.
      */
     public function getMessageWithAttachments(int $id): array
     {
@@ -102,10 +101,17 @@ class Message extends BaseModel
                 "getMessageWithAttachments() method error: Failed to retrieve the message.",
                 ['message' => $e->getMessage(), 'code' => $e->getCode()]
             );
-            throw new Exception("Something went wrong. Try again later!");
+            throw new RuntimeException("Something went wrong. Try again later!");
         }
     }
 
+    /**
+     * Retrieves all message IDs associated with a specific ticket.
+     * 
+     * @param int $ticketId ID of the ticket.
+     * @return array An array of message IDs.
+     * @throws RuntimeException If there is an error during the database operation.
+     */
     public function getAllMessageIdsByTicket(int $ticketId): array
     {
         try {
@@ -119,6 +125,7 @@ class Message extends BaseModel
                 "getAllMessageIdsByTicket() metod error: Fetching message ids from the database failed!",
                 ['message' => $e->getMessage(), 'code' => $e->getCode()]
             );
+            throw new \RuntimeException("Error fetching message ids!");
         }
     }
 
@@ -128,6 +135,8 @@ class Message extends BaseModel
      * 
      * @param int $id ID of the message in the messages table.
      * @param string $message Text of the message.
+     * @return void
+     * @throws RuntimeException If there is an error during the database operation.
      */
     public function editMessage(int $id, string $message): void
     {
@@ -144,5 +153,18 @@ class Message extends BaseModel
             );
             throw new RuntimeException("Error Updating the Message!");
         }
+    }
+
+    /**
+     * Deletes a message from the messages table by its ID.
+     * 
+     * @param int $id ID of the message to be deleted.
+     * @return void
+     * @throws RuntimeException If there is an error during the deletion process.
+     * @see BaseModel::deleteRowById()
+     */
+    public function deleteMessage(int $id): void
+    {
+        $this->deleteRowById("messages", $id);
     }
 }

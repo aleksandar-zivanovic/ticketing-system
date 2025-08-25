@@ -1,0 +1,9 @@
+RewriteEngine On
+
+# If the file or folder exists and is not a PHP file → serve directly
+RewriteCond %{REQUEST_FILENAME} -f
+RewriteCond %{REQUEST_FILENAME} !\.php$ [NC]
+RewriteRule ^ - [L]
+
+# Forward all PHP files and non-existent routes to index.php
+RewriteRule ^ index.php [L]

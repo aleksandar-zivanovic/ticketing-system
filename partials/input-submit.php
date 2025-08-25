@@ -1,1 +1,0 @@
-<input type="submit" name="<?=$name?>" id="<?=$name?>" value="<?=$value?>" class="w-full py-3 px-4 text-sm tracking-wider font-semibold rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none">
