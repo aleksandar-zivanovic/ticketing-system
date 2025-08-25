@@ -1,20 +1,20 @@
 <?php
 session_start();
-require_once '../../config/config.php';
-require_once '../../helpers/functions.php';
-require_once '../../classes/Ticket.php';
+require_once '../config/config.php';
+require_once ROOT . DS . 'helpers' . DS . 'functions.php';
+require_once ROOT . DS . 'classes' . DS . 'Ticket.php';
 
 // Checks if a visitor is logged in.
 requireLogin();
 
 if (!isset($_POST["delete_ticket"]) || $_POST["delete_ticket"] !== "Delete Ticket") {
-    die(header("Location: ../index.php"));
+    die(header("Location: ../public/index.php"));
 }
 
 // Validates ticket ID.
 $validId = filter_input(INPUT_POST, "ticket_id", FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
 if (!$validId) {
-    die(header("Location: ../index.php"));
+    die(header("Location: ../public/index.php"));
 }
 
 $ticket = new Ticket();
@@ -25,7 +25,7 @@ if ($ticket->deleteTicket($validId)) {
 
     // Redirect if the deletion completed successfully 
     $panel = trim($_SESSION["user_role"] === "admin") ? "admin" : "user";
-    $redirectionUrl = $panel === "admin" ? "../admin/admin-ticket-listing.php" : "../user/user-ticket-listing.php";
+    $redirectionUrl = $panel === "admin" ? "../public/admin/admin-ticket-listing.php" : "../public/user/user-ticket-listing.php";
     die(header("Location: {$redirectionUrl}"));
 }
 ?>

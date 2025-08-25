@@ -121,9 +121,9 @@ class User extends BaseModel
         require_once 'PHPMailer.php';
         require_once 'SMTP.php';
         require_once 'Exception.php';
-        require_once '../../config/email-config.php';
+        require_once '../config/email-config.php';
 
-        $verificationUrl = "http://localhost/ticketing-system/public/actions/email-verification.php";
+        $verificationUrl = "http://localhost/ticketing-system/controllers/email-verification.php";
 
         //Create an instance; passing `true` enables exceptions
         $mail = new PHPMailer(true);
@@ -381,9 +381,9 @@ class User extends BaseModel
                 die;
             } else {
                 if ($user['r_name'] === "admin") {
-                    header("Location: ../admin/admin-ticket-listing.php");
+                    header("Location: ../public/admin/admin-ticket-listing.php");
                 } else {
-                    header("Location: ../user/user-ticket-listing.php");
+                    header("Location: ../public/user/user-ticket-listing.php");
                 }
                 die;
             }

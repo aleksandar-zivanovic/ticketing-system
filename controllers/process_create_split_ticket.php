@@ -1,10 +1,10 @@
 <?php
 session_start();
-require_once('../../helpers/functions.php');
+require_once '../helpers/functions.php';
 // Checks if a visitor is logged in.
 requireLogin();
-require_once('../../config/config.php');
-require_once('../../classes/Ticket.php');
+require_once '../config/config.php';
+require_once '../classes/Ticket.php';
 
 if (
     $_SERVER['REQUEST_METHOD'] !== "POST" ||
@@ -54,7 +54,7 @@ if ($_POST['user_action'] === "Split Ticket") {
         die('Forbidden action!');
     }
 
-    $splitPageRedirect = fn () => header("Location: ../admin/split-ticket.php?ticket=" . cleanString($_POST["error_ticket_id"]));
+    $splitPageRedirect = fn () => header("Location: ../public/admin/split-ticket.php?ticket=" . cleanString($_POST["error_ticket_id"]));
 
     $theTicket = $ticket->fetchTicketDetails(filter_input(INPUT_POST, "error_ticket_id", FILTER_VALIDATE_INT));
 
@@ -119,8 +119,8 @@ fail:
 // $_SESSION["fail"] is session message for both actions.
 $_SESSION["fail"] = ucfirst(str_replace("error_", "", $errorField)) . " field must not be empty!";
 if ($_POST['user_action'] === "Split Ticket") {
-    header("Location: ../admin/split-ticket.php?ticket=" . cleanString($_POST["error_ticket_id"]));
+    header("Location: ../public/admin/split-ticket.php?ticket=" . cleanString($_POST["error_ticket_id"]));
 } else {
-    header("Location: ../forms/create-ticket.php?source=" . cleanString($_POST["error_page"]));
+    header("Location: ../public/forms/create-ticket.php?source=" . cleanString($_POST["error_page"]));
 }
 die;

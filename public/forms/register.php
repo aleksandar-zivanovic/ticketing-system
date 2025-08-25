@@ -38,7 +38,7 @@ require_once '../../helpers/functions.php';
         </div>
         <?php endif; ?>
 
-        <form action="../actions/process_user_action.php" method="POST">
+        <form action="../../controllers/process_user_action.php" method="POST">
             <div class="grid sm:grid-cols-2 gap-8">
 
                 <?php

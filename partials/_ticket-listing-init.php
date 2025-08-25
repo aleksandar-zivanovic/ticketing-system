@@ -9,13 +9,12 @@ $fileName = basename($_SERVER['SCRIPT_NAME']);
 
 // Sets an appropriate action file for requiring
 if ($fileName === "user-ticket-listing.php") { 
-  require_once '../actions/user-ticket-listing-action.php';
-  requireLogin();
+  require_once __DIR__ . '/../controllers/user-ticket-listing-action.php';
 } elseif ($fileName === "admin-ticket-listing.php") {
-  require_once '../actions/admin-ticket-listing-action.php';
+  require_once __DIR__ . '/../controllers/admin-ticket-listing-action.php';
 } elseif ($fileName === "admin-tickets-i-handle.php") {
   // TODO: dodati ovaj uslov u gornji elseif sa znakom ili (||), tako da, ako se jedan od dva uslova ostvare, onda se isputni require_once '../actions/admin-ticket-listing-action.php';
-  require_once '../actions/admin-ticket-listing-action.php';
+  require_once __DIR__ . '/../controllers/admin-ticket-listing-action.php';
 }
 ?>
 

@@ -7,7 +7,7 @@
       <section class="modal-card-body">
         <p>Are you sure you want to delete the ticket <span class="font-bold italic ">"<?= $theTicket['title'] ?>"</span>?</p>
         <div class="p-8">
-          <form method="POST" action="../actions/process_delete_ticket.php">
+          <form method="POST" action="/ticketing-system/controllers/process_delete_ticket.php">
             <input type="hidden" name="ticket_id" value=<?= $theTicket['id'] ?>>
             <div class="field grouped">
               <div class="control w-full">

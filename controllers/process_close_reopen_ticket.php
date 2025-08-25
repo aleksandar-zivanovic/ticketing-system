@@ -1,7 +1,7 @@
 <?php
 session_start();
-require_once('../../classes/Ticket.php');
-require_once('../../helpers/functions.php');
+require_once '../classes/Ticket.php';
+require_once '../helpers/functions.php';
 
 // Checks if a visitor is logged in.
 requireLogin();
@@ -18,16 +18,21 @@ if (isset($_POST["reopen_ticket"]) && $_POST["reopen_ticket"] === "Reopen Ticket
 
 if ($action === null) die(header("Location: ../index.php"));
 
+$redirectToIndex = function () {
+    header("Location: ../public/index.php");
+    die;
+};
+
 // Get ticket ID from the form
 if (isset($_POST["ticket_id"]) && $_POST["ticket_id"] > 0) {
     $ticketIdFromForm = (int) filter_input(INPUT_POST, "ticket_id", FILTER_SANITIZE_NUMBER_INT);
 } else {
-    die(header("Location: ../index.php"));
+    $redirectToIndex();
 }
 
 // Validate $_SESSION['user_id']
 if (!isset($_SESSION['user_id']) || !is_int($_SESSION['user_id']) || $_SESSION['user_id'] < 1) {
-    die(header("Location: ../index.php"));
+    $redirectToIndex();
 }
 
 // Get user ID from session
@@ -36,20 +41,22 @@ $userIdFromSession = $_SESSION['user_id'];
 $ticket = new Ticket();
 $theTicket = $ticket->fetchTicketDetails($ticketIdFromForm);
 
-// Verifies whether the ticket has "in progress".
-if ($theTicket["statusId"] !== 2) {
-    throw new Exception("Only tickets with `in progress` status can be closed!");
+if ($action === "close") {
+    // Verifies whether the ticket has "in progress".
+    if ($theTicket["statusId"] !== 2) {
+        throw new Exception("Only tickets with `in progress` status can be closed!");
+    }
 }
 
 // Verifies whether the user is the creator of the ticket or the admin who handles the ticket.
 if ($theTicket["handled_by"] != $userIdFromSession && $theTicket["created_by"] != $userIdFromSession) {
-    die(header("Location: ../index.php"));
+    $redirectToIndex();
 }
 
 if ($theTicket["handled_by"] == $userIdFromSession) {
-    $location = "Location: ../admin/view-ticket.php?ticket={$ticketIdFromForm}";
+    $location = "Location: ../public/admin/view-ticket.php?ticket={$ticketIdFromForm}";
 } else {
-    $location = "Location: ../user/user-view-ticket.php?ticket={$ticketIdFromForm}";
+    $location = "Location: ../public/user/user-view-ticket.php?ticket={$ticketIdFromForm}";
 }
 
 // Closes / reopens the ticket
@@ -58,5 +65,6 @@ if ($action === "close" || $action === "reopen") {
     if ($result === false) {
         throw new Exception("Ticket {$action} failed. Try again!");
     }
-    die(header($location));
+    header($location);
+    die;
 }

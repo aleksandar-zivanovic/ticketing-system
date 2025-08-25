@@ -1,13 +1,14 @@
 <?php
 session_start();
-require_once "../../classes/Ticket.php";
-require_once "../../classes/Message.php";
-require_once "../../helpers/functions.php";
+require_once "../config/config.php";
+require_once ROOT . DS . "classes" . DS . "Ticket.php";
+require_once ROOT . DS . "classes" . DS . "Message.php";
+require_once ROOT . DS . "helpers". DS ."functions.php";
 
 // Checks if a visitor is logged in.
 requireLogin();
 
-$location = "../user/user-ticket-listing.php";
+$location = "../public/user/user-ticket-listing.php";
 if (!isset($_POST["take_ticket"]) || $_POST["take_ticket"] !== "Take the Ticket") 
 {
     die(header("Location: {$location}"));
@@ -35,5 +36,5 @@ if((trim($_SESSION["user_role"]) !== "admin") || trim($_SESSION["user_id"]) === 
 
 if ($ticket->takeTicket($ticketID)) {
     $_SESSION["info"] = "The ticket ID:{$ticketID} is assigned to you!";
-    die(header("Location: ../admin/view-ticket.php?ticket={$ticketID}"));
+    die(header("Location: ../public/admin/view-ticket.php?ticket={$ticketID}"));
 }

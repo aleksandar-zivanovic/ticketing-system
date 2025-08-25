@@ -77,7 +77,7 @@
                 $_SESSION["user_id"] !== $theTicket["created_by"]
             ) :
             ?>
-                <form class="p-8" method="POST" action="../actions/process_take_ticket.php">
+                <form class="p-8" method="POST" action="/ticketing-system/controllers/process_take_ticket.php">
                     <input type="hidden" name="take_ticket_id" value=<?= $theTicket['id'] ?>>
                     <div class="field grouped">
                         <div class="control w-full">
@@ -149,7 +149,7 @@
                     $ticket->hasChildren($ticketID) === false
                 ) :
             ?>
-                    <form class="p-8" method="POST" action="../actions/process_close_reopen_ticket.php">
+                    <form class="p-8" method="POST" action="/ticketing-system/controllers/process_close_reopen_ticket.php">
                         <input type="hidden" name="ticket_id" value=<?= $theTicket['id'] ?>>
                         <div class="field grouped">
                             <?php if ($theTicket['status_name'] !== "closed") : ?>

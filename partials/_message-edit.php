@@ -48,7 +48,7 @@ $panel = $_SESSION['user_role'] === "admin" ? "admin" : "user";
         <section class="section main-section">
             <div class="card mb-6">
                 <div class="card-content">
-                    <form id="editMessageForm" method="POST" action="../actions/process_message-edit.php" enctype="multipart/form-data">
+                    <form id="editMessageForm" method="POST" action="/ticketing-system/controllers/process_message-edit.php" enctype="multipart/form-data">
 
                         <div class="field">
                             <label class="label">Message</label>

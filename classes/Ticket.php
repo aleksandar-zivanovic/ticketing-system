@@ -256,7 +256,7 @@ class Ticket extends BaseModel
         );
 
         $_SESSION["success"] = "Ticket with ID {$this->parentId} is split!";
-        header("Location: ../admin/admin-ticket-listing.php");
+        header("Location: ../public/admin/admin-ticket-listing.php");
         die;
     }
 

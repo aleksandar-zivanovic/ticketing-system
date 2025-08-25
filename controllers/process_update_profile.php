@@ -10,7 +10,7 @@ if ($isNotPost || $noFormSent || $invalidProfile || $invalidPassword) {
 }
 
 session_start();
-require_once '../../config/config.php';
+require_once __DIR__ . '/../config/config.php';
 require_once ROOT . 'helpers/functions.php';
 
 // Checks if a visitor is logged in.

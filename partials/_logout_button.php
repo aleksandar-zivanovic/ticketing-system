@@ -1,4 +1,4 @@
-<form method="POST" action="../actions/logout.php">
+<form method="POST" action="/ticketing-system/controllers/logout.php">
     <button type="submit" name="logout" class="navbar-item" title="Log out">
         <span class="icon"><i class="mdi mdi-logout"></i></span>
         <span>Log Out</span>

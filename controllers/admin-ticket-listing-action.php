@@ -1,5 +1,5 @@
 <?php
-// Checks if the user has `admin` role
+// Checks if the user is logged and if has the `admin` role
 checkAuthorization("admin", "../");
 
 require_once '../../classes/User.php';
@@ -9,8 +9,6 @@ require_once '../../classes/Priority.php';
 require_once '../../classes/Status.php';
 require_once '../../classes/Pagination.php';
 
-// Checks if a visitor is logged in.
-requireLogin();
 
 // Sets the panel (admin or user)
 $panel = "admin";

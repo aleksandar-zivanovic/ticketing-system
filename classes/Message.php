@@ -27,7 +27,8 @@ class Message extends BaseModel
                 $attachment->processImages($_FILES, $messageId, "message_attachments", "error_images");
             }
 
-            header("Location: ../user/user-view-ticket.php?ticket={$ticketId}");
+            header("Location: ../public/user/user-view-ticket.php?ticket={$ticketId}");
+            die;
         } catch (\PDOException $e) {
             logError(
                 "createMessage() metod error: Inserting a message to the database failed! ",
@@ -119,6 +120,7 @@ class Message extends BaseModel
                 "getAllMessageIdsByTicket() metod error: Fetching message ids from the database failed!",
                 ['message' => $e->getMessage(), 'code' => $e->getCode()]
             );
+            throw new \RuntimeException("Error fetching message ids!");
         }
     }
 

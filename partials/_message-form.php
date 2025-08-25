@@ -1,5 +1,5 @@
 <div class="card-content">
-    <form method="POST" action="../actions/process_creating_message.php" enctype="multipart/form-data">
+    <form method="POST" action="/ticketing-system/controllers/process_creating_message.php" enctype="multipart/form-data">
         <div class="field mt-10">
             <label class="label">Message</label>
             <div class="control">

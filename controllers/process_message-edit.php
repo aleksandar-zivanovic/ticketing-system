@@ -1,9 +1,10 @@
 <?php
 session_start();
-require_once '../../helpers/functions.php';
-require_once '../../classes/Message.php';
-require_once '../../classes/Attachment.php';
-require_once '../../config/config.php';
+require_once '../config/config.php';
+require_once ROOT . DS . 'helpers' . DS . 'functions.php';
+require_once ROOT . DS . 'classes' . DS . 'Message.php';
+require_once ROOT . DS . 'classes' . DS . 'Attachment.php';
+
 
 // Checks if a visitor is logged in.
 requireLogin();
@@ -15,7 +16,7 @@ if (
     || !isset($_POST["body"])
     || strlen($_POST["body"]) < 2
 ) {
-    die(header("Location: ../index.php"));
+    die(header("Location: ../public/index.php"));
 }
 
 // Message content
@@ -114,10 +115,10 @@ if (!empty($_FILES["error_images"]["name"][0])) {
 }
 
 if (str_contains($_SERVER["HTTP_REFERER"], "admin")) {
-    header("Location: .." . DS . "admin" . DS . "view-ticket.php?ticket={$ticketId}");
+    header("Location: /ticketing-system/public/admin/view-ticket.php?ticket={$ticketId}");
     die;
 } else {
-    header("Location: .." . DS . "user" . DS . "user-view-ticket.php?ticket={$ticketId}");
+    header("Location: /ticketing-system/public/user-view-ticket.php?ticket={$ticketId}");
     die;
 }
 

@@ -1,8 +1,8 @@
 <?php
 session_start();
-require_once('../../config/config.php');
-require_once('../../classes/Message.php');
-require_once('../../helpers/functions.php');
+require_once '../config/config.php';
+require_once '../classes/Message.php';
+require_once '../helpers/functions.php';
 
 // Checks if a visitor is logged in.
 requireLogin();
@@ -18,6 +18,6 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
         $message->createMessage($ticketId);
     }
 } else {
-    header("Location: ../");
-    die();
+    header("Location: ../public/index.php");
+    die;
 }
