@@ -7,8 +7,8 @@ requireLogin();
 
 // Call log out functionalitiy
 if (isset($_POST['logout'])) {
-    logout('../public/forms/login.php');
+    logout('forms/login.php');
 } else {
-    header("Location: ../public/index.php");
+    header("Location: index.php");
     die;
 }
