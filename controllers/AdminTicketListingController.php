@@ -3,18 +3,17 @@
 checkAuthorization("admin", "../");
 
 require_once '../../classes/User.php';
-require_once '../../classes/Ticket.php';
 require_once '../../classes/Department.php';
 require_once '../../classes/Priority.php';
 require_once '../../classes/Status.php';
-require_once '../../classes/Pagination.php';
-
+require_once '../../services/TicketService.php';
 
 // Sets the panel (admin or user)
 $panel = "admin";
 
 // Set $page and $data varaiables
-$page = str_replace(" Action", "", fileName(__FILE__));
+$page = str_replace("Controller", "", fileName(__FILE__));
+$page = implode(" ", preg_split('/(?=[A-Z])/', $page));
 $data = true;
 
 // Initializes allowed filter values for tickets
@@ -57,24 +56,17 @@ if (isset($_GET['limit'])) {
 // If $ticketsIHandle is not set, set it to false
 $ticketsIHandle = $ticketsIHandle ?? false;
 
-// Call fetchAllTickets() method
-$ticket = new Ticket();
-$data = $ticket->fetchAllTickets(allowedValues: $allowedValues, orderBy: $orderBy, sortBy: $sortBy, limit: $limit, handledByMe: $ticketsIHandle);
+$ticketService = new TicketService();
 
-// Pagination proccessing
-$ticket2 = new Ticket();
-$totalItems = $ticket2->countAllTickets(allowedValues: $allowedValues, orderBy: $orderBy, sortBy: $sortBy, handledByMe: $ticketsIHandle);
+// Fetch tickets for pagination
+$data = $ticketService->fetchTicketsForPagination(allowedValues: $allowedValues, orderBy: $orderBy, sortBy: $sortBy, limit: $limit, handledByMe: $ticketsIHandle);
 
-// Sets results per page
-if (isset($_GET["limit"])) {
-  $limit = intval(cleanString($_GET["limit"]));
-}elseif (!isset($_GET["limit"]) && isset($_SESSION["limit"])) {
-  $limit = intval(cleanString($_SESSION["limit"]));
-} else {
-  $limit = 10;
-}
+// Count total tickets for pagination
+$totalItems = $ticketService->countAllTicketsForPagination(allowedValues: $allowedValues, orderBy: $orderBy, sortBy: $sortBy, handledByMe: $ticketsIHandle);
 
-$pagination = new Pagination($limit, $totalItems);
-$currentPage = $pagination->getCurrentPage();
-$totalPages = $pagination->getTotalPages();
+// Get pagination data
+$paginationData = $ticketService->getPaginationData(limit: $limit, totalItems: $totalItems);
+$currentPage = $paginationData['currentPage'];
+$totalPages = $paginationData['totalPages'];
+$pagination = $paginationData['pagination'];
 ?>
