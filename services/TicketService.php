@@ -10,13 +10,14 @@ class TicketService
      * @param string $orderBy - Order by parameter
      * @param string|null $sortBy - Sort by parameter
      * @param int $limit - Number of results per page
+     * @param int|null $userId - User ID to filter tickets for a specific user (optional)
      * @param bool $handledByMe - Whether to fetch tickets handled by the current user
      * @return array - Array of tickets
      */
-    public function fetchTicketsForPagination($allowedValues, $orderBy, $sortBy, $limit, $handledByMe = false)
+    public function fetchTicketsForPagination($allowedValues, $orderBy, $sortBy, $limit, $userId = null, $handledByMe = false)
     {
         $ticket = new Ticket();
-        return $ticket->fetchAllTickets(allowedValues: $allowedValues, orderBy: $orderBy, sortBy: $sortBy, limit: $limit, handledByMe: $handledByMe);
+        return $ticket->fetchAllTickets(allowedValues: $allowedValues, orderBy: $orderBy, sortBy: $sortBy, limit: $limit, userId: $userId, handledByMe: $handledByMe);
     }
 
     /** Count total tickets for pagination
@@ -24,13 +25,14 @@ class TicketService
      * @param array $allowedValues - Allowed filter values for tickets
      * @param string $orderBy - Order by parameter
      * @param string|null $sortBy - Sort by parameter
+     * @param int|null $userId - User ID to filter tickets for a specific user (optional)
      * @param bool $handledByMe - Whether to count tickets handled by the current user
      * @return int - Total number of tickets
      */
-    public function countAllTicketsForPagination($allowedValues, $orderBy, $sortBy, $handledByMe = false)
+    public function countAllTicketsForPagination($allowedValues, $orderBy, $sortBy, $userId = null, $handledByMe = false)
     {
         $ticket = new Ticket();
-        return $ticket->countAllTickets(allowedValues: $allowedValues, orderBy: $orderBy, sortBy: $sortBy, handledByMe: $handledByMe);
+        return $ticket->countAllTickets(allowedValues: $allowedValues, orderBy: $orderBy, sortBy: $sortBy, userId: $userId, handledByMe: $handledByMe);
     }
 
     /** Count total pages for pagination

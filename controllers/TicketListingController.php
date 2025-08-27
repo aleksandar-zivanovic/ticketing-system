@@ -1,20 +1,23 @@
 <?php
-// Checks if the user is logged and if has the `admin` role
-checkAuthorization("admin", "../");
+// Set $page and $data varaiables
+$page = str_replace("Controller", "", fileName(__FILE__));
+
+if (str_contains($page, "admin")) {
+  // Check if a visitor is logged in and is an admin.
+  checkAuthorization("admin", "../");
+} else {
+  // Check if a visitor is logged in.
+  requireLogin();
+}
+
+$page = implode(" ", preg_split('/(?=[A-Z])/', $page));
+$data = true;
 
 require_once '../../classes/User.php';
 require_once '../../classes/Department.php';
 require_once '../../classes/Priority.php';
 require_once '../../classes/Status.php';
 require_once '../../services/TicketService.php';
-
-// Sets the panel (admin or user)
-$panel = "admin";
-
-// Set $page and $data varaiables
-$page = str_replace("Controller", "", fileName(__FILE__));
-$page = implode(" ", preg_split('/(?=[A-Z])/', $page));
-$data = true;
 
 // Initializes allowed filter values for tickets
 $allTicketFilterData = loadTicketFilterData();
@@ -58,15 +61,26 @@ $ticketsIHandle = $ticketsIHandle ?? false;
 
 $ticketService = new TicketService();
 
-// Fetch tickets for pagination
-$data = $ticketService->fetchTicketsForPagination(allowedValues: $allowedValues, orderBy: $orderBy, sortBy: $sortBy, limit: $limit, handledByMe: $ticketsIHandle);
+// Fetch tickets and count total tickets based on the panel type
+if ($panel === "admin") {
+  // Fetch tickets for pagination
+  $data = $ticketService->fetchTicketsForPagination(allowedValues: $allowedValues, orderBy: $orderBy, sortBy: $sortBy, limit: $limit, handledByMe: $ticketsIHandle);
 
-// Count total tickets for pagination
-$totalItems = $ticketService->countAllTicketsForPagination(allowedValues: $allowedValues, orderBy: $orderBy, sortBy: $sortBy, handledByMe: $ticketsIHandle);
+  // Count total tickets for pagination
+  $totalItems = $ticketService->countAllTicketsForPagination(allowedValues: $allowedValues, orderBy: $orderBy, sortBy: $sortBy, handledByMe: $ticketsIHandle);
+}
+
+if ($panel === "user") {
+  // Fetch tickets for pagination
+  $data = $ticketService->fetchTicketsForPagination(allowedValues: $allowedValues, orderBy: $orderBy, sortBy: $sortBy, limit: $limit, userId: $_SESSION['user_id']);
+
+  // Count total tickets for pagination
+  $totalItems = $ticketService->countAllTicketsForPagination(allowedValues: $allowedValues, orderBy: $orderBy, sortBy: $sortBy, userId: $_SESSION['user_id']);
+}
+
 
 // Get pagination data
 $paginationData = $ticketService->getPaginationData(limit: $limit, totalItems: $totalItems);
 $currentPage = $paginationData['currentPage'];
 $totalPages = $paginationData['totalPages'];
 $pagination = $paginationData['pagination'];
-?>

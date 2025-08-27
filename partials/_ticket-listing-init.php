@@ -5,21 +5,15 @@ require_once '../../helpers/functions.php';
 requireLogin();
 
 // Gets file name
-$fileName = basename($_SERVER['SCRIPT_NAME']); 
+$fileName = basename($_SERVER['SCRIPT_NAME']);
 
-// Sets an appropriate action file for requiring
-if ($fileName === "user-ticket-listing.php") { 
-  require_once __DIR__ . '/../controllers/user-ticket-listing-action.php';
-} elseif ($fileName === "admin-ticket-listing.php") {
-  require_once __DIR__ . '/../controllers/AdminTicketListingController.php';
-} elseif ($fileName === "admin-tickets-i-handle.php") {
-  // TODO: dodati ovaj uslov u gornji elseif sa znakom ili (||), tako da, ako se jedan od dva uslova ostvare, onda se isputni require_once '../controllers/AdminTicketListingController.php';
-  require_once __DIR__ . '/../controllers/AdminTicketListingController.php';
-}
+// Import the TicketListingController
+require_once __DIR__ . '/../controllers/TicketListingController.php';
 ?>
 
 <!DOCTYPE html>
 <html lang="en" class="">
+
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -31,31 +25,33 @@ if ($fileName === "user-ticket-listing.php") {
   <link rel="stylesheet" href="../css/admin-one-main.css">
   <link rel="stylesheet" href="../css/font-awesome.min.css">
 </head>
+
 <body>
 
-<div id="app">
+  <div id="app">
 
-  <?php 
-  // import header navigation bar
-  include_once '../../partials/_navigation-bar.php';
+    <?php
+    // import header navigation bar
+    include_once '../../partials/_navigation-bar.php';
 
-  // import side menu
-  include_once '../../partials/_side-menu.php';
+    // import side menu
+    include_once '../../partials/_side-menu.php';
 
-  // import breadcrumbs
-  include_once '../../partials/_navigation-breadcrumbs.php';
+    // import breadcrumbs
+    include_once '../../partials/_navigation-breadcrumbs.php';
 
-  // import session messages
-  include_once '../../partials/_session-messages.php';
+    // import session messages
+    include_once '../../partials/_session-messages.php';
 
-  // import table
-  require_once '../../partials/_ticket-listing-table.php';
+    // import table
+    require_once '../../partials/_ticket-listing-table.php';
 
-  // import footer
-  include_once '../../partials/_footer.php'; 
-  ?>
+    // import footer
+    include_once '../../partials/_footer.php';
+    ?>
 
-</div>
+  </div>
 
 </body>
+
 </html>
