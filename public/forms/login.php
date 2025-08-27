@@ -24,14 +24,10 @@ require_once '../../helpers/functions.php';
             <h4 class="text-gray-800 text-base font-semibold mt-6">Login to your account</h4>
         </div>
 
-        <?php if (!empty($_SESSION["fail"])): ?>
-        <div class="bg-red-100 m-6 p-2 text-center">
-            <?php
-            // handling login error message
-            handleSessionMessages("fail", true);
-            ?>
-        </div>
-        <?php endif; ?>
+        <?php
+        // import session messages
+        include_once '../../partials/_session-messages.php';
+        ?>
 
         <form action="../../controllers/process_user_action.php" method="POST">
             <div class="grid gap-8">
@@ -44,10 +40,10 @@ require_once '../../helpers/functions.php';
                 ?>
             </div>
             <div class="!mt-12">
-            <?php 
-            // submit button
-            renderingSubmitButton('user_action', 'Login');
-            ?>
+                <?php
+                // submit button
+                renderingSubmitButton('user_action', 'Login');
+                ?>
             </div>
 
             <div class="mt-6">

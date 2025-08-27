@@ -153,12 +153,11 @@ class User extends BaseModel
             $mail->send();
 
             $_SESSION['verification_status'] = "Verificaton code is sent to your email. Go to email to verify your account.";
-            header('Location: ../login.php');
-            die();
+            $this->redirectToLoginPage();
         } catch (Exception $e) {
             logError("Verification email couldn't be sent. Mailer Error: {$mail->ErrorInfo}");
             $_SESSION["fail"] = "Verification email couldn't be sent. Ask for a new verification code.";
-            header('Location: resend-confirmation-email.php');
+            header('Location: public/forms/resend-code.php');
             die();
         }
     }
@@ -314,6 +313,12 @@ class User extends BaseModel
         return $query->rowCount() > 0 ? true : false;
     }
 
+    private function redirectToLoginPage(): void
+    {
+        header("Location: /ticketing-system/public/forms/login.php");
+        die;
+    }
+
     public function login(): void
     {
         $this->email = htmlspecialchars(trim(filter_input(INPUT_POST, 'email', FILTER_SANITIZE_EMAIL)), ENT_QUOTES, 'UTF-8');
@@ -322,23 +327,20 @@ class User extends BaseModel
         // Checking if the email address is valid
         if (!filter_var($this->email, FILTER_VALIDATE_EMAIL)) {
             $_SESSION["fail"] = "Invalid email format.";
-            header("Location: ../forms/login.php");
-            die();
+            $this->redirectToLoginPage();
         }
 
         // Checking password length
         if (strlen($this->password) < 6) {
             $_SESSION["fail"] = "Wrong password.";
-            header("Location: ../forms/login.php");
-            die();
+            $this->redirectToLoginPage();
         }
 
         $passwordFromDb = $this->getPasswordByEmail();
 
         if ($passwordFromDb === null) {
             $_SESSION["fail"] = "An account with this email doesn't exist.";
-            header("Location: ../forms/login.php");
-            die();
+            $this->redirectToLoginPage();
         }
 
         if (password_verify($this->password, $passwordFromDb)) {
@@ -348,8 +350,7 @@ class User extends BaseModel
             // Forbidding login to unverified users
             if ($user['u_verified'] !== 1) {
                 $_SESSION["fail"] = "Please verify you account before loggin in.";
-                header("Location: ../forms/login.php");
-                die();
+                $this->redirectToLoginPage();
             }
 
             $newSession = $user["u_session_version"] + 1;
@@ -389,8 +390,7 @@ class User extends BaseModel
             }
         } else {
             $_SESSION["fail"] = "Wrong password.";
-            header("Location: ../forms/login.php");
-            die();
+            $this->redirectToLoginPage();
         }
     }
 

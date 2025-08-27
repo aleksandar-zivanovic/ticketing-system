@@ -28,7 +28,7 @@
             </div>
             <div class="row clearfix">
                 <div class="">
-                    <form action="/ticketing-system/controllers/resend-verification-code.php" method="POST">
+                    <form action="/ticketing-system/public/resend-verification-code.php" method="POST">
                         <!-- email input -->
                         <div class="input_field"> <span><i aria-hidden="true" class="fa fa-envelope"></i></span>
                             <input type="email" name="email" placeholder="Email" value="<?php persist_input('email'); ?>" required />

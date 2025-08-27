@@ -226,7 +226,7 @@ function fileName($currentPage): string
  * @return string|null Returns "selected" if the values match, otherwise null.
  */
 function addSelectedTag(
-    string $getParam = null,
+    ?string $getParam = null,
     string $formValue,
     bool|string|null $sessionName = null
 ): ?string {
@@ -347,15 +347,16 @@ function checkAuthorization(string|array $role, ?string $url = null)
     }
 }
 
-/**
- * Detrminates whether the user is in the admin or in the user panel
- * 
- * @return string "admin" if the user is in the admin panel, "user" otherwise.
- */
-function getPanel(): string
-{
-    return str_contains($_SERVER["REQUEST_URI"], "public/admin") ? "admin" : "user";
-}
+// TODO: remove if not needed
+// /**
+//  * Detrminates whether the user is in the admin or in the user panel
+//  * 
+//  * @return string "admin" if the user is in the admin panel, "user" otherwise.
+//  */
+// function getPanel(): string
+// {
+//     return str_contains($_SERVER["REQUEST_URI"], "public/admin") ? "admin" : "user";
+// }
 
 /**
  * Renders a single dashboard card in the admin panel.

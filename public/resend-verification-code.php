@@ -11,5 +11,5 @@ if ($_SERVER['REQUEST_METHOD'] == "POST" && $_POST['verification_code_form']) {
     $user = new User;
     $result = $user->resendVerificatonCode();
 } else {
-    die(header("Location: ../public/forms/resend-code.php"));
+    die(header("Location: forms/resend-code.php"));
 }
