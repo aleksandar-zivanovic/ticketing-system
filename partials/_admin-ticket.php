@@ -149,7 +149,7 @@
                     $ticket->hasChildren($ticketID) === false
                 ) :
             ?>
-                    <form class="p-8" method="POST" action="/ticketing-system/controllers/process_close_reopen_ticket.php">
+                    <form class="p-8" method="POST" action="/ticketing-system/controllers/TicketCloseReopenController.php">
                         <input type="hidden" name="ticket_id" value=<?= $theTicket['id'] ?>>
                         <div class="field grouped">
                             <?php if ($theTicket['status_name'] !== "closed") : ?>

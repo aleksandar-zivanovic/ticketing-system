@@ -569,11 +569,6 @@ class Ticket extends BaseModel
      */
     public function closeReopenTicket(int $ticketId, string $action): bool
     {
-        // Checks if the $action parameter contains a valid value ("close" or "reopen").
-        if ($action !== "close" && $action !== "reopen") {
-            throw new DomainException("The action parameter is invalid!");
-        }
-
         $sql = "UPDATE tickets SET statusId = :si, ";
 
         if ($action === "close") {
@@ -582,12 +577,14 @@ class Ticket extends BaseModel
             $statusId = 3;
 
             if (!isset($_POST['closingSelect']) || empty($_POST['closingSelect'])) {
+                logError("closeReopenTicket() method error: Missing closing type value!");
                 throw new DomainException("Missing closing type value");
             }
 
             $closingType = cleanString($_POST['closingSelect']);
 
             if (!in_array($closingType, $this->closingTypes)) {
+                logError("Invalid value for closing type.");
                 throw new DomainException("Invalid value for closing type.");
             }
 
