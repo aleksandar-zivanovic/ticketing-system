@@ -33,26 +33,6 @@ class Ticket extends BaseModel
     }
 
     /**
-     * Collects and sanitizes data from the form for creating a new ticket.
-     */
-    public function collectTicketData(): void
-    {
-        // Validates the URL from the form input.
-        $url = cleanString(filter_input(INPUT_POST, "error_page", FILTER_SANITIZE_URL));
-        if (!filter_var($url, FILTER_VALIDATE_URL)) {
-            throw new RuntimeException('URL is not valid!');
-        }
-
-        $this->url = $url;
-        $this->title = cleanString(filter_input(INPUT_POST, "error_title", FILTER_DEFAULT));
-        $this->description = cleanString(filter_input(INPUT_POST, "error_description", FILTER_DEFAULT));
-        $this->departmentId = cleanString(filter_input(INPUT_POST, "error_department", FILTER_SANITIZE_NUMBER_INT));
-        $this->priorityId = cleanString(filter_input(INPUT_POST, "error_priority", FILTER_SANITIZE_NUMBER_INT));
-        $this->statusId = 1;
-        $this->userId = cleanString($_SESSION["user_id"]);
-    }
-
-    /**
      * Collects and sanitizes data from the form for creating a new tickets from the split ticket.
      * Url, ticket creator ID, ticket status and parent ticket ID are set to proprties, 
      * while other parameters are returned in the array formatted as: 
@@ -147,20 +127,17 @@ class Ticket extends BaseModel
 
     /**
      * Creates a new ticket or mutliple new tickets.
-     * 
      * @param bool $split If true used in splitting process, otherwise in creating a new ticket.
      * @param ?array $ticketAttachments Formatted array of attachments for multiple tickets, null a single ticket. Default is null.
      * @param ?Attachment $attachment Attachment object or null.
-     * 
+     * @param ?array $data Associative array of ticket data or null. Default is null.
      * @return void
+     * @throws RuntimeException If the query execution fails.
      */
-    public function createTicket(
-        bool $split               = false,
-        ?array $ticketAttachments = null,
-        ?Attachment $attachment   = null
-    ): void {
+    public function createTicket(bool $split = false, ?array $ticketAttachments = null, ?Attachment $attachment = null, ?array $data): void
+    {
         if ($split === false) {
-            $this->collectTicketData();
+            $data['statusId'] = 1;
         }
 
         $conn = $this->getConn();
@@ -172,13 +149,13 @@ class Ticket extends BaseModel
 
         try {
             $stmt = $conn->prepare($query);
-            $stmt->bindValue(":de", $this->departmentId, PDO::PARAM_INT);
-            $stmt->bindValue(":us", $this->userId, PDO::PARAM_INT);
-            $stmt->bindValue(":pr", $this->priorityId, PDO::PARAM_INT);
-            $stmt->bindValue(":st", $this->statusId, PDO::PARAM_INT);
-            $stmt->bindValue(":tt", $this->title, PDO::PARAM_STR);
-            $stmt->bindValue(":bd", $this->description, PDO::PARAM_STR);
-            $stmt->bindValue(":ul", $this->url, PDO::PARAM_STR);
+            $stmt->bindValue(":de", $data['departmentId'], PDO::PARAM_INT);
+            $stmt->bindValue(":us", $data['userId'], PDO::PARAM_INT);
+            $stmt->bindValue(":pr", $data['priorityId'], PDO::PARAM_INT);
+            $stmt->bindValue(":st", $data['statusId'], PDO::PARAM_INT);
+            $stmt->bindValue(":tt", $data['title'], PDO::PARAM_STR);
+            $stmt->bindValue(":bd", $data['description'], PDO::PARAM_STR);
+            $stmt->bindValue(":ul", $data['url'], PDO::PARAM_STR);
             if ($split === true) $stmt->bindValue(":pi", $this->parentId, PDO::PARAM_INT);
             $stmt->execute();
             $ticketId = (int) $conn->lastInsertId();
@@ -197,14 +174,6 @@ class Ticket extends BaseModel
                     $attachment = new Attachment();
                 }
                 $attachment->processImages($ticketAttachments, $ticketId, "ticket_attachments", "error_images");
-            }
-
-            if ($split === false) {
-                $_SESSION["info"] = "The issue is reported! Thank you!";
-
-                // Redirects the user to the reported page after the successful ticket creation.
-                header("Location: {$this->url}");
-                die;
             }
         } catch (\PDOException $e) {
             logError("createTicket error: INSERT query failed!", ["message" => $e->getMessage(), "code" => $e->getCode()]);

@@ -5,18 +5,21 @@ require_once '../helpers/functions.php';
 requireLogin();
 require_once '../config/config.php';
 require_once '../classes/Ticket.php';
+require_once '../services/TicketCreateService.php';
 
 if (
     $_SERVER['REQUEST_METHOD'] !== "POST" ||
     !isset($_POST['user_action']) ||
     !in_array($_POST['user_action'], ["Create Ticket", "Split Ticket"])
 ) {
-    header("Location: ../");
-    die;
+    redirectAndDie(path: "../index.php");
 }
 
+// Redirect path after error in form submission.
+$path = "../public/forms/create-ticket.php?source=" . cleanString($_POST["error_page"]);
+
 // Sets error log message.
-$errorMessage = fn ($name) => "'{$name}' is missing by user {$_SESSION['user_email']} with IP: " . getIp();
+$errorMessage = fn($name) => "'{$name}' is missing by user {$_SESSION['user_email']} with IP: " . getIp();
 
 // $_POST["error_page"] is common for both actions and is hiddend input field.
 if (!isset($_POST["error_page"]) || empty($_POST["error_page"])) {
@@ -27,9 +30,10 @@ if (!isset($_POST["error_page"]) || empty($_POST["error_page"])) {
 
 saveFormValuesToSession();
 
-$errors = ["error_department", "error_priority", "error_title", "error_description"];
-$errorField = "";
-$ticket = new Ticket();
+$errors        = ["error_department", "error_priority", "error_title", "error_description"];
+$errorField    = "";
+$ticket        = new Ticket();
+$ticketService = new TicketCreateService();
 
 if ($_POST['user_action'] === "Create Ticket") {
     // Creates ticket.
@@ -41,7 +45,91 @@ if ($_POST['user_action'] === "Create Ticket") {
         }
     }
 
-    $ticket->createTicket();
+    // Validates the URL from the form input.
+    $url = cleanString(filter_input(INPUT_POST, "error_page", FILTER_SANITIZE_URL));
+    $url = $ticketService->validateUrl($url);
+    if ($url === false) {
+        redirectAndDie(
+            sessionMessage: "Provided URL is not valid.",
+            type: "fail",
+            path: $path
+        );
+    }
+
+    // Collects and sanitizes rest of data from the form
+
+    $title = cleanString(filter_input(INPUT_POST, "error_title", FILTER_DEFAULT));
+    if (!$ticketService->validateText($title, 10)) {
+        redirectAndDie(
+            sessionMessage: "Title must be at least 10 characters long.",
+            type: "fail",
+            path: $path
+        );
+    }
+
+    $description = cleanString(filter_input(INPUT_POST, "error_description", FILTER_DEFAULT));
+    if (!$ticketService->validateText($description, 20)) {
+        redirectAndDie(
+            sessionMessage: "Description must be at least 20 characters long.",
+            type: "fail",
+            path: $path
+        );
+    }
+
+    $departmentId = (int) cleanString(filter_input(INPUT_POST, "error_department", FILTER_SANITIZE_NUMBER_INT));
+    $departmentId = $ticketService->validateInt($departmentId);
+    if ($departmentId === false) {
+        redirectAndDie(
+            sessionMessage: "Selected department is not valid.",
+            type: "fail",
+            path: $path
+        );
+    }
+
+    $priorityId = (int) cleanString(filter_input(INPUT_POST, "error_priority", FILTER_SANITIZE_NUMBER_INT));
+    $priorityId = $ticketService->validateInt($priorityId);
+    if ($priorityId === false) {
+        redirectAndDie(
+            sessionMessage: "Selected priority is not valid.",
+            type: "fail",
+            path: $path
+        );
+    }
+
+    $userId = (int) cleanString(filter_var($_SESSION["user_id"], FILTER_SANITIZE_NUMBER_INT));
+    $userId = $ticketService->validateInt($userId);
+    if ($userId === false) {
+        redirectAndDie(
+            sessionMessage: "User ID is not valid.",
+            type: "fail",
+            path: $path
+        );
+    }
+
+    $data = [
+        'url' => $url,
+        'title' => $title,
+        'description' => $description,
+        'departmentId' => $departmentId,
+        'priorityId' => $priorityId,
+        'userId' => $userId,
+    ];
+
+    // Tries to create a ticket and catches potential exception.
+    try {
+        $ticketService->createTicket(data: $data);
+        redirectAndDie(
+            sessionMessage: "The issue is reported! Thank you!",
+            type: "info",
+            path: "/ticketing-system/public/user/user-ticket-listing.php"
+        );
+    } catch (\RuntimeException $e) {
+        redirectAndDie(
+            sessionMessage: "There was an error while creating the ticket. Please try again later.",
+            type: "fail",
+            path: $path
+        );
+    }
 }
 
 if ($_POST['user_action'] === "Split Ticket") {
@@ -54,7 +142,7 @@ if ($_POST['user_action'] === "Split Ticket") {
         die('Forbidden action!');
     }
 
-    $splitPageRedirect = fn () => header("Location: ../public/admin/split-ticket.php?ticket=" . cleanString($_POST["error_ticket_id"]));
+    $splitPageRedirect = fn() => header("Location: ../public/admin/split-ticket.php?ticket=" . cleanString($_POST["error_ticket_id"]));
 
     $theTicket = $ticket->fetchTicketDetails(filter_input(INPUT_POST, "error_ticket_id", FILTER_VALIDATE_INT));
 

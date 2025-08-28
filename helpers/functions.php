@@ -536,3 +536,29 @@ function getIp(): string
 {
     return $_SERVER['REMOTE_ADDR'] ?? 'unknown';
 }
+
+/**
+ * Redirects to a specified path and optionally sets a session message.
+ * 
+ * @param string $sessionMessage The message to store in the session. If empty, no message is set.
+ * @param string $type The type of message (e.g., "success", "fail", "info", "verification_status"). Default is "fail".
+ * @param string $path The URL path to redirect to.
+ * 
+ * @throws InvalidArgumentException If the provided type is not one of the allowed values.
+ */
+function redirectAndDie(string $sessionMessage = "", string $type = "fail", string $path): void
+{
+    $types = ["success", "fail", "info", "verification_status"];
+
+    // Validate type
+    if (!in_array($type, $types)) {
+        throw new InvalidArgumentException("Type has unallowed value. Choose one of the following: " . implode(", ", $types));
+    }
+
+    if (!empty($sessionMessage)) {
+        $_SESSION[$type] = $sessionMessage;
+    }
+
+    header("Location: {$path}");
+    die;
+}
