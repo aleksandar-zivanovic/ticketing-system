@@ -13,7 +13,7 @@ class Year extends BaseModel
      */
     public function getAllYears(): array
     {
-        return $this->getAllNames("years", "year");
+        return $this->getAllByColumn("years", "year");
     }
 
     /**

@@ -32,98 +32,98 @@ class Ticket extends BaseModel
         return $this->getAll("priorities");
     }
 
-    /**
-     * Collects and sanitizes data from the form for creating a new tickets from the split ticket.
-     * Url, ticket creator ID, ticket status and parent ticket ID are set to proprties, 
-     * while other parameters are returned in the array formatted as: 
-     *  [
-     *      "error_department"  => [int, ...], 
-     *      "error_priority"    => [int, ...], 
-     *      "error_title"       => [int, ...], 
-     *      "error_description" => [int, ...], 
-     *  ]
-     * 
-     * @return array
-     */
-    public function collectSplitTicketData(): array
-    {
-        // Gets url from $_POST
-        $url = filter_input_array(INPUT_POST, ["error_page" => ['filter' => FILTER_VALIDATE_URL, 'flags' => FILTER_REQUIRE_ARRAY,]]);
+    // /**
+    //  * Collects and sanitizes data from the form for creating a new tickets from the split ticket.
+    //  * Url, ticket creator ID, ticket status and parent ticket ID are set to proprties, 
+    //  * while other parameters are returned in the array formatted as: 
+    //  *  [
+    //  *      "error_department"  => [int, ...], 
+    //  *      "error_priority"    => [int, ...], 
+    //  *      "error_title"       => [int, ...], 
+    //  *      "error_description" => [int, ...], 
+    //  *  ]
+    //  * 
+    //  * @return array
+    //  */
+    // public function collectSplitTicketData(): array
+    // {
+    // // Gets url from $_POST
+    // $url = filter_input_array(INPUT_POST, ["error_page" => ['filter' => FILTER_VALIDATE_URL, 'flags' => FILTER_REQUIRE_ARRAY,]]);
 
-        if (empty($url["error_page"][0])) {
-            throw new RuntimeException('URL is not valid!');
-        } else {
-            $this->url = cleanString($url["error_page"][0]);
-        }
+    // if (empty($url["error_page"][0])) {
+    //     throw new RuntimeException('URL is not valid!');
+    // } else {
+    //     $this->url = cleanString($url["error_page"][0]);
+    // }
 
-        // Gets departments from $_POST
-        $filters = [
-            "error_department" => [
-                "filter" => FILTER_VALIDATE_INT,
-                "flags" => FILTER_REQUIRE_ARRAY,
-            ]
-        ];
-        $values = filter_input_array(INPUT_POST, $filters);
+    // // Gets departments from $_POST
+    // $filters = [
+    //     "error_department" => [
+    //         "filter" => FILTER_VALIDATE_INT,
+    //         "flags" => FILTER_REQUIRE_ARRAY,
+    //     ]
+    // ];
+    // $values = filter_input_array(INPUT_POST, $filters);
 
-        if (empty($values["error_department"])) throw new DomainException("Empty department ID.");
+    // if (empty($values["error_department"])) throw new DomainException("Empty department ID.");
 
-        foreach ($values["error_department"] as $dep) {
-            if ($dep === false || $dep < 1) {
-                throw new DomainException("Empty department ID.");
-            }
-        }
+    // foreach ($values["error_department"] as $dep) {
+    //     if ($dep === false || $dep < 1) {
+    //         throw new DomainException("Empty department ID.");
+    //     }
+    // }
 
-        // Gets priorities from $_POST
-        $filters = [
-            "error_priority" => [
-                "filter" => FILTER_VALIDATE_INT,
-                "flags" => FILTER_REQUIRE_ARRAY,
-            ]
-        ];
-        $values = $values + filter_input_array(INPUT_POST, $filters);
+    // // Gets priorities from $_POST
+    // $filters = [
+    //     "error_priority" => [
+    //         "filter" => FILTER_VALIDATE_INT,
+    //         "flags" => FILTER_REQUIRE_ARRAY,
+    //     ]
+    // ];
+    // $values = $values + filter_input_array(INPUT_POST, $filters);
 
-        if (empty($values["error_priority"])) throw new DomainException("You didn't set priorities");
+    // if (empty($values["error_priority"])) throw new DomainException("You didn't set priorities");
 
-        foreach ($values["error_priority"] as $pri) {
-            if ($pri === false || $pri < 1) {
-                throw new DomainException("You didn't set priorities.");
-            }
-        }
+    // foreach ($values["error_priority"] as $pri) {
+    //     if ($pri === false || $pri < 1) {
+    //         throw new DomainException("You didn't set priorities.");
+    //     }
+    // }
 
-        // Gets titles from $_POST
-        $values["error_title"] = [];
-        foreach ($_POST["error_title"] as $key => $title) {
-            $values["error_title"][$key] = cleanString($title);
-            if (empty($values["error_title"][$key])) throw new DomainException("You didn't set title.");
-        }
+    // // Gets titles from $_POST
+    // $values["error_title"] = [];
+    // foreach ($_POST["error_title"] as $key => $title) {
+    //     $values["error_title"][$key] = cleanString($title);
+    //     if (empty($values["error_title"][$key])) throw new DomainException("You didn't set title.");
+    // }
 
-        // Gets descriptions from $_POST
-        $values["error_description"] = [];
-        foreach ($_POST["error_description"] as $key => $desc) {
-            $values["error_description"][$key] = cleanString($desc);
-            if (empty($values["error_description"][$key])) throw new DomainException("You didn't set description.");
-        }
+    // // Gets descriptions from $_POST
+    // $values["error_description"] = [];
+    // foreach ($_POST["error_description"] as $key => $desc) {
+    //     $values["error_description"][$key] = cleanString($desc);
+    //     if (empty($values["error_description"][$key])) throw new DomainException("You didn't set description.");
+    // }
 
-        // Gets ID of ticket to split
-        $splitTicketId = filter_input(INPUT_POST, "error_ticket_id", FILTER_VALIDATE_INT);
-        if ($splitTicketId === false || $splitTicketId < 1) {
-            logError("Inserted fake ticket id in `error_ticket_id` input field inside split ticket form by user {$_SESSION["email"]}.");
-            throw new DomainException("False data.");
-        }
-        $this->parentId = $splitTicketId;
+    // // Gets ID of ticket to split
+    // $splitTicketId = filter_input(INPUT_POST, "error_ticket_id", FILTER_VALIDATE_INT);
+    // if ($splitTicketId === false || $splitTicketId < 1) {
+    //     logError("Inserted fake ticket id in `error_ticket_id` input field inside split ticket form by user {$_SESSION["email"]}.");
+    //     throw new DomainException("False data.");
+    // }
+    // $this->parentId = $splitTicketId;
 
-        // Gets ID of the ticket creator
-        $theCreator = filter_input(INPUT_POST, "error_user_id", FILTER_VALIDATE_INT);
-        if ($theCreator === false || $theCreator < 1) {
-            logError("Inserted fake user id in `created_by` input field inside split ticket form by user {$_SESSION["email"]}.");
-            throw new DomainException("False data.");
-        }
-        $this->userId = $theCreator;
+    // // Gets ID of the ticket creator
+    // $theCreator = filter_input(INPUT_POST, "error_user_id", FILTER_VALIDATE_INT);
+    // if ($theCreator === false || $theCreator < 1) {
+    //     logError("Inserted fake user id in `created_by` input field inside split ticket form by user {$_SESSION["email"]}.");
+    //     throw new DomainException("False data.");
+    // }
+    // $this->userId = $theCreator;
 
-        $this->statusId = 1;
+    // $this->statusId = 1;
 
-        return $values;
-    }
+    // return $values;
+    // }
 
     /**
      * Creates a new ticket or mutliple new tickets.
@@ -193,24 +193,50 @@ class Ticket extends BaseModel
     }
 
     /**
-     * Prepares data for multiple creating ticket calls.
+     * Splits a ticket into multiple new tickets.
+     * 
+     * @param array $splitData Associative array containing form data. . Formatted as:
+     *  [
+     *      "error_department"  => [int, ...], 
+     *      "error_priority"    => [int, ...], 
+     *      "error_title"       => [int, ...], 
+     *      "error_description" => [int, ...], 
+     *      "error_page"        => string,
+     *      "error_user_id"     => int,
+     *      "error_ticket_id"   => int,
+     *  ]
+     * @return void
+     * @throws RuntimeException If the query execution fails.
+     * @see Ticket::createTicket()
+     * @see Ticket::updateTicket()
      */
-    public function splitTicket(): void
+    public function splitTicket(array $splitData): void
     {
         require_once 'Attachment.php';
         $attachment     = new Attachment();
         $attachments    = $attachment->processImagesForSplit();
-        $splitData      = $this->collectSplitTicketData();
 
         foreach ($attachments as $key => $ticketAttachments) {
-            $this->title        = $splitData["error_title"][$key];
-            $this->priorityId   = $splitData["error_priority"][$key];
-            $this->description  = $splitData["error_description"][$key];
-            $this->departmentId = $splitData["error_department"][$key];
-            $this->createTicket(true, $ticketAttachments, $attachment);
+            $data['title']        = $splitData["error_title"][$key];
+            $data['priorityId']   = $splitData["error_priority"][$key];
+            $data['description']  = $splitData["error_description"][$key];
+            $data['departmentId'] = $splitData["error_department"][$key];
+            $data['userId']       = $splitData["error_user_id"];
+            $data['url']          = $splitData["error_page"];
+            $data['statusId']     = 1;
+            $this->parentId       = $splitData["error_ticket_id"];
 
-            $columns = [["statusId" => 3, "closed_date" => date("Y-m-d H:i:s"), "closing_type" => "split"]];
+            $this->createTicket(true, $ticketAttachments, $attachment, $data);
+
+            $columns = [
+                [
+                    "statusId" => 3,
+                    "closed_date" => date("Y-m-d H:i:s"),
+                    "closing_type" => "split"
+                ]
+            ];
             $whereClauses = [["id" => $this->parentId]];
+
             $this->updateTicket($columns, $whereClauses);
         }
 
@@ -223,10 +249,6 @@ class Ticket extends BaseModel
             $_SESSION["error_user_id"],
             $_SESSION["error_ticket_id"],
         );
-
-        $_SESSION["success"] = "Ticket with ID {$this->parentId} is split!";
-        header("Location: ../public/admin/admin-ticket-listing.php");
-        die;
     }
 
     /**
@@ -433,6 +455,18 @@ class Ticket extends BaseModel
             logError($e->getMessage() . $e->getCode());
             throw new Exception($e->getMessage() . $e->getCode());
         }
+    }
+
+    /**
+     * Fetches row from `tickets` table by ID.
+     * 
+     * @param int $ticketId Ticket ID.
+     * @return array|false Returns associative array of ticket data or false if ticket is not found.
+     * @see BaseModel::getAllWhere()
+     */
+    public function fetchTicketById(int $ticketId): array|false
+    {
+        return $this->getAllWhere("tickets", "id = {$ticketId}")[0] ?? false;
     }
 
     /**
@@ -854,6 +888,10 @@ class Ticket extends BaseModel
         return $countTicketsByFilters;
     }
 
+    /**
+     * Updates ticket data in the database (wrapper for "tickets" table).
+     * @see Database::updateRows()
+     */
     public function updateTicket(array $columns, array $whereClauses): void
     {
         $this->updateRows("tickets", $columns, $whereClauses);

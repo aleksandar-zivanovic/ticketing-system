@@ -21,7 +21,7 @@ class Status extends BaseModel
      */
     public function getAllStatusNames(): array
     {
-        return $this->getAllNames("statuses", "name");
+        return $this->getAllByColumn("statuses", "name");
     }
 
     /**

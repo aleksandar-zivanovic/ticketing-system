@@ -22,7 +22,7 @@
     $brackets = !empty($split) ? "[0]" : "";
     ?>
 
-    <form action="/ticketing-system/controllers/process_create_split_ticket.php" method="POST" enctype="multipart/form-data">
+    <form action="/ticketing-system/public/actions/create_split_ticket_action.php" method="POST" enctype="multipart/form-data">
         <?= !empty($split) ? '<div id="tickets-container">' : ''; ?>
         <div class="grid sm:grid-cols-1 gap-8 <?= !empty($split) ? 'ticket-block' : ''; ?>">
             <?php

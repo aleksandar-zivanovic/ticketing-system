@@ -41,13 +41,19 @@ abstract class BaseModel
      * @param string $where content of WHERE clause.
      * 
      * @return array
+     * @throws RuntimeException if request failed.
      */
     public function getAllWhere(string $table, string $where): array
     {
         $query = "SELECT * FROM {$table} WHERE {$where}";
         $stmt = $this->getConn()->prepare($query);
-        $stmt->execute();
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        try {
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (\PDOException $e) {
+            logError("getAllWhere::BaseModel failed. ", ['message' => $e->getMessage(), 'code' => $e->getCode()]);
+            throw new RuntimeException("Request failed. Try again.");
+        }
     }
 
     /**
@@ -59,7 +65,7 @@ abstract class BaseModel
      * 
      * @return array List of strings.
      */
-    public function getAllNames(string $table, string $column): array
+    public function getAllByColumn(string $table, string $column): array
     {
         $names = [];
         foreach ($this->getAll($table) as $value) {
@@ -80,13 +86,13 @@ abstract class BaseModel
      */
     protected function checkTheRecordExists(string $table, string $column, int|string $record): bool
     {
-        $records = $this->getAllNames($table, $column);
+        $records = $this->getAllByColumn($table, $column);
 
         return in_array($record, $records);
     }
 
     /**
-     * Updates rows in the database. Update is done with tranasction.
+     * Updates rows in the database. Update is done with transction.
      * 
      * @param string $tableName Table for update.
      * @param array  $columns Array of columns and values to update. Each sub-array must contain 
@@ -99,6 +105,9 @@ abstract class BaseModel
      * representing column(s) and their match value(s), e.g.: [["id" => 5], ["statusId" => 3]]
      * 
      * @return void
+     * @throws InvalidArgumentException if the number of rows and where values do not match,
+     * or if unsupported parameter types are provided.
+     * @throws RuntimeException if the update fails.
      */
     public function updateRows(string $tableName, array $columns, array $whereClauses): void
     {
@@ -146,6 +155,7 @@ abstract class BaseModel
      *  ["column1" => "value1", "column2" => "value2"]
      * 
      * @return void
+     * @throws InvalidArgumentException if key of $row arry is not supported.
      */
     private function bindValues(PDOStatement $stmt, array $row): void
     {

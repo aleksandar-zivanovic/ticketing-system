@@ -37,17 +37,6 @@ class TicketCreateService
     }
 
     /**
-     * Validates integer value.
-     * Returns the integer if it is a valid integer greater than zero, otherwise false.
-     * @param int $number Number to validate.
-     * @return int|false Validated integer or false if not valid.
-     */
-    public function validateInt(int $number): int|false
-    {
-        return filter_var($number, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);    
-    }
-
-    /**
      * Creates a ticket using the Ticket class.
      * @param array $data Associative array containing ticket data.
      * @return void
