@@ -1,7 +1,8 @@
 <?php
 require_once '../../classes/Ticket.php';
+require_once 'BaseService.php';
 
-class TicketSplitService
+class TicketSplitService extends BaseService
 {
     private Ticket $ticket;
     private array|false $ticketData = false;
@@ -103,14 +104,14 @@ class TicketSplitService
 
         // Validate titles
         foreach ($values['error_title'] as $title) {
-            if (empty($title) || !$this->validateText($title, 5)) {
+            if (empty($title) || $this->validateTextLength($title, 5) === false) {
                 return ["success" => false, "message" => "Each title must be at least 5 characters long."];
             }
         }
 
         // Validate descriptions
         foreach ($values['error_description'] as $description) {
-            if (empty($description) || !$this->validateText($description, 15)) {
+            if (empty($description) || $this->validateTextLength($description, 15) === false) {
                 return ["success" => false, "message" => "Description must be at least 15 characters long."];;
             }
         }
@@ -148,52 +149,19 @@ class TicketSplitService
     }
 
     /**
-     * Validates text length.
-     * Returns true if text length is equal or greater than specified length, otherwise false.
-     * @param string $text Text to validate.
-     * @param string $length Minimum length required.
-     * @return bool True if valid, false otherwise.
-     */
-    public function validateText(string $text, string $length): bool
-    {
-        if (strlen($text) < $length) {
-            return false;
-        }
-        return true;
-    }
-
-    /**
-     * Checks if a department ID exists among existing departments.
-     * @param int $departmentId ID to validate.
-     * @return bool Valid ID or false if invalid.
-     */
-    public function validateDepartments(int $departmentId): bool
-    {
-        require_once '../../classes/Department.php';
-        $department  = new Department();
-        $departments = $department->getAllDepartmentIds();
-        return in_array($departmentId, $departments);
-    }
-
-    /**
-     * Checks if a priority ID exists among existing priorities.
-     * @param int $priorityId ID to validate.
-     * @return bool Valid ID or false if invalid.
-     */
-    public function validatePriorities(int $priorityId): bool
-    {
-        require_once '../../classes/Priority.php';
-        $priority   = new Priority();
-        $priorities = $priority->getAllPriorotyIds();
-        return in_array($priorityId, $priorities);
-    }
-
-    /**
      * Proxy method to split a ticket using the Ticket model.
      *
      * @param array $values Formatted as expected by Ticket::splitTicket().
      * @return void
+     * @throws RuntimeException If the query execution fails.
+     * @throws UnexpectedValueException If the table name is invalid.
+     * @throws Exception Exception If there is an error in images upload.
+     * @throws InvalidArgumentException if the number of rows and where values do not match,
+     * or if unsupported parameter types are provided.
+     * 
      * @see Ticket::splitTicket()
+     * @see Ticket::createTicket()
+     * @see Ticket::updateTicket()
      */
     public function splitTicket(array $values): void
     {

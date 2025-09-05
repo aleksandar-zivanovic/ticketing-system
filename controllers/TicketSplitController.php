@@ -113,15 +113,24 @@ class TicketSplitController extends BaseController
             $_SESSION["fail"] = $serviceValidation["message"];
             return false;
         }
-        
+
         $this->validatedData = $values;
         return true;
     }
 
     /**
      * Proxy method to split a ticket using the TicketSplitService.
+     * 
      * @return void
+     * @throws RuntimeException If the query execution fails.
+     * @throws UnexpectedValueException If the table name is invalid.
+     * @throws Exception Exception If there is an error in images upload.
+     * @throws InvalidArgumentException if the number of rows and where values do not match,
+     * or if unsupported parameter types are provided.
+     * 
      * @see Ticket::splitTicket()
+     * @see Ticket::createTicket()
+     * @see Ticket::updateTicket()
      */
     public function splitTicket(): void
     {
