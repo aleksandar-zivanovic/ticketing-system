@@ -11,6 +11,11 @@ class TicketCreateService extends BaseService
         $this->ticket = new Ticket();
     }
 
+    /**
+     * Service validation.
+     * 
+     * @return array Associative array with 'success' (bool) and 'message' (string).
+     */
     public function validate(array $data): array
     {
         // Validates minimal title length

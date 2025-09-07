@@ -149,18 +149,18 @@
                     $ticket->hasChildren($ticketID) === false
                 ) :
             ?>
-                    <form class="p-8" method="POST" action="/ticketing-system/controllers/TicketCloseReopenController.php">
+                    <form class="p-8" method="POST" action="/ticketing-system/public/actions/ticket_close_reopen_action.php">
                         <input type="hidden" name="ticket_id" value=<?= $theTicket['id'] ?>>
                         <div class="field grouped">
                             <?php if ($theTicket['status_name'] !== "closed") : ?>
                                 <div class="control w-full">
-                                    <button class="button red w-full --jb-modal" data-target="ticket-close-modal" type="button">
+                                    <button class="button red font-bold w-full --jb-modal" data-target="ticket-close-modal" type="button">
                                         Close Ticket
                                     </button>
                                 </div>
                             <?php else : ?>
                                 <div class="control w-full">
-                                    <input type="submit" name="reopen_ticket" value="Reopen Ticket" class="button blue w-full">
+                                    <input type="submit" name="reopen_ticket" value="Reopen Ticket" class="button blue font-bold w-full">
                                 </div>
                             <?php endif; ?>
                         </div>

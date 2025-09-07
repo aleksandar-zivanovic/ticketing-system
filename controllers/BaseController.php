@@ -10,10 +10,7 @@ class BaseController
      */
     public function hasValue(string $value): bool
     {
-        if (isset($value) && !empty($value)) {
-            return true;
-        }
-        return true;
+        return isset($value) && !empty($value);
     }
 
     /**

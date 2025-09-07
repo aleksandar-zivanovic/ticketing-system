@@ -1,4 +1,6 @@
 <?php
+require_once '../../helpers/functions.php';
+requireLogin();
 require_once '../../controllers/TicketSplitController.php';
 
 $splitController = new TicketSplitController();

@@ -6,7 +6,7 @@
     </header>
     <section class="modal-card-body">
       <div class="p-8">
-        <form method="POST" action="/ticketing-system/controllers/TicketCloseReopenController.php">
+        <form method="POST" action="/ticketing-system/public/actions/ticket_close_reopen_action.php">
           <input type="hidden" name="ticket_id" value=<?= $theTicket['id'] ?>>
           <label for="closingSelect" class="w-full block py-2">
             Choose a ticket closing reason
@@ -14,7 +14,6 @@
           <select name="closingSelect" id="closingSelect" class="w-full block p-2">
             <?php
             foreach ($ticket->closingTypes as $type) {
-              echo $key['name'];
               echo "<option value='{$type}'>" . ucfirst($type) . "</option>";
             }
             ?>

@@ -1,4 +1,7 @@
 <?php
+require_once '../../helpers/functions.php';
+requireLogin();
+
 require_once '../../controllers/TicketCreateController.php';
 
 $createController = new TicketCreateController();

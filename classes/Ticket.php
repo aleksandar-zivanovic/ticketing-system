@@ -491,7 +491,7 @@ class Ticket extends BaseModel
      * 
      * @param int $ticketId ID of the ticket that should be closed.
      * @param string $action Determines if a ticket should be closed or reopened. Allowed values are "close" and "reopen"
-     * @return bool Returns true if the process was successful, otherwise returns false.
+     * @return bool Returns true if the process was successful, otherwise throws Exception.
      */
     public function closeReopenTicket(int $ticketId, string $action): bool
     {
@@ -502,17 +502,19 @@ class Ticket extends BaseModel
             $curentDateSql = "'{$curentDate}'";
             $statusId = 3;
 
-            if (!isset($_POST['closingSelect']) || empty($_POST['closingSelect'])) {
-                logError("closeReopenTicket() method error: Missing closing type value!");
-                throw new DomainException("Missing closing type value");
-            }
+            // // TODO: prebaciti u akcion fajl
+            // if (!isset($_POST['closingSelect']) || empty($_POST['closingSelect'])) {
+            //     logError("closeReopenTicket() method error: Missing closing type value!");
+            //     throw new DomainException("Missing closing type value");
+            // }
 
             $closingType = cleanString($_POST['closingSelect']);
 
-            if (!in_array($closingType, $this->closingTypes)) {
-                logError("Invalid value for closing type.");
-                throw new DomainException("Invalid value for closing type.");
-            }
+            // // TODO: prebaciti u servis
+            // if (!in_array($closingType, $this->closingTypes)) {
+            //     logError("Invalid value for closing type.");
+            //     throw new DomainException("Invalid value for closing type.");
+            // }
 
             $sql .= "closing_type = :ct, ";
         }

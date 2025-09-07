@@ -546,7 +546,7 @@ function getIp(): string
  * 
  * @throws InvalidArgumentException If the provided type is not one of the allowed values.
  */
-function redirectAndDie(string $sessionMessage = "", string $type = "fail", string $path): void
+function redirectAndDie(string $path, string $sessionMessage = "", string $type = "fail"): void
 {
     $types = ["success", "fail", "info", "verification_status"];
 

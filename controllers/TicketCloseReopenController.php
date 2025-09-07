@@ -1,75 +1,74 @@
 <?php
-session_start();
-require_once '../classes/Ticket.php';
-require_once '../helpers/functions.php';
-require_once '../services/TicketCloseReopenService.php';
+require_once '../../services/TicketCloseReopenService.php';
+require_once 'BaseController.php';
 
-// Checks if a visitor is logged in.
-requireLogin();
+class TicketCloseReopenController extends BaseController
+{
+    private TicketCloseReopenService $service;
+    private int|string $ticketId;
 
-$action = null;
+    public function __construct(private array $data, private string $action)
+    {
+        $this->ticketId = $this->validateId($this->data["ticket_id"]);
 
-$redirectToIndex = function () {
-    header("Location: ../public/index.php");
-    die;
-};
+        if ($this->ticketId === false) {
+            throw new InvalidArgumentException("Ticket ID is invalid");
+        }
 
-if (!isset($_POST["reopen_ticket"]) && !isset($_POST["close_ticket"])) {
-    $redirectToIndex();
+        $this->service = new TicketCloseReopenService((int) $this->data["ticket_id"], $action);
+    }
+
+    /**
+     * Validates and sanatizes data from POST request.
+     * 
+     * @param int $userIdFromSession User ID from session.
+     * @return array{success: bool, message?: string, ticketIdFromForm?: int} 
+     *         success=false + message on fail, success=true + ticketIdFromForm on success.
+     * @see TicketCloseReopenService::validate()
+     */
+    public function validateRequest(int $userIdFromSession): array
+    {
+        if ($this->action === "close") {
+            // Sanitizes close type string
+            $this->data["closingSelect"] = cleanString($this->data["closingSelect"]);
+            if ($this->service->isClosingTypeValid($this->data["closingSelect"]) === false) {
+                return ["success" => false, "message" => "Invalid closing type."];
+            }
+        } else {
+            // Checks if the ticket is eligible for reopeoning based on its closing reason.
+            if ($this->service->isReopenable() === false) {
+                return ["success" => false, "message" => "This ticket can't be reopen."];
+            }
+        }
+
+        return $this->service->validate($userIdFromSession);
+    }
+
+    /** 
+     * Check if the user is the creator or the handler of the ticket.
+     * 
+     * @param int $userIdFromSession The user ID from the session.
+     * @return bool True if a user is the creator or the handler of the ticket, otherwise false.
+     * @see TicketCloseReopenService::isHandler()
+     */
+    public function isHandler(int $userIdFromSession): bool
+    {
+        return $this->service->isHandler($userIdFromSession);
+    }
+
+    /**
+     * Close or Reopen a ticket.
+     * Delegates the action to TicketCloseReopenService::closeReopenTicket()
+     * 
+     * @param int $ticketIdFromForm The ticket ID from the form
+     * @param string $action The action to perform: "close" or "reopen".
+     * @return bool Returns true if the process was successful.
+     * @throws DomainException If the action is invalid.
+     * @throws Exception For other errors thrown by the service.
+     * @see TicketCloseReopenService::closeReopenTicket()
+     */
+    public function closeReopenTicket(int $ticketIdFromForm, string $action): bool
+    {
+        return $this->service->closeReopenTicket($ticketIdFromForm, $action);
+    }
 }
-
-if (isset($_POST["close_ticket"]) && $_POST["close_ticket"] === "Close Ticket") {
-    $action = "close";
-}
-
-if (isset($_POST["reopen_ticket"]) && $_POST["reopen_ticket"] === "Reopen Ticket") {
-    $action = "reopen";
-}
-
-if ($action != "close" && $action != "reopen") {
-    logError("TicketCloseReopenController.php: The action parameter is invalid! $action is invalid value!");
-    $redirectToIndex();
-}
-
-// Get ticket ID from the form
-if (isset($_POST["ticket_id"]) && $_POST["ticket_id"] > 0) {
-    $ticketIdFromForm = (int) filter_input(INPUT_POST, "ticket_id", FILTER_SANITIZE_NUMBER_INT);
-} else {
-    $redirectToIndex();
-}
-
-// Validate $_SESSION['user_id']
-if (!isset($_SESSION['user_id']) || (int) $_SESSION['user_id'] < 1) {
-    $redirectToIndex();
-}
-
-// Get user ID from session
-$userIdFromSession = (int) $_SESSION['user_id'];
-
-$ticketService = new TicketCloseReopenService($ticketIdFromForm);
-
-if ($action === "close") {
-    // Verifies whether the ticket has "in progress".
-    $ticketService->isTheTicketInProgress();
-}
-
-// Verifies whether the user is the creator of the ticket or the admin who handles the ticket.
-if ($ticketService->notCreatorOrHandler($userIdFromSession)) {
-    $redirectToIndex();
-}
-
-if ($ticketService->theTicket["handled_by"] == $userIdFromSession) {
-    $location = "Location: ../public/admin/view-ticket.php?ticket={$ticketIdFromForm}";
-} else {
-    $location = "Location: ../public/user/user-view-ticket.php?ticket={$ticketIdFromForm}";
-}
-
-try {
-    $ticketService->closeReopenTicket($ticketIdFromForm, $action);
-    $_SESSION['success'] = "Ticket successfully " . ($action === "close" ? "closed!" : "opened!");
-} catch (\InvalidArgumentException | \DomainException | \Exception $e) {
-    $_SESSION['fail'] = "Unable to process request.";
-}
-
-header($location);
-die;
