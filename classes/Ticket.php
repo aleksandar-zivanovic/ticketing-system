@@ -51,7 +51,7 @@ class Ticket extends BaseModel
         bool $split = false,
         ?array $ticketAttachments = null,
         ?Attachment $attachment = null,
-        ?array $data, 
+        ?array $data,
         ?callable $onTicketCreated = null
     ): void {
         $data['statusId'] = 1;
@@ -177,32 +177,32 @@ class Ticket extends BaseModel
     /**
      * Fetches ticket data and associated details from related tables.
      *
-     * This method builds and executes a SQL query to retrieve ticket data.
+     * Builds and executes a SQL query with optional filtering, sorting, 
+     * and inclusion of attachments.
      *
-     * @param array $allowedValues An array of allowed values for ordering tickets.
-     * @param string $orderBy The value by which to order the tickets, default is "newest".
-     * @param ?string $sortBy The table name for sorting, defaults to null if not provided.
-     * @param int $limit Value for LIMIT clause in the SQL query. If 0, no limit is applied. Default value is 0.
+     * @param string  $orderBy Order direction: "newest" (default) or "oldest".
+     * @param ?string $sortBy Column value used for filtering, depends on $table.
+     * @param ?string $table Table name for filtering ("statuses", "priorities", "departments", "users").
+     * @param ?string $table The table name for sorting, defaults to null if not provided and will look in user table.
+     * @param int  $limit Maximum number of tickets to fetch. 0 = no limit.
      * @param bool $images A flag to include image attachments in the result, default is true.
      * @param ?int $userId The ID of the user whose tickets are to be fetched. If `null`, all tickets will be fetched (default).
      * @param bool $handledByMe If true, fetches only tickets handled by the currently logged-in admin.
      * 
      * @return array The result set containing ticket information, including optional image attachments.
-     * 
-     * @throws DomainException If the provided $sortBy or $orderBy value is not in the allowed values.
-     * @throws Exception If there is a PDOException while executing the SQL query.
+     * @throws PDOException If a database query fails.
      */
     public function fetchAllTickets(
-        array $allowedValues,
         string $orderBy = "newest",
         ?string $sortBy = null,
+        ?string $table = null,
         int $limit = 0,
         bool $images = true,
         ?int $userId = null,
         bool $handledByMe = false
     ): array {
-        // Validates sorting and ordering values and sets $table value.
-        $table = $this->validateSortingAndOrdering($allowedValues, $orderBy, $sortBy);
+        // // Validates sorting and ordering values and sets $table value.
+        // $table = $this->validateSortingAndOrdering($allowedValues, $orderBy, $sortBy);
 
         try {
             // Initial query to select ticket data and associated table names for join.
@@ -248,6 +248,7 @@ class Ticket extends BaseModel
                         break;
                     case 'departments':
                         $tableAllias = "d";
+                        break;
                     default:
                         $tableAllias = "u";
                 }
@@ -302,9 +303,10 @@ class Ticket extends BaseModel
             // Returns the fetched result set
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (\PDOException $e) {
-            // Logs the error and throws an exception if a PDOException occurs
+            // Logs the error and throws PDOException
             logError($e->getMessage() . $e->getCode());
             throw new Exception($e->getMessage() . $e->getCode());
+            throw new \PDOException($e->getMessage(), (int)$e->getCode(), $e);
         }
     }
 
@@ -501,20 +503,7 @@ class Ticket extends BaseModel
             $curentDate = date("Y-m-d H:i:s");
             $curentDateSql = "'{$curentDate}'";
             $statusId = 3;
-
-            // // TODO: prebaciti u akcion fajl
-            // if (!isset($_POST['closingSelect']) || empty($_POST['closingSelect'])) {
-            //     logError("closeReopenTicket() method error: Missing closing type value!");
-            //     throw new DomainException("Missing closing type value");
-            // }
-
             $closingType = cleanString($_POST['closingSelect']);
-
-            // // TODO: prebaciti u servis
-            // if (!in_array($closingType, $this->closingTypes)) {
-            //     logError("Invalid value for closing type.");
-            //     throw new DomainException("Invalid value for closing type.");
-            // }
 
             $sql .= "closing_type = :ct, ";
         }

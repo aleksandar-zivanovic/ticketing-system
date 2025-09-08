@@ -4,23 +4,23 @@ require_once '../../classes/Pagination.php';
 
 class TicketService
 {
-    /** Fetch tickets for pagination with given parameters
+    /** Fetches tickets for pagination with given parameters
      *
-     * @param array $allowedValues - Allowed filter values for tickets
      * @param string $orderBy - Order by parameter
      * @param string|null $sortBy - Sort by parameter
      * @param int $limit - Number of results per page
      * @param int|null $userId - User ID to filter tickets for a specific user (optional)
      * @param bool $handledByMe - Whether to fetch tickets handled by the current user
      * @return array - Array of tickets
+     * @see Ticket::fetchAllTickets()
      */
-    public function fetchTicketsForPagination($allowedValues, $orderBy, $sortBy, $limit, $userId = null, $handledByMe = false)
+    public function fetchTicketsForPagination($orderBy, $sortBy, $table, $limit, $userId = null, $handledByMe = false)
     {
         $ticket = new Ticket();
-        return $ticket->fetchAllTickets(allowedValues: $allowedValues, orderBy: $orderBy, sortBy: $sortBy, limit: $limit, userId: $userId, handledByMe: $handledByMe);
+        return $ticket->fetchAllTickets(orderBy: $orderBy, sortBy: $sortBy, table: $table, limit: $limit, userId: $userId, handledByMe: $handledByMe);
     }
 
-    /** Count total tickets for pagination
+    /** Counts total tickets for pagination
      *
      * @param array $allowedValues - Allowed filter values for tickets
      * @param string $orderBy - Order by parameter
@@ -28,30 +28,34 @@ class TicketService
      * @param int|null $userId - User ID to filter tickets for a specific user (optional)
      * @param bool $handledByMe - Whether to count tickets handled by the current user
      * @return int - Total number of tickets
+     * @see Ticket::countAllTickets()
      */
-    public function countAllTicketsForPagination($allowedValues, $orderBy, $sortBy, $userId = null, $handledByMe = false)
+    public function countAllTicketsForPagination($allowedValues, $orderBy, $sortBy, $userId = null, $handledByMe = false): int
     {
         $ticket = new Ticket();
         return $ticket->countAllTickets(allowedValues: $allowedValues, orderBy: $orderBy, sortBy: $sortBy, userId: $userId, handledByMe: $handledByMe);
     }
 
-    /** Count total pages for pagination
+    /** Counts total pages for pagination
      *
      * @param int $limit - Number of results per page
      * @param int $totalItems - Total number of items
      * @return int - Total number of pages
+     * @see Pagination::getTotalPages()
      */
-    public function countTotalPages(int $limit, int $totalItems)
+    public function countTotalPages(int $limit, int $totalItems): int
     {
         $pagination = new Pagination($limit, $totalItems);
         return $pagination->getTotalPages();
     }
 
-    /** Get pagination object
+    /** Retrives current page, total pages and pagination data.
      *
      * @param int $limit - Number of results per page
      * @param int $totalItems - Total number of items
      * @return array - Array containing currentPage, totalPages, and pagination object
+     * @see Pagination::getCurrentPage()
+     * @see Pagination::getTotalPages()
      */
     public function getPaginationData(int $limit, int $totalItems): array
     {

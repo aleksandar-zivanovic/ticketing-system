@@ -6,6 +6,7 @@ require_once '../../classes/Priority.php';
 require_once '../../classes/Status.php';
 require_once '../../classes/User.php';
 require_once '../../classes/Year.php';
+require_once '../../controllers/TicketListingController.php';
 require_once '../../helpers/functions.php';
 require_once '../../helpers/chart_helpers.php';
 $page = "Dashboard";
@@ -21,15 +22,12 @@ $departments  = $allTicketFilterData["departments"];
 $ticket       = new Ticket();
 $closingTypes = $ticket->closingTypes;
 
-// Sets allowed values list for fetchAllTickets() method
-$allowedValues = buildAllowedTicketValues($allTicketFilterData);
-
 // Calls fetchAllTickets() method
 if ($panel === "admin") {
-    $allTicketsData = $ticket->fetchAllTickets(allowedValues: $allowedValues, images: false);
-    $handledTicketsData = $ticket->fetchAllTickets(allowedValues: $allowedValues, images: false, handledByMe: true);
+    $allTicketsData = $ticket->fetchAllTickets(images: false);
+    $handledTicketsData = $ticket->fetchAllTickets(images: false, handledByMe: true);
 } else {
-    $allTicketsData = $ticket->fetchAllTickets(allowedValues: $allowedValues, images: false, userId: cleanString($_SESSION["user_id"]));
+    $allTicketsData = $ticket->fetchAllTickets(images: false, userId: cleanString($_SESSION["user_id"]));
 }
 unset($ticket);
 

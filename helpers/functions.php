@@ -223,7 +223,7 @@ function fileName($currentPage): string
  * @param string|null $sessionName The name of the session variable to check if $_GET is not set.
  * @param string|bool|null $sessionName The name of the session variable to check if $_GET is not set.
  *                                      If `true`, it gets the value of `$getParam`.
- * @return string|null Returns "selected" if the values match, otherwise null.
+ * @return string Returns "selected" if the values match, otherwise empty string.
  */
 function addSelectedTag(
     ?string $getParam = null,
@@ -241,7 +241,7 @@ function addSelectedTag(
         return "selected";
     }
 
-    return null;
+    return "";
 }
 
 /**

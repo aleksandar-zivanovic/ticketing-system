@@ -1,14 +1,20 @@
 <?php
 require_once '../../helpers/functions.php';
 
-// Checks if a visitor is logged in.
-requireLogin();
-
-// Gets file name
 $fileName = basename($_SERVER['SCRIPT_NAME']);
 
-// Import the TicketListingController
-require_once __DIR__ . '/../controllers/TicketListingController.php';
+// Checks if a visitor is logged in.
+if (str_contains($fileName, "admin")) {
+  // Check if a visitor is logged in and is an admin.
+  checkAuthorization("admin", "../");
+  $page = "Administration ticket listing";
+} else {
+  // Check if a visitor is logged in.
+  requireLogin();
+  $page = "My tickets";
+}
+
+require_once __DIR__ . '/../public/actions/ticket_listing_action.php';
 ?>
 
 <!DOCTYPE html>

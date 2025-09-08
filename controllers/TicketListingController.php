@@ -1,86 +1,105 @@
 <?php
-// Set $page and $data varaiables
-$page = str_replace("Controller", "", fileName(__FILE__));
-
-if (str_contains($page, "admin")) {
-  // Check if a visitor is logged in and is an admin.
-  checkAuthorization("admin", "../");
-} else {
-  // Check if a visitor is logged in.
-  requireLogin();
-}
-
-$page = implode(" ", preg_split('/(?=[A-Z])/', $page));
-$data = true;
-
+require_once '../../controllers/BaseController.php';
 require_once '../../classes/User.php';
 require_once '../../classes/Department.php';
 require_once '../../classes/Priority.php';
 require_once '../../classes/Status.php';
 require_once '../../services/TicketService.php';
 
-// Initializes allowed filter values for tickets
-$allTicketFilterData = loadTicketFilterData();
-$statuses    = $allTicketFilterData["statuses"];
-$priorities  = $allTicketFilterData["priorities"];
-$departments = $allTicketFilterData["departments"];
+class TicketListingController extends BaseController
+{
+  public function validateSortBy(?string $sortBy): array
+  {
+    // Trims and sanatizates
+    $sortBy = cleanString($sortBy);
 
-// Sets allowed values list for fetchAllTickets() method
-$allowedValues = buildAllowedTicketValues($allTicketFilterData);
+    $allowedValues = loadTicketFilterData();
 
-// Get sorting and ordering parameters
-if (isset($_GET['order_by'])) {
-  $orderBy = cleanString(filter_input(INPUT_GET, 'order_by', FILTER_DEFAULT));
-  $_SESSION['order_by'] = $orderBy;
-} elseif (!isset($_GET['order_by']) && isset($_SESSION['order_by'])) {
-  $orderBy = $_SESSION['order_by'];
-} else {
-  $orderBy = "newest";
-}
+    $allowedSort = false;
+    if ($sortBy === null || $sortBy === "all") {
+      $allowedSort = true;
+      $table = null;
+    } else {
+      foreach ($allowedValues as $key => $value) {
+        if (in_array($sortBy, $value)) {
+          $allowedSort = true;
+          $table = $key;
+          break;
+        }
+      }
+    }
 
-$sortBy = isset($_GET['sort']) ? filter_input(INPUT_GET, 'sort', FILTER_DEFAULT) : null;
-
-// Set results per page
-if (isset($_GET['limit'])) {
-  if ($_GET['limit'] !== "all") {
-    $limit = intval(filter_input(INPUT_GET, 'limit', FILTER_SANITIZE_NUMBER_INT));
-    if ($limit < 0) $limit = 0;
-    $_SESSION['limit'] = $limit;
-  } else {
-    $limit = $_SESSION['limit'] = 0;
+    return ["allowedSort" => $allowedSort, "table" => $table, "cleanSortBy" => $sortBy];
   }
-} elseif (!isset($_GET['limit']) && isset($_SESSION['limit'])) {
-  $limit = $_SESSION['limit'];
-} else {
-  $limit = 10;
-  $_SESSION['limit'] = 10;
+
+  /**
+   * Prepares tickets listing data for the partial template.
+   *
+   * - Fetches tickets based on panel type (admin/user) and optional "handled by me" filter.
+   * - Applies sorting, filtering, and pagination.
+   * - Loads supporting data for dropdown filters: statuses, priorities, and departments.
+   *
+   * @param string $panel "admin" or "user" – determines ticket scope and links
+   * @param string $sortBy Filter to sort by (status, priority, department, etc.)
+   * @param string $orderBy "ASC" | "DESC" or "newest" | "oldest"
+   * @param string|null $table Column from tickets table
+   * @param int $limit Number of tickets per page
+   * @param bool $ticketsIHandle Optional. If true, admin panel only: fetch tickets handled by current user
+   * @return array{
+   *     data: array,           // List of tickets matching filters
+   *     totalItems: int,       // Total number of tickets matching filters
+   *     currentPage: int,      // Current pagination page
+   *     totalPages: int,       // Total pagination pages
+   *     pagination: array,     // Array of pagination links
+   *     statuses: array,       // Allowed ticket statuses
+   *     priorities: array,     // Allowed ticket priorities
+   *     departments: array     // Allowed ticket departments
+   * }
+   * @see TicketService::fetchTicketsForPagination()
+   * @see TicketService::countAllTicketsForPagination()
+   */
+  public function prepareTicketsListingData(string $panel, ?string $sortBy, string $orderBy, ?string $table, int $limit, bool $ticketsIHandle = false): array
+  {
+    // Initializes allowed filter values for tickets
+    $allTicketFilterData = loadTicketFilterData();
+    $statuses    = $allTicketFilterData["statuses"];
+    $priorities  = $allTicketFilterData["priorities"];
+    $departments = $allTicketFilterData["departments"];
+
+    // Sets allowed values list for fetchAllTickets() method
+    $allowedValues = buildAllowedTicketValues($allTicketFilterData);
+
+    $ticketService = new TicketService();
+
+    // Fetch tickets and count total tickets based on the panel type
+    if ($panel === "admin") {
+      // Fetch tickets for pagination
+      $data = $ticketService->fetchTicketsForPagination(orderBy: $orderBy, sortBy: $sortBy, table: $table, limit: $limit, handledByMe: $ticketsIHandle);
+
+      // Count total tickets for pagination
+      $totalItems = $ticketService->countAllTicketsForPagination(allowedValues: $allowedValues, orderBy: $orderBy, sortBy: $sortBy, handledByMe: $ticketsIHandle);
+    }
+
+    if ($panel === "user") {
+      // Fetch tickets for pagination
+      $data = $ticketService->fetchTicketsForPagination(orderBy: $orderBy, sortBy: $sortBy, table: $table, limit: $limit, userId: $_SESSION['user_id']);
+
+      // Count total tickets for pagination
+      $totalItems = $ticketService->countAllTicketsForPagination(allowedValues: $allowedValues, orderBy: $orderBy, sortBy: $sortBy, userId: $_SESSION['user_id']);
+    }
+
+    // Get pagination data
+    $paginationData = $ticketService->getPaginationData(limit: $limit, totalItems: $totalItems);
+
+    return [
+      "data"        => $data,
+      "totalItems"  => $totalItems,
+      "currentPage" => $paginationData['currentPage'],
+      "totalPages"  => $paginationData['totalPages'],
+      "pagination"  => $paginationData['pagination'],
+      "statuses"    => $statuses,
+      "priorities"  => $priorities,
+      "departments" => $departments,
+    ];
+  }
 }
-
-// If $ticketsIHandle is not set, set it to false
-$ticketsIHandle = $ticketsIHandle ?? false;
-
-$ticketService = new TicketService();
-
-// Fetch tickets and count total tickets based on the panel type
-if ($panel === "admin") {
-  // Fetch tickets for pagination
-  $data = $ticketService->fetchTicketsForPagination(allowedValues: $allowedValues, orderBy: $orderBy, sortBy: $sortBy, limit: $limit, handledByMe: $ticketsIHandle);
-
-  // Count total tickets for pagination
-  $totalItems = $ticketService->countAllTicketsForPagination(allowedValues: $allowedValues, orderBy: $orderBy, sortBy: $sortBy, handledByMe: $ticketsIHandle);
-}
-
-if ($panel === "user") {
-  // Fetch tickets for pagination
-  $data = $ticketService->fetchTicketsForPagination(allowedValues: $allowedValues, orderBy: $orderBy, sortBy: $sortBy, limit: $limit, userId: $_SESSION['user_id']);
-
-  // Count total tickets for pagination
-  $totalItems = $ticketService->countAllTicketsForPagination(allowedValues: $allowedValues, orderBy: $orderBy, sortBy: $sortBy, userId: $_SESSION['user_id']);
-}
-
-
-// Get pagination data
-$paginationData = $ticketService->getPaginationData(limit: $limit, totalItems: $totalItems);
-$currentPage = $paginationData['currentPage'];
-$totalPages = $paginationData['totalPages'];
-$pagination = $paginationData['pagination'];
