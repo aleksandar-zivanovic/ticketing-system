@@ -112,7 +112,7 @@ class TicketSplitService extends BaseService
         // Validate descriptions
         foreach ($values['error_description'] as $description) {
             if (empty($description) || $this->validateTextLength($description, 15) === false) {
-                return ["success" => false, "message" => "Description must be at least 15 characters long."];;
+                return ["success" => false, "message" => "Description must be at least 15 characters long."];
             }
         }
 

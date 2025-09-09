@@ -92,7 +92,8 @@ class Ticket extends BaseModel
                 $imagesUpload = $attachment->processImages($ticketAttachments, $ticketId, "ticket_attachments", "error_images");
                 // Deletes new ticket if images uploading failed.
                 if ($imagesUpload === false) {
-                    $this->deleteTicket($ticketId);
+                    $ticketToDelete = $this->fetchAllTickets($ticketId);
+                    $this->deleteTicket($ticketToDelete);
                 }
             }
 
@@ -534,22 +535,15 @@ class Ticket extends BaseModel
     }
 
     /**
-     * Delete a ticket from database. 
-     * If the ticket ID is int or string it will be converted to array type.
+     * Deletes one or multiple tickets from the database.
+     * Accepts ticket ID(s) as int, string (comma-separated), or array.
      * 
-     * @param int|string|array $ticketId Ticket ID(s) for delation.
+     * @param int|string|array $id Ticket ID(s) for deletion.
+     * @return void
+     * @throws Exception If database deletion fails
      */
-    public function deleteTicketRow($id): bool
+    public function deleteTicketRow(array $ids, array $params): void
     {
-        // Convert string to array type.
-        if (is_string($id)) $id = explode(",", $id);
-
-        // Convert integer to array type.
-        if (is_int($id)) $id = [$id];
-
-        require_once "helpers/IdValidator.php";
-        list($ids, $params) = IdValidator::prepareIdsForQuery($id);
-
         try {
             $sql = "DELETE FROM tickets WHERE id IN (" . implode(",", $params) . ")";
             $stmt = $this->getConn()->prepare($sql);
@@ -557,7 +551,7 @@ class Ticket extends BaseModel
                 $stmt->bindValue($value, $ids[$key], PDO::PARAM_INT);
             }
 
-            return $stmt->execute();
+            $stmt->execute();
         } catch (\PDOException $e) {
             // Logs the error and throws an exception if a PDOException occurs.
             logError(
@@ -569,28 +563,17 @@ class Ticket extends BaseModel
     }
 
     /**
-     * Deletes the attachment(s) from the server and the database.
+     * TODO: fix all method uses this method and delete this method
+     * Deletes the attachment(s) from the server and the database 
+     * and calls deleteTicketRow after that to delete the ticket from the database.
      * 
-     * @param int $id ID of the ticket whose attachment(s) should be deleted.
+     * @param array $ticket Ticket data retrieved with Ticket::fetchTicketDetails().
      * @return bool Returns true on success. Throws an exception on failure.
+     * @see Ticket::deleteTicketRow()
+     * @see Ticket::fetchTicketDetails()
      */
-    public function deleteTicket(int $id): bool
+    public function deleteTicket(array $ticket): bool
     {
-        // Get ticket data.
-        $ticket = $this->fetchTicketDetails($id);
-
-        // Validate user's deletion premission. 
-        if (
-            $ticket["statusId"] !== 1 &&
-            $ticket["handled_by"] != null &&
-            !empty($allMessages) &&
-            ($ticket["created_by"] !== trim($_SESSION['user_id']) && trim($_SESSION["user_role"] !== "admin"))
-        ) {
-            $panel = $ticket["created_by"] !== trim($_SESSION['user_id']) && trim($_SESSION["user_role"] === "admin") ? "admin" : "user";
-            $redirectionUrl = $panel === "admin" ? "../public/admin/admin-ticket-listing.php" : "../public/user/user-ticket-listing.php";
-            die(header("Location: {$redirectionUrl}"));
-        }
-
         // Delete attachments from the database and the server.
         if (!empty($ticket["attachment_id"])) {
             require_once 'Attachment.php';
@@ -622,7 +605,8 @@ class Ticket extends BaseModel
         }
 
         // Delete the ticket from the database.
-        return $this->deleteTicketRow($id);
+        // TODO: ispraviti da koristi odgovarajuce parametre
+        return $this->deleteTicketRow($ticket["id"]);
     }
 
     /**

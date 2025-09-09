@@ -14,7 +14,7 @@ class Attachment extends BaseModel
      * Inserts image names to the database.
      * Uploads images to the designated folder.
      * 
-     * @param array $ticketAttachments ????? TODO:
+     * @param ?array $ticketAttachments Formatted array of attachments for multiple tickets, null a single ticket. Default is null.
      * @param int $id ID of a ticket or message related to the files.
      * @param string $table Name of the table (`ticket_attachments` or `message_attachments`).
      * @param string $fieldName The name of the file input field in the form.
@@ -239,6 +239,8 @@ class Attachment extends BaseModel
      * If there are undeleted files at the end RuntimeException will be thrown.
      * 
      * @param string|array $attachments Name or names of file(s) should be removed.
+     * @return void
+     * @throws RuntimeException If failed to delete.
      */
     public function deleteAttachmentsFromServer(string|array $attachments): void
     {

@@ -2,19 +2,19 @@
 require_once '../../helpers/functions.php';
 requireLogin();
 
-require_once '../../controllers/TicketCreateController.php';
+require_once '../../controllers/TicketController.php';
 
-$createController = new TicketCreateController();
+$controller = new TicketController();
 
 // Sets validation failed redirection path
 $failedPath = "../forms/create-ticket.php?source=" . cleanString($_POST["error_page"]);
 
-if ($createController->validateRequest($_POST) === false) {
+if ($controller->validateCreateRequest($_POST) === false) {
     header("Location: {$failedPath}");
     die;
 }
 
-$createController->createTicket(onTicketCreated: function ($ticketId) {
+$controller->createTicket(onTicketCreated: function ($ticketId) {
     $_SESSION["success"] = "New ticket created with ID: {$ticketId}";
     header("Location: /ticketing-system/public/admin/view-ticket.php?ticket={$ticketId}");
     die;
