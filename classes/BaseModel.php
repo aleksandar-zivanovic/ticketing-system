@@ -38,7 +38,7 @@ abstract class BaseModel
      * Returns multidimensional associative array.
      * 
      * @param string $table Database table name you are fetching data from.
-     * @param string $where content of WHERE clause.
+     * @param string $where content of WHERE clause (e.g. "parent_ticket = {$ticketId} AND statusId = 1")
      * 
      * @return array
      * @throws RuntimeException if request failed.

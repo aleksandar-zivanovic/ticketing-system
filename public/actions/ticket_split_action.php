@@ -9,7 +9,11 @@ if ($splitController->validatePostData($_POST) === false) {
     die;
 }
 
-$splitController->splitTicket($splitController->validatedData);
+try {
+    $splitController->splitTicket($splitController->validatedData);
+} catch (\Throwable $th) {
+    redirectAndDie("/ticketing-system/public/admin/split-ticket.php?ticket=" . $splitController->ticketId, "Ticket splitting failed. Please try again.");
+}
 
 $_SESSION["success"] = "The ticket is split successfully.";
 header("Location: /ticketing-system/public/admin/admin-ticket-listing.php");

@@ -84,8 +84,7 @@ class TicketController extends BaseController
     /**
      * Creates a ticket using the Ticket class.
      * 
-     * @param ?callable $onTicketCreated Callback function to receive the new ticket ID.
-     * @return void
+     * @return int ID of the newly created ticket.
      * 
      * @throws RuntimeException If the query execution fails.
      * @throws UnexpectedValueException If the table name is invalid.
@@ -93,9 +92,12 @@ class TicketController extends BaseController
      * @see Ticket::createTicket()
      * @see Attachment::processImages()
      */
-    public function createTicket(?callable $onTicketCreated = null)
-    {
-        $this->service->createTicket(data: $this->values, onTicketCreated: $onTicketCreated);
+    // public function createTicket(?callable $onTicketCreated = null)
+    // {
+    public function createTicket(bool $split = false,): int {
+
+        // $this->service->createTicket(data: $this->values, onTicketCreated: $onTicketCreated);
+        return $this->service->createTicket(split: $split, ticketAttachments: null, data: $this->values);
     }
 
     /**

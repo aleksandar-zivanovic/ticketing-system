@@ -10,7 +10,6 @@ class Ticket extends BaseModel
     public int $priorityId;
     public int $statusId;
     public int $userId;
-    public int $parentId;
     public ?array $images;
     public array $closingTypes = [
         "normal",    // Ticket was resolved and closed in the usual way.
@@ -39,8 +38,7 @@ class Ticket extends BaseModel
      * @param ?array $ticketAttachments Formatted array of attachments for multiple tickets, null a single ticket. Default is null.
      * @param ?Attachment $attachment Attachment object or null.
      * @param ?array $data Associative array of ticket data or null. Default is null.
-     * @param ?callable $onTicketCreated Callback function to receive the new ticket ID.
-     * @return void
+     * @return int Returns the ID of the newly created ticket. Throws exception if the process fails.
      * 
      * @throws RuntimeException If the query execution fails.
      * @throws UnexpectedValueException If the table name is invalid.
@@ -51,9 +49,9 @@ class Ticket extends BaseModel
         bool $split = false,
         ?array $ticketAttachments = null,
         ?Attachment $attachment = null,
-        ?array $data,
-        ?callable $onTicketCreated = null
-    ): void {
+        ?array $data, 
+        ?int $parentId = null
+    ): int {
         $data['statusId'] = 1;
 
         $conn = $this->getConn();
@@ -72,34 +70,10 @@ class Ticket extends BaseModel
             $stmt->bindValue(":tt", $data['title'], PDO::PARAM_STR);
             $stmt->bindValue(":bd", $data['description'], PDO::PARAM_STR);
             $stmt->bindValue(":ul", $data['url'], PDO::PARAM_STR);
-            if ($split === true) $stmt->bindValue(":pi", $this->parentId, PDO::PARAM_INT);
+            if ($split === true) $stmt->bindValue(":pi", $parentId, PDO::PARAM_INT);
             $stmt->execute();
-            $ticketId = (int) $conn->lastInsertId();
 
-            // Add the year in `years` table.
-            $this->addCurrentYear();
-
-            // Proccesses files if they are attached in form:
-            if ($ticketAttachments === null) {
-                $ticketAttachments = $_FILES;
-            }
-            unset($_FILES);
-            if ($ticketAttachments['error_images']['error'][0] != 4) {
-                if ($split === false) {
-                    require_once 'Attachment.php';
-                    $attachment = new Attachment();
-                }
-                $imagesUpload = $attachment->processImages($ticketAttachments, $ticketId, "ticket_attachments", "error_images");
-                // Deletes new ticket if images uploading failed.
-                if ($imagesUpload === false) {
-                    $ticketToDelete = $this->fetchAllTickets($ticketId);
-                    $this->deleteTicket($ticketToDelete);
-                }
-            }
-
-            if ($split === false && $onTicketCreate === null) {
-                $onTicketCreated($ticketId);
-            }
+            return (int) $conn->lastInsertId();
         } catch (\PDOException $e) {
             logError("createTicket error: INSERT query failed!", ["message" => $e->getMessage(), "code" => $e->getCode()]);
             throw new \RuntimeException("createTicket method query execution failed");
@@ -109,70 +83,11 @@ class Ticket extends BaseModel
     /**
      * Inserts a year in 'years' table.
      */
-    private function addCurrentYear(): void
+    public function addCurrentYear(): void
     {
         require_once 'Year.php';
         $yearInstance = new Year();
         $yearInstance->createYear(date("Y")); // Add the year in `years` table.
-    }
-
-    /**
-     * Splits a ticket into multiple new tickets.
-     * 
-     * @param array $splitData Associative array containing form data. . Formatted as:
-     *  [
-     *      "error_department"  => [int, ...], 
-     *      "error_priority"    => [int, ...], 
-     *      "error_title"       => [int, ...], 
-     *      "error_description" => [int, ...], 
-     *      "error_page"        => string,
-     *      "error_user_id"     => int,
-     *      "error_ticket_id"   => int,
-     *  ]
-     * @return void
-     * @throws RuntimeException If the query execution fails.
-     * @see Ticket::createTicket()
-     * @see Ticket::updateTicket()
-     */
-    public function splitTicket(array $splitData): void
-    {
-        require_once 'Attachment.php';
-        $attachment     = new Attachment();
-        $attachments    = $attachment->processImagesForSplit();
-
-        foreach ($attachments as $key => $ticketAttachments) {
-            $data['title']        = $splitData["error_title"][$key];
-            $data['priorityId']   = $splitData["error_priority"][$key];
-            $data['description']  = $splitData["error_description"][$key];
-            $data['departmentId'] = $splitData["error_department"][$key];
-            $data['userId']       = $splitData["error_user_id"];
-            $data['url']          = $splitData["error_page"];
-            $data['statusId']     = 1;
-            $this->parentId       = $splitData["error_ticket_id"];
-
-            $this->createTicket(true, $ticketAttachments, $attachment, $data);
-
-            $columns = [
-                [
-                    "statusId" => 3,
-                    "closed_date" => date("Y-m-d H:i:s"),
-                    "closing_type" => "split"
-                ]
-            ];
-            $whereClauses = [["id" => $this->parentId]];
-
-            $this->updateTicket($columns, $whereClauses);
-        }
-
-        unset(
-            $_SESSION["error_department"],
-            $_SESSION["error_priority"],
-            $_SESSION["error_page"],
-            $_SESSION["error_title"],
-            $_SESSION["error_description"],
-            $_SESSION["error_user_id"],
-            $_SESSION["error_ticket_id"],
-        );
     }
 
     /**
@@ -563,53 +478,6 @@ class Ticket extends BaseModel
     }
 
     /**
-     * TODO: fix all method uses this method and delete this method
-     * Deletes the attachment(s) from the server and the database 
-     * and calls deleteTicketRow after that to delete the ticket from the database.
-     * 
-     * @param array $ticket Ticket data retrieved with Ticket::fetchTicketDetails().
-     * @return bool Returns true on success. Throws an exception on failure.
-     * @see Ticket::deleteTicketRow()
-     * @see Ticket::fetchTicketDetails()
-     */
-    public function deleteTicket(array $ticket): bool
-    {
-        // Delete attachments from the database and the server.
-        if (!empty($ticket["attachment_id"])) {
-            require_once 'Attachment.php';
-            $attachment = new Attachment();
-
-            // Convert string of IDs to an array of IDs.
-            $idsArray = explode(",", $ticket["attachment_id"]);
-
-            $attachments = $attachment->getAttachmentsByIds($idsArray, "ticket_attachments");
-
-            // Get attachment names for deleteAttachmentsFromServer() method.
-            $attachmentNames = [];
-            foreach ($attachments as $anAttachment) {
-                $attachmentNames[] = $anAttachment["file_name"];
-            }
-
-            // Collect data about existing and missing files.
-            $attachmentFilesStatus = $attachment->isAttachmentExisting($attachmentNames);
-
-            if (!empty($attachmentFilesStatus["exist"])) {
-                // Delete attachments from the server.
-                $attachment->deleteAttachmentsFromServer($attachmentNames);
-            }
-
-            // Delete attachments from the database.
-            if ($attachment->deleteAttachmentsFromDbById($idsArray, "ticket_attachments") === false) {
-                throw new RuntimeException("Deleting attachments from the database failed");
-            };
-        }
-
-        // Delete the ticket from the database.
-        // TODO: ispraviti da koristi odgovarajuce parametre
-        return $this->deleteTicketRow($ticket["id"]);
-    }
-
-    /**
      * Set an admin as the ticket handler.
      * This method allows an admin to take the administration over the ticket.
      * 
@@ -789,10 +657,11 @@ class Ticket extends BaseModel
     /**
      * Updates ticket data in the database (wrapper for "tickets" table).
      * 
+     * @param array $columns An array of associative arrays, each containing column-value pairs to update.
+     * @param array $whereClauses An array of associative arrays, each containing column-value pairs for the WHERE clause.
      * @throws InvalidArgumentException if the number of rows and where values do not match,
      * or if unsupported parameter types are provided.
      * @throws RuntimeException if the update fails.
-     * 
      * @see BaseModel::updateRows()
      */
     public function updateTicket(array $columns, array $whereClauses): void

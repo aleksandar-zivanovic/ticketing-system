@@ -14,8 +14,14 @@ if ($controller->validateCreateRequest($_POST) === false) {
     die;
 }
 
-$controller->createTicket(onTicketCreated: function ($ticketId) {
-    $_SESSION["success"] = "New ticket created with ID: {$ticketId}";
-    header("Location: /ticketing-system/public/admin/view-ticket.php?ticket={$ticketId}");
-    die;
-});
+// Creates the ticket and redirects to the ticket view page on success
+try {
+    $ticketId = $controller->createTicket(false);
+    redirectAndDie(
+        "/ticketing-system/public/admin/view-ticket.php?ticket={$ticketId}",
+        "New ticket created with ID: {$ticketId}",
+        "success"
+    );
+} catch (RuntimeException $e) {
+    redirectAndDie($failedPath, "Ticket creation failed. Please try again.");
+}

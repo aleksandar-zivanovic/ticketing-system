@@ -1,5 +1,6 @@
 <?php
 require_once '../../classes/Ticket.php';
+require_once 'TicketService.php';
 require_once 'BaseService.php';
 
 class TicketSplitService extends BaseService
@@ -151,7 +152,7 @@ class TicketSplitService extends BaseService
     /**
      * Proxy method to split a ticket using the Ticket model.
      *
-     * @param array $values Formatted as expected by Ticket::splitTicket().
+     * @param array $splitData Formatted as expected by Ticket::splitTicket().
      * @return void
      * @throws RuntimeException If the query execution fails.
      * @throws UnexpectedValueException If the table name is invalid.
@@ -163,8 +164,45 @@ class TicketSplitService extends BaseService
      * @see Ticket::createTicket()
      * @see Ticket::updateTicket()
      */
-    public function splitTicket(array $values): void
+    public function splitTicket(array $splitData): void
     {
-        $this->ticket->splitTicket($values);
+        require_once '../../classes/Attachment.php';
+        $attachment     = new Attachment();
+        $attachments    = $attachment->processImagesForSplit();
+        $ticketService  = new TicketService();
+        $parentId       = $splitData["error_ticket_id"];
+
+        foreach ($attachments as $key => $ticketAttachments) {
+            $data['title']        = $splitData["error_title"][$key];
+            $data['priorityId']   = $splitData["error_priority"][$key];
+            $data['description']  = $splitData["error_description"][$key];
+            $data['departmentId'] = $splitData["error_department"][$key];
+            $data['userId']       = $splitData["error_user_id"];
+            $data['url']          = $splitData["error_page"];
+            $data['statusId']     = 1; // 1 = waitting
+
+            $ticketService->createTicket(true, $ticketAttachments, $data, $parentId);
+
+            $columns = [
+                [
+                    "statusId" => 3,
+                    "closed_date" => date("Y-m-d H:i:s"),
+                    "closing_type" => "split"
+                ]
+            ];
+            $whereClauses = [["id" => $parentId]];
+
+            $this->ticket->updateTicket($columns, $whereClauses);
+        }
+
+        unset(
+            $_SESSION["error_department"],
+            $_SESSION["error_priority"],
+            $_SESSION["error_page"],
+            $_SESSION["error_title"],
+            $_SESSION["error_description"],
+            $_SESSION["error_user_id"],
+            $_SESSION["error_ticket_id"],
+        );
     }
 }

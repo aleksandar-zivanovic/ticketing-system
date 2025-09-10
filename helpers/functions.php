@@ -347,17 +347,6 @@ function checkAuthorization(string|array $role, ?string $url = null)
     }
 }
 
-// TODO: remove if not needed
-// /**
-//  * Detrminates whether the user is in the admin or in the user panel
-//  * 
-//  * @return string "admin" if the user is in the admin panel, "user" otherwise.
-//  */
-// function getPanel(): string
-// {
-//     return str_contains($_SERVER["REQUEST_URI"], "public/admin") ? "admin" : "user";
-// }
-
 /**
  * Renders a single dashboard card in the admin panel.
  *   

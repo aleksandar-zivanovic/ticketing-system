@@ -12,6 +12,11 @@ class TicketService extends BaseService
         $this->ticket = new Ticket();
     }
 
+    public function setTicketDetails(array $ticketDetails): void
+    {
+        $this->ticketDetails = $ticketDetails;
+    }
+
     /**
      * Service validation.
      * 
@@ -127,7 +132,7 @@ class TicketService extends BaseService
      * @throws RuntimeException If deletion of files from server or `attachments` table fails
      * @see AttachmentService::deleteAttachments()
      */
-    public function deleteAttachments(array $ticket)
+    public function deleteAttachments(array $ticket): void
     {
         if (!empty($this->ticketDetails["attachment_id"]) === true) {
             require_once 'AttachmentService.php';
@@ -137,11 +142,65 @@ class TicketService extends BaseService
     }
 
     /**
+     * Processes and uploads attachments if there are any.
+     * 
+     * @param bool $split Indicates if the ticket is part of a split operation.
+     * @param ?array $ticketAttachments Formatted array of attachments for multiple tickets, null a single ticket. Default is null.
+     * @param ?Attachment $attachment Attachment object or null. Default is null.
+     * @param int $ticketId ID of the ticket to which attachments are to be associated.
+     * @return void
+     * @throws Exception If there is an error in images upload or if ticket deletion fails after a failed upload.
+     * @see Attachment::processImages()
+     * @see TicketService::deleteTicket()
+     */
+    private function processAttachments(bool $split = false, ?array $ticketAttachments = null, ?Attachment $attachment = null, int $ticketId, ?int $parentId = null): void
+    {
+        // Proccesses files if they are attached in form:
+        if ($ticketAttachments === null) {
+            $ticketAttachments = $_FILES;
+        }
+        unset($_FILES);
+
+        if ($ticketAttachments['error_images']['error'][0] != 4) {
+            $imagesUpload = $attachment->processImages($ticketAttachments, $ticketId, "ticket_attachments", "error_images");
+
+            // Deletes new ticket if images uploading failed.
+            if ($imagesUpload === false) {
+                $this->ticketDetails = $this->ticket->fetchTicketDetails($ticketId);
+                $this->deleteTicket();
+
+                // If $parentId !== null thatm means that the ticket is created by splitting process
+                // so we need to delete all child tickets.
+                if ($parentId !== null) {
+                    $childTickets = $this->ticket->getAllWhere("tickets", "parent_ticket = {$parentId}");
+                    if (!empty($childTickets)) {
+                        foreach ($childTickets as $childTicket) {
+                            $this->ticketDetails = $this->ticket->fetchTicketDetails($childTicket["id"]);
+                            $this->deleteTicket();
+                        }
+                    }
+
+                    // Finally, we need to reopen the parent ticket if it was closed.
+                    $this->ticket->updateTicket([
+                        [
+                            "statusId" => 1,
+                            "closed_date" => null,
+                            "closing_type" => null
+                        ]
+                    ], [["id" => $parentId]]);
+                }
+
+                throw new RuntimeException("Ticket creation failed during images upload. The ticket is deleted.");
+            }
+        }
+    }
+
+    /**
      * Creates a ticket using the Ticket class.
      * 
      * @param array $data Associative array containing ticket data.
      * @param ?callable $onTicketCreated Callback function to receive the new ticket ID.
-     * @return void
+     * @return int Returns the ID of the newly created ticket.
      * 
      * @throws RuntimeException If the query execution fails.
      * @throws UnexpectedValueException If the table name is invalid.
@@ -149,9 +208,27 @@ class TicketService extends BaseService
      * @see Ticket::createTicket()
      * @see Attachment::processImages()
      */
-    public function createTicket(array $data, ?callable $onTicketCreated = null): void
-    {
-        $this->ticket->createTicket(split: false, ticketAttachments: null, attachment: null, data: $data, onTicketCreated: $onTicketCreated);
+    // public function createTicket(array $data, ?callable $onTicketCreated = null): void
+    // {
+    public function createTicket(
+        bool $split = false,
+        ?array $ticketAttachments = null,
+        ?array $data,
+        ?int $parentId = null,
+    ): int {
+        if (!isset($attachment)) {
+            require_once '../../classes/Attachment.php';
+            $attachment = new Attachment();
+        }
+        $lastInsertId = $this->ticket->createTicket($split, $ticketAttachments, $attachment, $data, $parentId);
+
+        // Add the year in `years` table.
+        $this->ticket->addCurrentYear();
+
+        // Proccesses files if they are attached in form:
+        $this->processAttachments($split, $ticketAttachments, $attachment, $lastInsertId, $parentId);
+
+        return $lastInsertId;
     }
 
     /**
