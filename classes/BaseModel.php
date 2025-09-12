@@ -19,18 +19,23 @@ abstract class BaseModel
 
     /**
      * Fetches all data for a certain table.
-     * Returns multidimensional associative array.
+     * Returns multidimensional associative array or empty array if no data found.
      * 
      * @param string $table Database table name you are fetching data from.
-     * 
+     * @throws RuntimeException if request failed.
      * @return array
      */
     public function getAll(string $table): array
     {
-        $query = "SELECT * FROM {$table}";
-        $stmt = $this->getConn()->prepare($query);
-        $stmt->execute();
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        try {
+            $query = "SELECT * FROM {$table}";
+            $stmt = $this->getConn()->prepare($query);
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (\PDOException $e) {
+            logError("getAll::BaseModel failed. ", ['message' => $e->getMessage(), 'code' => $e->getCode()]);
+            throw new RuntimeException("Request failed. Try again.");
+        }
     }
 
     /**

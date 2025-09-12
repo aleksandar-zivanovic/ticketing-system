@@ -482,13 +482,14 @@ class Ticket extends BaseModel
      * This method allows an admin to take the administration over the ticket.
      * 
      * @param int $ticketId ID of the ticket that will be assigned to an admin.
+     * @param int $adminId ID of the admin who is taking the ticket.
      * @return bool True on success, otherwise throws an exception.
      * @throws Exception If the assignment fails.
      */
-    public function takeTicket(int $ticketId): bool
+    public function takeTicket(int $ticketId, int $adminId): bool
     {
-        $adminId = trim($_SESSION["user_role"]) === "admin" ? trim($_SESSION["user_id"]) : false;
-        if ($adminId === false) die(header("Location: ../user/user-ticket-listing.php"));
+        // $adminId = trim($_SESSION["user_role"]) === "admin" ? trim($_SESSION["user_id"]) : false;
+        // if ($adminId === false) die(header("Location: ../user/user-ticket-listing.php"));
 
         try {
             $sql = "UPDATE tickets SET handled_by = :adm, statusId = 2 WHERE id = {$ticketId}";

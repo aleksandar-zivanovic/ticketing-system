@@ -111,6 +111,8 @@ class TicketService extends BaseService
             $this->ticketDetails["statusId"] !== 1 ||
             // Checks if someone handles the ticket
             $this->ticketDetails["handled_by"] != null ||
+            // Checks if the ticket is a child ticket
+            $this->ticketDetails["parent_ticket"] !== null ||
             // Checks if there are messages
             !empty($allMessages) ||
             // Checks if the current user is the ticket creator or an admin
@@ -193,6 +195,16 @@ class TicketService extends BaseService
                 throw new RuntimeException("Ticket creation failed during images upload. The ticket is deleted.");
             }
         }
+    }
+
+    public function validateTakeTiket(): array
+    {
+        // Validate user's permission to take the ticket
+        if ((trim($_SESSION["user_role"]) !== "admin") || trim($_SESSION["user_id"]) === $this->ticketDetails["created_by"]) {
+            return ["success" => false, "message" => "You don't have the permission for this action!"];
+        }
+
+        return ["success" => true];
     }
 
     /**

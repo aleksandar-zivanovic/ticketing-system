@@ -77,7 +77,7 @@
                 $_SESSION["user_id"] !== $theTicket["created_by"]
             ) :
             ?>
-                <form class="p-8" method="POST" action="/ticketing-system/controllers/process_take_ticket.php">
+                <form class="p-8" method="POST" action="/ticketing-system/public/actions/take_ticket_action.php">
                     <input type="hidden" name="take_ticket_id" value=<?= $theTicket['id'] ?>>
                     <div class="field grouped">
                         <div class="control w-full">
@@ -177,7 +177,8 @@
                 // Delete the ticket button
                 if (
                     $theTicket["statusId"] === 1 &&
-                    $theTicket["handled_by"] === null &&
+                    $theTicket["handled_by"] === null && 
+                    $theTicket["parent_ticket"] === null &&
                     empty($allMessages) &&
                     ($theTicket["created_by"] == trim($_SESSION['user_id']) || trim($_SESSION["user_role"] === "admin"))
                 ) :
