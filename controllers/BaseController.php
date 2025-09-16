@@ -38,4 +38,15 @@ class BaseController
 
         return $url;
     }
+
+    /**
+     * Validates and sanitize an email address.
+     */
+    public function validateEmail(string $email): string|false
+    {
+        $email = filter_var($email, FILTER_SANITIZE_EMAIL);
+        $email = filter_var($email, FILTER_VALIDATE_EMAIL);
+
+        return $email;
+    }
 }

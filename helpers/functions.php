@@ -315,6 +315,7 @@ function requireLogin()
         $_SESSION["session_version"] = $theUser["session_version"];
         $_SESSION['user_id']         = $theUser['u_id'];
         $_SESSION['user_role']       = $theUser['r_name'];
+        $_SESSION['user_email']      = $theUser['u_email'];
     }
 }
 

@@ -41,7 +41,7 @@ class User extends BaseModel
             }
 
             // checks if the email is already in use
-            if ($this->isEmailOccupied()) {
+            if ($this->isEmailOccupied($this->email)) {
                 $this->registrationErrorHandling("Email is already in use!");
             }
 
@@ -67,15 +67,25 @@ class User extends BaseModel
         }
     }
 
-    // checking if there is a use with the entered email
-    public function isEmailOccupied(): bool
+    /**
+     * Checks if the provided email is already in use.
+     * @param string $email The email address to check.
+     * @return bool True if the email is occupied, false otherwise.
+     * @throws RuntimeException If the database query fails.
+     */
+    public function isEmailOccupied(string $email): bool
     {
-        $conn = $this->getConn();
-        $queryLookForEmail = "SELECT email FROM users WHERE email = :email";
-        $query = $conn->prepare($queryLookForEmail);
-        $query->bindValue(':email', $this->email, PDO::PARAM_STR);
-        $query->execute();
-        return $query->rowCount() >= 1;
+        try {
+            $conn = $this->getConn();
+            $queryLookForEmail = "SELECT email FROM users WHERE email = :email";
+            $query = $conn->prepare($queryLookForEmail);
+            $query->bindValue(':email', $email, PDO::PARAM_STR);
+            $query->execute();
+            return $query->rowCount() >= 1;
+        } catch (\PDOException $e) {
+            logError("User::isEmailOccupied failed. ", ['message' => $e->getMessage(), 'code' => $e->getCode()]);
+            throw new RuntimeException("Request failed. Try again.");
+        }
     }
 
     // hashing password
@@ -287,20 +297,34 @@ class User extends BaseModel
      * @param int $id ID column from users table.
      * 
      * @return array|null Returns user row as associative array, or null if not found.
+     * @throws RuntimeException If the database query fails.
      */
     public function getUserById(int $id): ?array
     {
         return $this->getAllWhere("users", "id = {$id}")[0] ?? null;
     }
 
-    public function getPasswordByEmail(): string|null
+    /**
+     * Retrieves the hashed password for a given email address.
+     *
+     * @param string $email The email address of the user.
+     * @return string|null The hashed password if found, or null if not found.
+     * @throws RuntimeException If the database query fails.
+     */
+    public function getPasswordByEmail($email): string|null
     {
-        $getPasswordByEmail = "SELECT password FROM users WHERE email = :em";
-        $query = $this->getConn()->prepare($getPasswordByEmail);
-        $query->bindValue(":em", $this->email, PDO::PARAM_STR);
-        $query->execute();
-        $result = $query->fetch(PDO::FETCH_ASSOC);
-        return !empty($result) ? $result['password'] : null;
+        try {
+            $getPasswordByEmail = "SELECT password FROM users WHERE email = :em";
+            $query = $this->getConn()->prepare($getPasswordByEmail);
+            $query->bindValue(":em", $email, PDO::PARAM_STR);
+            $query->execute();
+            $result = $query->fetch(PDO::FETCH_ASSOC);
+            return !empty($result) ? $result['password'] : null;
+        } catch (\PDOException $e) {
+            logError("User::getPasswordByEmail failed. ", ['message' => $e->getMessage(), 'code' => $e->getCode()]);
+            throw new RuntimeException("Request failed. Try again.");
+            
+        }
     }
 
     // add verification code to a user and returns true if is and false if isn't added
@@ -336,7 +360,7 @@ class User extends BaseModel
             $this->redirectToLoginPage();
         }
 
-        $passwordFromDb = $this->getPasswordByEmail();
+        $passwordFromDb = $this->getPasswordByEmail($this->email);
 
         if ($passwordFromDb === null) {
             $_SESSION["fail"] = "An account with this email doesn't exist.";
@@ -375,6 +399,7 @@ class User extends BaseModel
             $_SESSION['last_check']      = time();
             $_SESSION["session_version"] = $newSession;
             $_SESSION["info"]            = "Logged in successfully!";
+            session_regenerate_id(true);
 
             if (!empty($_SESSION["redirect_after_login"])) {
                 header("Location: " . $_SESSION["redirect_after_login"]);
@@ -399,18 +424,10 @@ class User extends BaseModel
      *
      * @return true Returns true if the update succeeds.
      * @throws RuntimeException If the database update fails.
+     * @throws InvalidArgumentException If the email is already in use.
      */
-    public function updateUserRow(): bool
+    public function updateUserRow(array $data, int $profileId): bool
     {
-        try {
-            // Prepares data for update user
-            $data = $this->prepareDataForUserUpdate();
-        } catch (\InvalidArgumentException $e) {
-            throw $e;
-        }
-
-        $profileId = $data['id'];
-        unset($data["id"]);
         $where = ["id" => $profileId];
 
         if (!empty($data["email"])) {
@@ -420,7 +437,7 @@ class User extends BaseModel
                 // If the same email is already set to the account, don't update the email 
                 unset($data["email"]);
             } else {
-                if ($this->isEmailOccupied()) {
+                if ($this->isEmailOccupied($this->email)) {
                     throw new InvalidArgumentException("Email is aready in use!");
                 };
             }
@@ -428,42 +445,6 @@ class User extends BaseModel
 
         $this->updateRows("users", [$data], [$where]);
         return true;
-    }
-
-    /**
-     * Prepares data for updateUserRow() method.
-     * 
-     * @return array
-     */
-    private function prepareDataForUserUpdate(): array
-    {
-        $profileId  = (int) $_POST["profile_id"];
-        $firstName  = cleanString($_POST["fname"]);
-        $familyName = cleanString($_POST["sname"]);
-        $result     = ["id" => $profileId, "name" => $firstName, "surname" => $familyName];
-
-        if (!empty($_POST["phone"])) {
-            $phone = cleanString($_POST["phone"]);
-            $regex = preg_match("/^\\+?[0-9]{7,15}$/", $phone);
-
-            if ($regex !== 1) {
-                throw new InvalidArgumentException("Phone number must contain at least 7 and maximum 15 characters!");
-            }
-
-            $result += ["phone" => $phone];
-        }
-
-        if (!empty($_POST["email"])) {
-            $email = filter_input(INPUT_POST, "email", FILTER_VALIDATE_EMAIL);
-
-            if ($email === false) {
-                throw new InvalidArgumentException("Email is not valid!");
-            }
-
-            $result += ["email" => $email];
-        }
-
-        return $result;
     }
 
     /**
@@ -481,5 +462,14 @@ class User extends BaseModel
 
         $this->updateRows('users', $data, $where);
         return true;
+    }
+
+    /** Sets the password property.
+     *
+     * @param string $password The password to set.
+     */
+    public function setPassword(string $password): void
+    {
+        $this->password = $password;
     }
 }

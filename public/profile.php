@@ -74,7 +74,7 @@ $page  = "Profile page"
             </p>
           </header>
           <div class="card-content">
-            <form method="POST" action="/ticketing-system/controllers/process_update_profile.php">
+            <form method="POST" action="/ticketing-system/public/actions/profile_update_action.php">
               <!-- <div class="field">
                 <label class="label">Avatar</label>
                 <div class="field-body">
@@ -211,7 +211,7 @@ $page  = "Profile page"
             </p>
           </header>
           <div class="card-content">
-            <form method="POST" action="/ticketing-system/controllers/process_update_profile.php">
+            <form method="POST" action="/ticketing-system/public/actions/profile_update_action.php">
               <div class="field">
                 <label class="label">Current password</label>
                 <div class="control">
