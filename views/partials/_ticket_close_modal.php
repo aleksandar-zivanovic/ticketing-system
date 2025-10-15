@@ -23,9 +23,17 @@
           </div>
         </form>
         <div class="control w-full mt-1">
-          <button type="cancle" class="button blue w-full --jb-modal-close">Cancel</button>
+          <button id="cancelButton" type="cancel" class="button blue w-full --jb-modal-close">Cancel</button>
         </div>
       </div>
     </section>
   </div>
 </div>
+
+<script>
+  // Remove 'clipped' class from html element when cancel button is clicked
+  var cancelButton = document.getElementById('cancelButton');
+  cancelButton.addEventListener('click', function() {
+    document.documentElement.classList.remove('clipped');
+  });
+</script>
