@@ -174,7 +174,8 @@ class Ticket extends BaseModel
 
             // Fetches only tickets created by the user
             if ($action === "my") {
-                if (!isset($table) || $table == null) $query .= " WHERE t.created_by = " . $userId;
+                $whereOrAnd = empty($table) ? "WHERE" : "AND";
+                $query .= " {$whereOrAnd} t.created_by = {$userId}";
             }
 
             // Fetches only tickets handled by the current admin role user
@@ -199,12 +200,13 @@ class Ticket extends BaseModel
                 $query .= " LIMIT :limit OFFSET {$offset}";
             }
 
+
             // Prepares and executes the SQL query
             $stmt = $this->getConn()->prepare($query);
 
             // Binds the value of limit to the query if it is greater than 0
             if ($limit !== 0) $stmt->bindValue("limit", $limit, PDO::PARAM_INT);
-
+            // dd($query);
             $stmt->execute();
 
             // Returns the fetched result set

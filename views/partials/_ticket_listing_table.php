@@ -62,10 +62,12 @@
                     // Show legend only for admin users
                     if ($_SESSION["user_role"] === "admin") :
                     ?>
-                <div class="gap-2 text-sm mb-2 flex items-center">
+                <div class="gap-2 text-sm mb-2 flex items-center bg-purple-100 p-1 px-4 rounded-xl ml-4">
                     <span class="text-lg">Legend:</span>
-                    <span class="px-1 bg-green-300 rounded-full">Assigned to me</span>
-                    <span class="px-1 bg-blue-200 rounded-full">Created by me</span>
+                    <?php $commonLegendStyle = "px-2 p-1 border-black border-2 rounded-full"; ?>
+                    <span class="<?= $commonLegendStyle ?> bg-green-100">Assigned to me</span>
+                    <span class="<?= $commonLegendStyle ?> bg-blue-100">Created by me</span>
+                    <span class="<?= $commonLegendStyle ?> bg-white">Neither yours nor assigned</span>
                 </div>
             <?php endif; ?>
             </p>
@@ -89,13 +91,20 @@
                     <tbody>
                         <?php
                         foreach ($data as $ticket) :
-                            $assignedToMe = $_SESSION["user_id"] === $ticket["handled_by"] ? "px-1 bg-green-300 rounded-full" : "";
-                            $myTicket = $_SESSION["user_id"] === $ticket["created_by"] ? "px-1 bg-orange-300 rounded-full" : "";
+                            // Set style for ticket ID based on user relation to the ticket
+                            if ($_SESSION["user_id"] === $ticket["handled_by"]) {
+                                $style = "bg-green-100";
+                            } elseif ($_SESSION["user_id"] === $ticket["created_by"]) {
+                                $style = "bg-blue-100";
+                            } else {
+                                $style = "";
+                            }
+
                         ?>
 
                             <tr>
                                 <td data-label="ID">
-                                    <span class="<?= $assignedToMe . " " . $myTicket ?>"><?= $ticket['id']; ?></span>
+                                    <span class="px-1 p-1 <?= $style ?> border-2 border-solid border-black rounded-full"><?= $ticket['id']; ?></span>
                                 </td>
                                 <td data-label="Title">
                                     <!--
@@ -152,7 +161,7 @@
                                 }
                                 ?>
 
-                                <td data-label="Att">
+                                <td data-label="Att" class="text-center">
                                     <?php
                                     echo $attachments ?? "None";
                                     unset($attachments);
