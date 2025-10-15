@@ -62,7 +62,7 @@
             <div class="!mt-12">
                 <!-- Add split ticket form button -->
                 <?php
-                renderingButton("add-ticket-btn", "Add create ticket form", "text-white", "bg-green-500", "hover:bg-green-600", "my-4", "mdi mdi-plus-thick", type:"button");
+                renderingButton("add-ticket-btn", "Add create ticket form", "text-white", "bg-green-500", "hover:bg-green-600", "my-4", "mdi mdi-plus-thick", type: "button");
                 ?>
             <?php endif; // ends if (!empty($split)) : block
             ?>
@@ -70,8 +70,8 @@
 
             <?php
             if (!empty($split)) {
-                // Cancle split action button
-                renderingButton("user_action", "Cancle split action", "text-white", "bg-red-500", "hover:bg-red-600", "mb-4");
+                // Cancel splitting action button
+                renderingButton("user_action", "Cancel splitting", "text-white", "bg-red-500", "hover:bg-red-600", "mb-4", type: "link", link: "/ticketing-system/public/admin/view-ticket.php?ticket=" . $theTicket["id"]);
 
                 // Process splitting action button
                 renderingButton("user_action", "Split Ticket");
