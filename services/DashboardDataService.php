@@ -24,7 +24,7 @@ class DashboardDataService extends BaseService
         $this->ticketReferenceService = new TicketReferenceService();
     }
 
-    public function getDashboardData(string $panel, ?string $userId = null): array
+    public function getDashboardData(string $panel, int $currentPage, ?string $userId = null): array
     {
         // Initializes allowed filter values for tickets
         $allTicketFilterData = $this->ticketReferenceService->getReferenceData();
@@ -34,10 +34,10 @@ class DashboardDataService extends BaseService
 
         // Calls fetchAllTickets() method
         if ($panel === "admin") {
-            $allTicketsData = $this->ticketModel->fetchAllTickets(images: false);
-            $handledTicketsData = $this->ticketModel->fetchAllTickets(images: false, handledByMe: true, userRole: "admin");
+            $allTicketsData = $this->ticketModel->fetchAllTickets(action: "all", userId: $userId, currentPage: $currentPage, images: false);
+            $handledTicketsData = $this->ticketModel->fetchAllTickets(action: "handling", userId: $userId, currentPage: $currentPage, images: false);
         } else {
-            $allTicketsData = $this->ticketModel->fetchAllTickets(images: false, userId: $userId);
+            $allTicketsData = $this->ticketModel->fetchAllTickets(action: "my", userId: $userId, currentPage: $currentPage, images: false);
         }
         unset($this->ticketModel);
 

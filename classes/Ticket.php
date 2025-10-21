@@ -100,6 +100,7 @@ class Ticket extends BaseModel
      *
      * @param string  $action Action type for the listing (e.g., "all", "my", "handling")
      * @param int     $userId The ID of the user whose tickets are to be fetched.
+     * @param int     $currentPage The current pagination page.
      * @param string  $orderBy Order direction: "newest" (default) or "oldest".
      * @param ?string $sortBy Column value used for filtering, depends on $table.
      * @param ?string $table Table name for filtering ("statuses", "priorities", "departments", "users").
