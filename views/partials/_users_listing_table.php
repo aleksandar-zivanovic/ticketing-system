@@ -74,7 +74,11 @@
                                 </td>
 
                                 <td data-label="Name & Surname">
-                                    <span class="px-1 p-1"><?= $user['name'] . " " . $user['surname']; ?></span>
+                                    <span class="px-1 p-1">
+                                        <a href="/ticketing-system/profile.php?user=<?= $user['id'] ?>" target="_blank" class="hover:underline hover:text-blue-600">
+                                            <?= $user['name'] . " " . $user['surname']; ?>
+                                        </a>
+                                    </span>
                                 </td>
 
                                 <td data-label=" Email">
