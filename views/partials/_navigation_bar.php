@@ -1,7 +1,7 @@
 <nav id="navbar-main" class="navbar is-fixed-top">
 
   <!-- search bar -->
-  <?php // require_once '_navigation_search.php'; 
+  <?php require_once '_navigation_search.php'; 
   ?>
 
   <div class="navbar-brand is-right">
