@@ -26,7 +26,7 @@ class TicketListingController extends BaseController
    * - Applies sorting, filtering, and pagination.
    * - Loads supporting data for dropdown filters: statuses, priorities, and departments.
    *
-   * @param string $action Action type for the listing (e.g., "all", "my", "handling")
+   * @param string $action Action type for the listing (e.g., "all", "my", "handling", "users-tickets")
    * @param string $panel "admin" or "user" – determines ticket scope and links
    * @param string $sortBy Filter to sort by (status, priority, department, etc.)
    * @param string $orderBy "ASC" | "DESC" or "newest" | "oldest"
@@ -48,10 +48,19 @@ class TicketListingController extends BaseController
    */
   public function prepareTicketsListingData(string $action, string $panel, ?string $sortBy, string $orderBy, ?string $table, int $limit, array $options): array
   {
-    $userId = trim($_SESSION["user_id"]);
+    if ($action !== "users-tickets") {
+      $userId = trim($_SESSION["user_id"]);
+    } else {
+      // Get user ID from query parameter for listing tickets of a specific user
+      if (!isset($_GET["user"]) || empty(trim($_GET["user"]))) {
+        throw new InvalidArgumentException("User ID is required to view user's tickets.");
+      }
+      $userId = trim($_GET["user"]);
+    }
+
     $userId = $this->validateId($userId);
     if ($userId === false) {
-      throw new InvalidArgumentException("Invalid user ID in session.");
+      throw new InvalidArgumentException("Invalid user ID.");
     }
 
     $currentPage = $this->getCurrentPage();

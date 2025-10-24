@@ -1,9 +1,20 @@
 <?php
 require_once ROOT . 'helpers' . DS . 'view_helpers.php';
 
-$page = $panel === "user" ?
-  "My tickets" : ($panel === "admin" && $action !== "handling" ?
-    "Administration ticket listing" : "Tickets I handle");
+// Determine page title and breadcrumbs based on panel and action
+if ($panel === "user") {
+  $page = "My tickets listing";
+}
+
+if ($panel === "admin") {
+  if ($action === "all") {
+    $page = "Administration ticket listing";
+  } else if ($action === "handling") {
+    $page = "Tickets I handle";
+  } else if ($action === "users-tickets") {
+    $page = "User's tickets listing";
+  }
+}
 ?>
 
 <!DOCTYPE html>

@@ -13,6 +13,10 @@
                 <?php if (isset($_GET['sort']) && !empty(trim($_GET['sort']))) : ?>
                     <input type="hidden" name="sort" value="<?php echo cleanString($_GET['sort']); ?>">
                 <?php endif; ?>
+                <!-- Preserve user ID in the form if present. Used for listing tickets for a specific user -->
+                <?php if (isset($_GET['user']) && !empty(trim($_GET['user']))) : ?>
+                    <input type="hidden" name="user" value="<?= (int) $_GET['user'] ?>">
+                <?php endif; ?>
             </form>
         </div>
         <div class="buttons">

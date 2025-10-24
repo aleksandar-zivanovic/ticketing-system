@@ -34,6 +34,10 @@
                         </optgroup>
                     <?php endif; ?>
                 </select>
+                <!-- Preserve user ID in the form if present. Used for listing tickets for a specific user -->
+                <?php if (isset($_GET['user']) && !empty(trim($_GET['user']))) : ?>
+                    <input type="hidden" name="user" value="<?= (int) $_GET['user'] ?>">
+                <?php endif; ?>
             </form>
         </div>
     </div>

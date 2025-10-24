@@ -98,7 +98,7 @@ class Ticket extends BaseModel
      * Builds and executes a SQL query with optional filtering, sorting, 
      * and inclusion of attachments.
      *
-     * @param string  $action Action type for the listing (e.g., "all", "my", "handling")
+     * @param string  $action Action type for the listing (e.g., "all", "my", "handling", "users-tickets")
      * @param int     $userId The ID of the user whose tickets are to be fetched.
      * @param int     $currentPage The current pagination page.
      * @param string  $orderBy Order direction: "ASC" (default) or "DESC".
@@ -174,7 +174,7 @@ class Ticket extends BaseModel
             }
 
             // Fetches only tickets created by the user
-            if ($action === "my") {
+            if ($action === "my" || $action === "users-tickets") {
                 $whereOrAnd = empty($table) ? "WHERE" : "AND";
                 $query .= " {$whereOrAnd} t.created_by = {$userId}";
             }
@@ -257,7 +257,7 @@ class Ticket extends BaseModel
                 $query .= " WHERE " . $tableAllias . "." . $column . " = '" . $sortBy . "'";
             }
 
-            if ($action === "my") {
+            if ($action === "my" || $action === "users-tickets") {
                 if (isset($table) && $table !== null) {
                     $query .= " AND t.created_by = " . $userId;
                 }

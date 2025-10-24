@@ -13,6 +13,10 @@ return [
         "handler" => [TicketListingController::class, "show"],
         "params"  => ["admin", "handling", "admin-tickets-i-handle.php"]
     ],
+    "/admin/user-tickets-list"      => [
+        "handler" => [TicketListingController::class, "show"],
+        "params"  => ["admin", "users-tickets", "ticket.php",]
+    ],
     "/user-ticket-listing"          => [
         "handler" => [TicketListingController::class, "show"],
         "params"  => ["user", "my", "user-ticket-listing.php"]

@@ -48,7 +48,7 @@
           </a>
         </li>
         <li class="--set-active-tables-html">
-          <a href="/ticketing-system/admin/users-listing/">
+          <a href="/ticketing-system/admin/users-listing">
             <span class="icon"><i class="mdi mdi-account-group"></i></span>
             <span class="menu-item-label">Users</span>
           </a>

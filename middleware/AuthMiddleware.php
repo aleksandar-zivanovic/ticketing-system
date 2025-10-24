@@ -25,7 +25,8 @@ class AuthMiddleware
         "/take_ticket_action"        => "admin",
         "/admin-edit-message"        => "admin",
         "/admin-dashboard.php"       => "admin",
-        "/admin/users"               => "admin",
+        "/admin/users-listing"       => "admin",
+        "/admin/user-tickets-list"   => "admin",
     ];
 
     /**
