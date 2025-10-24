@@ -25,6 +25,9 @@ return [
         "handler" => [TicketShowController::class, "show"],
         "params"  => ["ticket.php", "user"]
     ],
+    "/admin/users-listing"          => [
+        "handler" => [UserListingController::class, "show"],
+    ],
     "/admin/split-ticket"           => [
         "handler" => [TicketSplitController::class, "show"],
     ],
@@ -102,4 +105,5 @@ return [
     "/email-verification.php"        => [
         "handler" => [VerificationController::class, "verifyUser"]
     ],
+    "/tests/",
 ];

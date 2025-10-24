@@ -47,6 +47,12 @@
             <span class="menu-item-label">Handling tickets</span>
           </a>
         </li>
+        <li class="--set-active-tables-html">
+          <a href="/ticketing-system/admin/users-listing/">
+            <span class="icon"><i class="mdi mdi-account-group"></i></span>
+            <span class="menu-item-label">Users</span>
+          </a>
+        </li>
       <?php endif; ?>
       <li class="--set-active-profile-html">
         <a href="/ticketing-system/profile.php?user=<?= cleanString($_SESSION["user_id"]) ?>">

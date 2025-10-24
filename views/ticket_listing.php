@@ -1,4 +1,6 @@
 <?php
+require_once ROOT . 'helpers' . DS . 'view_helpers.php';
+
 $page = $panel === "user" ?
   "My tickets" : ($panel === "admin" && $action !== "handling" ?
     "Administration ticket listing" : "Tickets I handle");

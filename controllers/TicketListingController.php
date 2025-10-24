@@ -1,92 +1,22 @@
 <?php
 require_once ROOT . 'controllers' . DS . 'BaseController.php';
 require_once ROOT . 'services' . DS . 'TicketListingService.php';
+require_once ROOT . 'services' . DS . 'SortingAndOrderingService.php';
+require_once ROOT . 'services' . DS . 'TicketReferenceService.php';
+require_once ROOT . 'traits' . DS . 'PaginationTrait.php';
 
 class TicketListingController extends BaseController
 {
-  private TicketListingService $service;
+  private TicketListingService $ticketListingService;
+  private SortingAndOrderingService $sortingService;
+  private TicketReferenceService $ticketReferenceService;
+  use PaginationTrait;
 
   public function __construct()
   {
-    $this->service = new TicketListingService();
-  }
-
-  /**
-   * Validates the 'sort' parameter from the GET request.
-   * 
-   * @return array{table: string|null, cleanSortBy: string|null}
-   *         - 'table': The corresponding table for the sortBy value or null if not applicable.
-   *         - 'cleanSortBy': The sanitized sortBy value or null if not provided.
-   * 
-   * @see TicketListingService::validateSortBy()
-   */
-  public function validateSortByRequest(): array
-  {
-    if (isset($_GET['sort']) && !empty(trim($_GET['sort']))) {
-
-      // Trims and sanatizates
-      $sortBy = cleanString($_GET['sort']);
-
-      return $this->service->validateSortBy($sortBy);
-    } else {
-      return ["table" => null, "cleanSortBy" => null];
-    }
-  }
-
-  /**
-   * Validates the 'limit' parameter from the GET request and manages session storage.
-   * Limit parameter controls the number of results per page for ticket listings.
-   * 
-   * @return int The validated limit value. Returns 0 for "all" or if no limit is set, otherwise returns a positive integer.
-   */
-  public function validateLimitRequest(): array
-  {
-    // Set results per page
-    if (isset($_GET["limit"])) {
-      if ($_GET["limit"] !== "all") {
-        $limit = $this->validateId($_GET["limit"]);
-        $_SESSION["limit"] = $limit = $limit === false ? 0 : $limit;
-      } else {
-        $limit = $_SESSION["limit"] = 0;
-      }
-    } elseif (!isset($_GET["limit"]) && isset($_SESSION["limit"])) {
-      $limit = (int)trim($_SESSION["limit"]);
-    } else {
-      $limit = 10;
-    }
-
-    $preparedLimit = $this->service->prepareLimitOptions($limit);
-
-    $_SESSION["limit"] = $preparedLimit["limit"];
-
-    return ["limit" => $preparedLimit["limit"], "options" => $preparedLimit["options"]];
-  }
-
-  /**
-   * Validates the 'order_by' parameter from the GET request.
-   * 
-   * @return string "oldest" if 'order_by' is set to "oldest", otherwise "newest".
-   */
-  public function validateOrderByRequest(): string
-  {
-    return (isset($_GET["order_by"]) && trim($_GET["order_by"]) === "oldest") ?  "oldest" : "newest";
-  }
-
-  /**
-   * Gets current page from query string parameter "page".
-   * 
-   * @return int Returns current page if page parameter from query strng is set and valid, otherwise 1.
-   */
-  public function getCurrentPage(): int
-  {
-    if (isset($_GET["page"])) {
-      $currentPage = $this->validateId($_GET["page"]);
-      if ($currentPage === false || $currentPage < 1) {
-        $currentPage = 1;
-      }
-    }
-
-    return $currentPage ?? 1;
+    $this->ticketListingService   = new TicketListingService();
+    $this->sortingService         = new SortingAndOrderingService();
+    $this->ticketReferenceService = new TicketReferenceService();
   }
 
   /**
@@ -102,6 +32,7 @@ class TicketListingController extends BaseController
    * @param string $orderBy "ASC" | "DESC" or "newest" | "oldest"
    * @param string|null $table Column from tickets table
    * @param int $limit Number of tickets per page
+   * @param array $options Additional options for pagination
    * @return array{
    *     data: array,           // List of tickets matching filters
    *     totalItems: int,       // Total number of tickets matching filters
@@ -125,23 +56,24 @@ class TicketListingController extends BaseController
 
     $currentPage = $this->getCurrentPage();
 
-    return $this->service->prepareTicketsListingData($action, $panel, $sortBy, $orderBy, $table, $limit, $userId, $currentPage, $options);
+    return $this->ticketListingService->prepareTicketsListingData($action, $panel, $sortBy, $orderBy, $table, $limit, $userId, $currentPage, $options);
   }
 
   public function show(string $panel, string $action, string $fileName): void
   {
     try {
+      $allowedValues        = $this->ticketReferenceService->getReferenceData();
+      $sortByValidation     = $this->sortingService->validateSortByRequest($allowedValues);
+      $sortBy               = $sortByValidation["cleanSortBy"];
+      $table                = $sortByValidation["table"];
+      $orderBy              = $this->validateOrderByRequest();
       $validateLimitRequest = $this->validateLimitRequest();
-      $sortByValidation = $this->validateSortByRequest();
-      $sortBy           = $sortByValidation["cleanSortBy"];
-      $table            = $sortByValidation["table"];
-      $orderBy          = $this->validateOrderByRequest();
-      $limit            = $validateLimitRequest["limit"];
-      $options          = $validateLimitRequest["options"];
+      $limit                = $validateLimitRequest["limit"];
+      $options              = $validateLimitRequest["options"];
       $data = $this->prepareTicketsListingData($action, $panel, $sortBy, $orderBy, $table, $limit, $options);
-      $data["fileName"] = $fileName;
-      $data["limit"]    = $limit;
-      $data["action"]   = $action;
+      $data["fileName"]     = $fileName;
+      $data["limit"]        = $limit;
+      $data["action"]       = $action;
 
       $this->render("ticket_listing.php", $data);
     } catch (\Throwable $th) {

@@ -3,27 +3,29 @@
 class AuthMiddleware
 {
     private array $publicPaths = [
-        "login.php",
-        "login_action.php",
-        "register.php",
-        "register_action.php",
-        "logout.php",
-        "resend-code.php",
-        "resend_code_action.php",
-        "email-verification.php"
+        "/login.php",
+        "/login_action.php",
+        "/register.php",
+        "/register_action.php",
+        "/logout.php",
+        "/resend-code.php",
+        "/resend_code_action.php",
+        "/email-verification.php",
+        "/tests/"
     ];
 
     private array $rolePaths = [
-        "admin-ticket-listing"      => "admin",
-        "admin-tickets-i-handle"    => "admin",
-        "admin/view-ticket"         => "admin",
-        "admin/split-ticket"        => "admin",
-        "ticket_close_action"       => "admin",
-        "ticket_reopen_action"      => "admin",
-        "ticket_delete_action"      => "admin",
-        "take_ticket_action"        => "admin",
-        "admin-edit-message"        => "admin",
-        "admin-dashboard.php"       => "admin",
+        "/admin-ticket-listing"      => "admin",
+        "/admin-tickets-i-handle"    => "admin",
+        "/admin/view-ticket"         => "admin",
+        "/admin/split-ticket"        => "admin",
+        "/ticket_close_action"       => "admin",
+        "/ticket_reopen_action"      => "admin",
+        "/ticket_delete_action"      => "admin",
+        "/take_ticket_action"        => "admin",
+        "/admin-edit-message"        => "admin",
+        "/admin-dashboard.php"       => "admin",
+        "/admin/users"               => "admin",
     ];
 
     /**

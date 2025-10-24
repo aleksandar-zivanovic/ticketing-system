@@ -209,3 +209,16 @@ function renderChart(string $title, string $type, array $data): void
     $chartId = 'chart_' . uniqid();
     include ROOT . 'views' . DS . 'partials' . DS . '_admin_dashboard_chart.php';
 }
+
+/** 
+ * Renders a legend for a table.
+ * 
+ * @param string $greenTitle Title for the green legend item.
+ * @param string $blueTitle Title for the blue legend item.
+ * @param string $whiteTitle Title for the white legend item.
+ * @return void
+ */
+function renderTableLegend(string $greenTitle, string $blueTitle, string $whiteTitle): void
+{
+    include ROOT . 'views' . DS . 'partials' . DS . '_table_legend.php';
+}

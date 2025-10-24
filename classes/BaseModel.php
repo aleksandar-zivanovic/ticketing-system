@@ -78,15 +78,30 @@ abstract class BaseModel
      * Returns multidimensional associative array.
      * 
      * @param string $table Database table name you are fetching data from.
-     * @param string $where content of WHERE clause (e.g. "parent_ticket = {$ticketId} AND statusId = 1")
-     * 
+     * @param string|null $where Optional WHERE clause (e.g. "parent_ticket = {$ticketId} AND statusId = 1")
+     * @param int|null $limit Optional limit for number of returned rows.
+     * @param int|null $offset Optional offset for the returned rows.
      * @return array An associative array containing row details from the specified table or an empty array if not found.
      * @throws RuntimeException if request failed.
      */
-    public function getAllWhere(string $table, string $where): array
+    public function getAllWhere(string $table, ?string $where = null, ?int $limit = null, ?int $offset = null): array
     {
-        $query = "SELECT * FROM {$table} WHERE {$where}";
+        $query = "SELECT * FROM {$table}";
+
+        if ($where !== null) {
+            $query .= " WHERE {$where}";
+        }
+
+        if ($limit !== null) {
+            $query .= " LIMIT {$limit}";
+        }
+
+        if ($offset !== null) {
+            $query .= " OFFSET {$offset}";
+        }
+
         $stmt = $this->getConn()->prepare($query);
+
         try {
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -260,6 +275,35 @@ abstract class BaseModel
             $stmt->execute();
         } catch (\PDOException $e) {
             logError("BaseModel::deleteRowById failed. Failed to delete record from {$table} table. ", ['message' => $e->getMessage(), 'code' => $e->getCode()]);
+            throw new RuntimeException("Request failed. Try again.");
+        }
+    }
+
+    /**
+     * Counts total rows in a table with optional WHERE condition.
+     * 
+     * @param string $table Name of the table.
+     * @param string|null $where Optional WHERE clause (e.g. "statusId = 1")
+     * 
+     * @return int Total number of rows.
+     * @throws RuntimeException if the count fails.
+     */
+    protected function countRows(string $table, ?string $where = null): int
+    {
+        $query = "SELECT COUNT(*) as count FROM {$table}";
+
+        if ($where !== null) {
+            $query .= " WHERE {$where}";
+        }
+
+        $stmt = $this->getConn()->prepare($query);
+
+        try {
+            $stmt->execute();
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            return (int)$result['count'];
+        } catch (\PDOException $e) {
+            logError("BaseModel::countRows failed. Failed to count rows from {$table} table. ", ['message' => $e->getMessage(), 'code' => $e->getCode()]);
             throw new RuntimeException("Request failed. Try again.");
         }
     }

@@ -6,105 +6,20 @@ require_once ROOT . 'classes' . DS . 'Status.php';
 require_once ROOT . 'classes' . DS . 'Ticket.php';
 require_once ROOT . 'Support' . DS . 'Paginator.php';
 require_once ROOT . 'services' . DS . 'TicketReferenceService.php';
+require_once ROOT . 'services' . DS . 'SortingAndOrderingService.php';
 require_once ROOT . 'ViewModel' . DS . 'PaginationViewModel.php';
 
 class TicketListingService
 {
     private Ticket $ticketModel;
     private TicketReferenceService $ticketReferenceService;
+    private SortingAndOrderingService $sortingAndOrderingService;
 
     public function __construct()
     {
         $this->ticketModel = new Ticket();
         $this->ticketReferenceService = new TicketReferenceService();
-    }
-
-    /** 
-     * Validates the 'sort' parameter from the GET request.
-     *
-     * @param string $sortBy The sortBy parameter to validate
-     * @return array{table: string|null, cleanSortBy: string|null}
-     */
-    public function validateSortBy(string $sortBy): array
-    {
-        $allowedValues = $this->ticketReferenceService->getReferenceData();
-
-        if ($sortBy === null || $sortBy === "all") {
-            $table = null;
-        } else {
-            foreach ($allowedValues as $key => $value) {
-                if (in_array($sortBy, $value)) {
-                    $table = $key;
-                    break;
-                }
-            }
-        }
-        return ["table" => $table, "cleanSortBy" => $sortBy];
-    }
-
-    /**
-     * Validates sorting and ordering values.
-     * This method is used in methods for making queries for ticket listings. 
-     * Provides table name for the WHERE clause in a query.
-     * 
-     * @param array $allowedValues An associative array of allowed values for ordering tickets.
-     * @param ?string $sortBy The table name for sorting, defaults to null if not provided.
-     * @return string|null Returns table name or null if everything is valid, otherwise throws exception;
-     * @throws DomainException If the provided $sortBy or $orderBy value is not in the allowed values.
-     */
-    private function validateSortingAndOrdering(
-        array $allowedValues,
-        string $orderBy = "newest",
-        ?string $sortBy = null
-    ): string|null {
-        // Checks if the $sortBy value is valid.
-        $allowedSort = false;
-        if ($sortBy === null || $sortBy === "all") {
-            $allowedSort = true;
-            $table = null;
-        } else {
-            foreach ($allowedValues as $key => $value) {
-                if (in_array($sortBy, $value)) {
-                    $allowedSort = true;
-                    $table = $key;
-                }
-            }
-        }
-
-        // Checks if the $orderBy value is valid.
-        $allowedOrder = false;
-        if ($orderBy === "newest" || $orderBy === "oldest") {
-            $allowedOrder = true;
-        }
-
-        // Throws an exception if either $sortBy or $orderBy is invalid.
-        if ($allowedSort !== true ||  $allowedOrder !== true) {
-            throw new DomainException("Invalid order/sort value!");
-        }
-
-        return $table;
-    }
-
-    /**
-     * Prepares limit options for results per page selection.
-     *
-     * @param int $limit The current limit value
-     * @return array An array of limit options with their selected status
-     */
-    public function prepareLimitOptions(int $limit): array
-    {
-        if (!in_array($limit, [5, 10, 20, 50]) && $limit !== 0) {
-            $limit = 10;
-        }
-
-        $options = [
-            ["value" => 5,     "selected" => $limit === 5],
-            ["value" => 10,    "selected" => $limit === 10],
-            ["value" => 20,    "selected" => $limit === 20],
-            ["value" => 50,    "selected" => $limit === 50],
-            ["value" => "all", "selected" => $limit === 0],
-        ];
-        return ["options" => $options, "limit" => $limit];
+        $this->sortingAndOrderingService = new SortingAndOrderingService();
     }
 
     /** Fetches tickets for pagination with given parameters
@@ -130,36 +45,22 @@ class TicketListingService
      *
      * @param string $action - Action type for the listing (e.g., "all", "my", "handling")
      * @param array $allowedValues - Allowed filter values for tickets
-     * @param string $orderBy - Order by parameter
      * @param string|null $sortBy - Sort by parameter
      * @param int|null $userId - User ID to filter tickets for a specific user (optional)
      * @return int - Total number of tickets
      * @throws PDOException If a database query fails.
      * @see Ticket::countAllTickets()
      */
-    private function countAllTicketsForPagination(string $action, array $allowedValues, string $orderBy, ?string $sortBy, ?int $userId = null): int
+    private function countAllTicketsForPagination(string $action, array $allowedValues, ?string $sortBy, ?int $userId = null): int
     {
-        $table = $this->validateSortingAndOrdering($allowedValues, $orderBy, $sortBy);
-        return $this->ticketModel->countAllTickets(action: $action, userId: $userId, sortBy: $sortBy, table: $table);
-    }
+        $data = $this->sortingAndOrderingService->validateSortingAndOrdering($allowedValues, $sortBy);
 
-    // /** Retrives total pages and Paginator object for pagination
-    //  *
-    //  * @param int $limit - Number of results per page
-    //  * @param int $totalItems - Total number of items
-    //  * @return array - Array containing currentPage, totalPages, and pagination object
-    //  * @see Pagination::getCurrentPage()
-    //  * @see Pagination::getTotalPages()
-    //  */
-    // private function getPaginationData(int $limit, int $totalItems): array
-    // {
-    //     $pagination = new Paginator($limit, $totalItems);
-    //     $totalPages = $pagination->getTotalPages();
-    //     return [
-    //         "totalPages"  => $totalPages,
-    //         "pagination"  => $pagination
-    //     ];
-    // }
+        // If action is "all", we don't filter by user ID, because we want total count of all tickets
+        if ($action === "all") {
+            $userId = null;
+        }
+        return $this->ticketModel->countAllTickets(action: $action, userId: $userId, sortBy: $sortBy, table: $data["table"]);
+    }
 
     /**
      * Prepares tickets listing data for the partial template.
@@ -200,7 +101,11 @@ class TicketListingService
         $departments = $allTicketFilterData["departments"];
 
         // Sets allowed values list for fetchAllTickets() method
-        $allowedValues = buildAllowedTicketValues($allTicketFilterData);
+        $allowedValues = array_merge(
+            ["statuses" => $statuses],
+            ["priorities" => $priorities],
+            ["departments" => $departments],
+        );
 
         // Fetch tickets and count total tickets based on the panel type
         if ($panel === "admin") {
@@ -208,7 +113,7 @@ class TicketListingService
             $data = $this->fetchTicketsForPagination(action: $action, userId: $userId, currentPage: $currentPage, orderBy: $orderBy, sortBy: $sortBy, table: $table, limit: $limit);
 
             // Count total tickets for pagination
-            $totalItems = $this->countAllTicketsForPagination(action: $action, userId: $userId, allowedValues: $allowedValues, orderBy: $orderBy, sortBy: $sortBy);
+            $totalItems = $this->countAllTicketsForPagination(userId: $userId, allowedValues: $allowedValues, sortBy: $sortBy, action: $action);
         }
 
         if ($panel === "user") {
@@ -216,7 +121,7 @@ class TicketListingService
             $data = $this->fetchTicketsForPagination(action: $action, userId: $userId, currentPage: $currentPage, orderBy: $orderBy, sortBy: $sortBy, table: $table, limit: $limit);
 
             // Count total tickets for pagination
-            $totalItems = $this->countAllTicketsForPagination(action: $action, userId: $userId, allowedValues: $allowedValues, orderBy: $orderBy, sortBy: $sortBy);
+            $totalItems = $this->countAllTicketsForPagination(userId: $userId, allowedValues: $allowedValues, sortBy: $sortBy, action: $action);
         }
 
         // Get pagination data

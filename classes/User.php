@@ -89,22 +89,17 @@ class User extends BaseModel
     }
 
     /**
-     * Fetches all users from the database.
+     * Fetches all users from users table in the database.
      *
+     * @param string|null $where Optional WHERE clause (e.g. "status = 'active' AND role_id = 2").
+     * @param int|null $limit Optional limit for the number of returned rows.
+     * @param int|null $offset Optional offset for the returned rows.
      * @return array An array of associative arrays, each representing a user.
      * @throws RuntimeException If the database query fails.
      */
-    public function getAllUsers(): array
+    public function getAllUsers(?string $where = null, ?int $limit = null, ?int $offset = null): array
     {
-        try {
-            $query = "SELECT * FROM users";
-            $query = $this->getConn()->prepare($query);
-            $query->execute();
-            return $query->fetchAll(PDO::FETCH_ASSOC);
-        } catch (\PDOException $e) {
-            logError("User::getAllUsers failed. ", ['message' => $e->getMessage(), 'code' => $e->getCode()]);
-            throw new RuntimeException("Request failed. Try again.");
-        }
+        return $this->getAllWhere("users", $where, $limit, $offset);
     }
 
     /**
@@ -272,5 +267,65 @@ class User extends BaseModel
         $where = [["id" => $id]];
 
         $this->updateRows('users', $data, $where);
+    }
+
+    /**
+     * Retrieves all users along with their respective ticket counts.
+     *
+     * @param string|null $where Optional SQL WHERE clause to filter users (e.g. "role_id = 1").
+     * @param int|null $limit Optional limit on the number of users to retrieve.
+     * @param int|null $offset Optional offset for the returned users.
+     * @param string $orderBy Order by direction, either "ASC" or "DESC".
+     * @return array An array of users with an additional 'tickets_count' field.
+     * @throws RuntimeException If the database query fails.
+     */
+    public function getAllUsersWithTicketsCount(?string $where = null, ?int $limit = null, ?int $offset = null, string $orderBy = "ASC"): array
+    {
+        try {
+            $query = "SELECT u.*, COUNT(t.id) AS tickets_count 
+                FROM users AS u
+                LEFT JOIN tickets AS t ON u.id = t.created_by";
+
+            if ($where !== null) {
+                $query .= " WHERE {$where}";
+            }
+
+            $query .= " GROUP BY u.id
+                ORDER BY u.id {$orderBy}";
+
+            if ($limit !== 0) {
+                $query .= " LIMIT :limit";
+            }
+
+            if ($offset !== 0) {
+                $query .= " OFFSET :offset";
+            }
+
+            $stmt = $this->getConn()->prepare($query);
+            if ($limit !== 0) {
+                $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+            }
+            if ($offset !== 0) {
+                $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+            }
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (\PDOException $e) {
+            logError("User::getAllUsersWithTickets failed. ", ['message' => $e->getMessage(), 'code' => $e->getCode()]);
+            throw new RuntimeException("Request failed. Try again.");
+        }
+    }
+
+    /**
+     * Counts total users in the users table with optional WHERE clause.
+     *
+     * @param string|null $where Optional SQL WHERE clause to filter users.
+     * @return int The total number of users.
+     * @throws RuntimeException If the database query fails.
+     * @see BaseModel::countRows()
+     */
+    public function countUsers(?string $where = null): int
+    {
+        return $this->countRows("users", $where);
     }
 }

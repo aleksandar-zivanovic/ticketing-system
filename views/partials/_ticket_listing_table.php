@@ -3,22 +3,10 @@
         <h1 class="title">Tickets listing | <span class="text-gray-500 font-thin">Total: <?= $totalItems ?></span></h1>
         <div class="flex flex-col md:flex-row items-center justify-between space-y-6 md:space-y-0">
             <form action="">
-                <button
-                    type="submit"
-                    class="button <?php echo $orderBy === "oldest" ? "green" : "light"; ?>"
-                    name="order_by"
-                    value="oldest">
-                    <i class="fa fa-solid fa-arrow-up"></i>
-                </button>
-
-                <button
-                    type="submit"
-                    class="button 
-                    <?php echo $orderBy === "newest" ? "green" : "light"; ?>"
-                    name="order_by"
-                    value="newest">
-                    <i class="fa fa-solid fa-arrow-down"></i>
-                </button>
+                <?php
+                // Include order by buttons partial
+                require_once ROOT . 'views' . DS . 'partials' . DS . '_table_order_by_buttons.php';
+                ?>
 
                 <select name="sort" id="sort" onchange="this.form.submit()">
                     <option value="all" <?php echo addSelectedTag("newest", "sort"); ?>>All</option>
@@ -60,17 +48,11 @@
                     Tickets
                     <?php
                     // Show legend only for admin users
-                    if ($_SESSION["user_role"] === "admin") :
+                    if (trim($_SESSION["user_role"]) === "admin" && ($action !== "handling" && $action !== "my")) {
+                        renderTableLegend("Assigned to me", "Created by me", "Neither yours nor assigned");
+                    }
                     ?>
-                <div class="gap-2 text-sm mb-2 flex items-center bg-purple-100 p-1 px-4 rounded-xl ml-4">
-                    <span class="text-lg">Legend:</span>
-                    <?php $commonLegendStyle = "px-2 p-1 border-black border-2 rounded-full"; ?>
-                    <span class="<?= $commonLegendStyle ?> bg-green-100">Assigned to me</span>
-                    <span class="<?= $commonLegendStyle ?> bg-blue-100">Created by me</span>
-                    <span class="<?= $commonLegendStyle ?> bg-white">Neither yours nor assigned</span>
-                </div>
-            <?php endif; ?>
-            </p>
+                </p>
             </header>
             <div class="card-content">
                 <table>

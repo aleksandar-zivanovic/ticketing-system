@@ -101,7 +101,7 @@ class Ticket extends BaseModel
      * @param string  $action Action type for the listing (e.g., "all", "my", "handling")
      * @param int     $userId The ID of the user whose tickets are to be fetched.
      * @param int     $currentPage The current pagination page.
-     * @param string  $orderBy Order direction: "newest" (default) or "oldest".
+     * @param string  $orderBy Order direction: "ASC" (default) or "DESC".
      * @param ?string $sortBy Column value used for filtering, depends on $table.
      * @param ?string $table Table name for filtering ("statuses", "priorities", "departments", "users").
      * @param ?string $table The table name for sorting, defaults to null if not provided and will look in user table.
@@ -114,7 +114,7 @@ class Ticket extends BaseModel
         string $action,
         int $userId,
         int $currentPage,
-        string $orderBy = "newest",
+        string $orderBy = "ASC",
         ?string $sortBy = null,
         ?string $table = null,
         int $limit = 0,
@@ -189,18 +189,13 @@ class Ticket extends BaseModel
             }
 
             // Adds GROUP BY clause to group results by ticket ID
-            $query .= " GROUP BY t.id";
-
-            // Determines the ordering based on the value of $orderBy
-            $queryOrder = $orderBy === "oldest" ? " ORDER BY t.id ASC" : " ORDER BY t.id DESC";
-            if ($queryOrder) $query .= $queryOrder;
+            $query .= " GROUP BY t.id ORDER BY t.id {$orderBy}";
 
             // Setting limit and offset value
             if ($limit !== 0) {
                 $offset = $currentPage * $limit - $limit;
                 $query .= " LIMIT :limit OFFSET {$offset}";
             }
-
 
             // Prepares and executes the SQL query
             $stmt = $this->getConn()->prepare($query);
@@ -223,17 +218,15 @@ class Ticket extends BaseModel
      * Counts total tickets based on optional filtering criteria.
      * 
      * @param string  $action Action type for the listing (e.g., "all", "my", "handling")
-     * @param int     $userId The ID of the user whose tickets are to be counted.
-     * @param ?string $sortBy Column value used for filtering, depends on $table.
-     * @param ?string $table Table name for filtering ("statuses", "priorities", "departments", "users").
-     * 
+     * @param ?int    $userId The ID of the user whose tickets are to be counted. Optional.
+     * @param ?string $sortBy Column value used for filtering, depends on $table. Optional.
+     * @param ?string $table Table name for filtering ("statuses", "priorities", "departments", "users"). Optional.
      * @return int The total number of tickets matching the specified criteria.
-     * @throws Exception If user doesn't have permission for this action.
      * @throws RuntimeException If a database query fails.
      */
     public function countAllTickets(
         string $action,
-        int $userId,
+        ?int $userId = null,
         ?string $sortBy = null,
         ?string $table = null,
     ): int {
