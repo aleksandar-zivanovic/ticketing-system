@@ -48,7 +48,7 @@ if ($panel === "admin") {
 
     // import session messages
     include_once ROOT . 'views' . DS . 'partials' . DS . '_session_messages.php';
-
+    
     // import table
     require_once ROOT . 'views' . DS . 'partials' . DS . '_ticket_listing_table.php';
 

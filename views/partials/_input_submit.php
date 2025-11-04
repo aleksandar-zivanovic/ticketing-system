@@ -1,1 +1,1 @@
-<input type="submit" name="<?= $name ?>" id="<?= $name ?>" value="<?= $value ?>" class="w-full py-3 px-4 text-sm tracking-wider font-semibold rounded-md <?= $textColor ?> <?= $bgColor ?> <?= $hoverBgColor ?> <?= $otherClasses ?? "" ?> focus:outline-none" <?= $otherAttributes ?? "" ?>>
+<input type="submit" name="<?= $name ?>" id="<?= $name ?>" value="<?= $value ?>" class="w-full py-3 px-4 text-sm tracking-wider font-bold rounded-md <?= $textColor ?> <?= $bgColor ?> <?= $hoverBgColor ?> <?= $otherClasses ?? "" ?> focus:outline-none" <?= $otherAttributes ?? "" ?>>

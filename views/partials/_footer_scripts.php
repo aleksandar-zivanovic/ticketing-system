@@ -24,6 +24,9 @@ if (str_ends_with($currentPage, "index.php") || str_ends_with($currentPage, "/")
     <script type="text/javascript" src="/ticketing-system/public/js/admin-one-chart.js"></script>
 <?php endif; ?>
 
+<!-- Search JavaScript -->
+<script type="text/javascript" src="/ticketing-system/public/js/search.js"></script>
+
 <!-- Material Design Icons (MDI) - Local copy v7.4.47 -->
 <!-- Downloaded from: https://github.com/Templarian/MaterialDesign-Webfont/releases/tag/v7.4.47 -->
 <link rel="stylesheet" href="/ticketing-system/public/css/materialdesignicons.min.css">

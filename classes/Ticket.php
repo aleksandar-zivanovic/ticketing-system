@@ -202,7 +202,6 @@ class Ticket extends BaseModel
 
             // Binds the value of limit to the query if it is greater than 0
             if ($limit !== 0) $stmt->bindValue("limit", $limit, PDO::PARAM_INT);
-            // dd($query);
             $stmt->execute();
 
             // Returns the fetched result set
@@ -490,5 +489,18 @@ class Ticket extends BaseModel
             );
             throw new RuntimeException("Something went wrong. Try again later.");
         }
+    }
+
+    /**
+     * Fetches all tickets matching the specified WHERE clause.
+     * 
+     * @param string $where The WHERE clause to filter tickets.
+     * @return array An array of tickets matching the WHERE clause.
+     * @throws RuntimeException if the query execution fails.
+     * @see BaseModel::getAllWhere()
+     */
+    public function getAllResultsWhere(string $where): array
+    {
+        return $this->getAllWhere("tickets", $where);
     }
 }

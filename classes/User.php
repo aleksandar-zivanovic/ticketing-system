@@ -157,6 +157,19 @@ class User extends BaseModel
     }
 
     /**
+     * Fetches all users from users table that match the given WHERE clause.
+     *
+     * @param string $where MySQL WHERE clause (e.g. "role_id = 1").
+     * @return array An array of associative arrays, each representing a user.
+     * @throws RuntimeException If the database query fails.
+     * @see BaseModel::getAllWhere()
+     */
+    public function getAllResultsWhere(string $where): array
+    {
+        return $this->getAllWhere("users", $where);
+    }
+
+    /**
      * Retrieves the hashed password for a given email address.
      *
      * @param string $email The email address of the user.

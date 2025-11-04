@@ -109,5 +109,8 @@ return [
     "/email-verification.php"        => [
         "handler" => [VerificationController::class, "verifyUser"]
     ],
+    "/search_action.php"           => [
+        "handler" => [SearchController::class, "showResults"]
+    ],
     "/tests/",
 ];

@@ -62,14 +62,8 @@ class UserListingService extends BaseService
                 if ($departmentId === false) {
                     throw new RuntimeException("Invalid department name provided for filtering users.");
                 }
-                // if (!empty($departmentId)) {
-                //     $where = "u.department_id = " . ($departmentId + 1);
-                // } else {
-                //     $where = "u.department_id IS NULL";
-                // }
-
+                
                 $where = "u.department_id " . (!empty($departmentId) ? "= " . ($departmentId + 1) : "IS NULL");
-            // dd($where);
             }
         }
 
