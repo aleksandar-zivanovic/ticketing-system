@@ -42,7 +42,7 @@ if (!empty($split)) {
     include_once ROOT . 'views' . DS . 'partials' . DS . '_session_messages.php';
 
     // import table
-    require_once ROOT . 'views' . DS . 'partials' . DS . '_admin_ticket.php';
+    require_once ROOT . 'views' . DS . 'partials' . DS . '_ticket.php';
 
     // import footer
     include_once ROOT . 'views' . DS . 'partials' . DS . '_footer.php';

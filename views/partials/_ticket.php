@@ -200,9 +200,6 @@
                             otherAttributes: "data-target='ticket-delete-modal'"
                         );
                         ?>
-                        <!-- <button class="button red w-full --jb-modal text-white font-bold" data-target="ticket-delete-modal" type="button">
-                            Delete Ticket
-                        </button> -->
                     </div>
                     <hr>
             <?php

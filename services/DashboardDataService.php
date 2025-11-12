@@ -3,6 +3,7 @@ require_once ROOT . 'services' . DS . 'BaseService.php';
 require_once ROOT . 'services' . DS . 'TicketReferenceService.php';
 require_once ROOT . 'classes' . DS . 'Ticket.php';
 require_once ROOT . 'classes' . DS . 'User.php';
+require_once ROOT . 'classes' . DS . 'Role.php';
 require_once ROOT . 'classes' . DS . 'Year.php';
 require_once ROOT . 'classes' . DS . 'Status.php';
 require_once ROOT . 'classes' . DS . 'Priority.php';
@@ -102,6 +103,11 @@ class DashboardDataService extends BaseService
                 $countHandledTickets           = $handledTicketsCountStatuses["all"];
                 $countHandledInProgressTickets = $handledTicketsCountStatuses["in_progress"];
                 $countHandledSolvedTickets     = $handledTicketsCountStatuses["closed"];
+
+                // Counts users and users per a role
+                $usersAndRolesCount            = $this->countUsersAndRoles();
+                $totalUsers                    = array_sum($usersAndRolesCount);
+                $rolesCount                    = count($usersAndRolesCount);
             }
 
             // Prepare data for dropdown button
@@ -220,6 +226,9 @@ class DashboardDataService extends BaseService
 
         if ($panel === "admin") {
             $returnArray = [
+                "totalUsers" => $totalUsers,
+                "rolesCount" => $rolesCount,
+                "usersAndRolesCount" => $usersAndRolesCount,
                 "countHandledTickets" => $countHandledTickets,
                 "countHandledInProgressTickets" => $countHandledInProgressTickets,
                 "countHandledSolvedTickets" => $countHandledSolvedTickets,
@@ -430,5 +439,23 @@ class DashboardDataService extends BaseService
         }
 
         return $monthsData;
+    }
+
+    /**
+     * Counts users per role.
+     * 
+     * @return array Associative array where keys are role names and values are user counts ordered by role name.
+     * Example:
+     * [
+     *   "Admin" => 5,
+     *   "Moderator"  => 8,
+     *   "User" => 15
+     * ]
+     */
+    public function countUsersAndRoles(): array
+    {
+        $roleModel = new Role();
+        $result = $roleModel->getUsersCountByRole();
+        return array_column($result, "user_count", "role_name");
     }
 }

@@ -57,81 +57,21 @@ require_once ROOT . 'config' . DS . 'features-config.php';
 
             // Average ticket resolution time card
             if ($closedTicketsCount > 0) {
-        ?>
-                <header class="card-header">
-                    <p class="card-header-title text-xl">
-                        Other stats details:
-                    </p>
-                </header>
-                <div class="grid gap-6 grid-cols-1 md:grid-cols-2 m-6 mt-1">
-                    <?php
-                    renderDashboardCard("Average ticket resolution time", $formatedTime, "text-yellow-500", "mdi-timer-check-outline");
-                    ?>
-                    <?php if ($spitTicketsCount > 0 || $reopenedTickets > 0) : ?>
-                        <div class="grid gap-6 grid-cols-1 md:grid-cols-2">
-                            <?php
-                            if ($spitTicketsCount > 0) {
-                                renderDashboardCard("Split", $spitTicketsCount, "text-gray-500", "mdi-table-split-cell");
-                            }
+                require_once ROOT . 'views' . DS . 'partials' . DS . '_dashboard_additional_ticket_statistics_cards.php';
+            }
 
-                            if ($reopenedTickets > 0) {
-                                renderDashboardCard("Reopened", $reopenedTickets, "text-gray-500", "mdi-lock-open-variant-outline");
-                            }
-                            ?>
-                        </div>
-                    <?php endif; ?>
-                </div>
-
-            <?php
-            } // End $closedTicketsCount > 0
+            require_once ROOT . 'views' . DS . 'partials' . DS . '_dashboard_user_statistic_cards.php';
         }
 
         // Avoids rendering tables and chart for no tickets for users
         if ($panel === "admin" || ($panel === "user" && $countAllTickets > 0)) {
-            ?>
 
-            <!-- Dropdown button -->
-            <section class="is-hero-bar">
-                <div class="flex flex-col md:flex-row items-center justify-end space-y-6 md:space-y-0">
-                    <div class="pr-5 text-xl font-medium text-gray-900">
-                        Select year for the chart<?= $panel === "admin" ? "s" : "" ?>:
-                    </div>
-                    <form action="">
-                        <select name="year" id="year_drop_down" class='p-2 text-xl' onchange="this.form.submit()">
-                            <optgroup label="Choose year:">
-                                <?php
-                                foreach ($years as $singleYear) {
-                                    echo "<option value='{$singleYear}' " . addSelectedTag($singleYear, "year") . ">" . $singleYear . "</option>";
-                                }
-                                ?>
-                            </optgroup>
-                        </select>
-                    </form>
-                </div>
-            </section>
+            // Charts section
+            require_once ROOT . 'views' . DS . 'partials' . DS . '_dashboard_charts_section.php';
 
-            <!-- Charts -->
-            <?php
-            $commonChartLabel = $panel === "admin" ? "All tickets chart" : "Your tickets chart";
-            renderChart($commonChartLabel, "line", $chartAllData);
-            if ($panel === "admin") {
-                renderChart("Tickets you are handling", "line", $chartHandledData);
-            }
-            ?>
-            <div class="card has-table grid grid-cols-1 gap-6 lg:grid-cols-2 m-6">
-                <?php
-                if (!empty($chartDepartmentdData["datasets"][0]["data"])) {
-                    renderChart("Tickets per department", TICKETS_PER_DEPARTMENT_CHART_TYPE, $chartDepartmentdData);
-                }
-
-                if (!empty($chartPerAdminData["datasets"][0]["data"])) {
-                    renderChart("Tickets per admin", TICKETS_PER_ADMIN_CHART_TYPE, $chartPerAdminData);
-                }
-                ?>
-            </div>
-
-            <?php if ($countAllTickets > 0) : // Start rendering tables 
-            ?>
+            // Tables section
+            if ($countAllTickets > 0) :
+        ?>
                 <!-- Tables -->
                 <div class="card has-table grid grid-cols-1 gap-6 lg:grid-cols-2 m-6">
                     <?php
@@ -140,7 +80,7 @@ require_once ROOT . 'config' . DS . 'features-config.php';
                         if (!empty($items)) {
                             $pieces = explode(' ', $category);
                             $columnName = array_pop($pieces);
-                            include ROOT . 'views' . DS . 'partials' . DS . '_admin_dashboard_table.php';
+                            include ROOT . 'views' . DS . 'partials' . DS . '_dashboard_table.php';
                         }
                     }
                     ?>

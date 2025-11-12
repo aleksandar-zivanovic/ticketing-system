@@ -165,7 +165,7 @@ function renderDashboardCard(
     string $iconColor,
     string $icon
 ) {
-    include ROOT . 'views' . DS . 'partials' . DS . '_admin_dashboard_card_widget.php';
+    include ROOT . 'views' . DS . 'partials' . DS . '_dashboard_card_widget.php';
 }
 
 function renderDashboardCardsRow(
@@ -207,7 +207,7 @@ function renderDashboardCardsRow(
 function renderChart(string $title, string $type, array $data): void
 {
     $chartId = 'chart_' . uniqid();
-    include ROOT . 'views' . DS . 'partials' . DS . '_admin_dashboard_chart.php';
+    include ROOT . 'views' . DS . 'partials' . DS . '_dashboard_chart.php';
 }
 
 /** 
