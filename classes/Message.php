@@ -167,4 +167,34 @@ class Message extends BaseModel
     {
         $this->deleteRowById("messages", $id);
     }
+
+    /**
+     * Retrieves all messages and related user information where the email_sent flag is not set.
+     * 
+     * @return array An array of messages and related user information where email_sent is 0.
+     * @throws RuntimeException If there is an error during the database operation.
+     */
+    public function getAllMessagesWhereEmailNotSent(): array
+    {
+        try {
+            $sql = "SELECT 
+                    m.*, 
+                    u.name AS user_name, 
+                    u.surname AS user_surname 
+                FROM messages m 
+                LEFT JOIN users u 
+                ON m.user = u.id 
+                WHERE m.email_sent = 0;";
+
+            $stmt = $this->getConn()->prepare($sql);
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (\PDOException $e) {
+            logError(
+                "Message::getAllMessagesWhereEmailNotSent() method error: Failed to retrieve messages.",
+                ['message' => $e->getMessage(), 'code' => $e->getCode()]
+            );
+            throw new RuntimeException("Something went wrong. Try again later!");
+        }
+    }
 }

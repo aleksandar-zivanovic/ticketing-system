@@ -103,15 +103,14 @@ class VerificationController extends BaseController
      */
     public function verifyUser(): void
     {
-        $this->redirectUrl = "/ticketing-system/resend-code.php";
         $validated = $this->validateVerifyRequest();
         $this->handleValidation($validated);
 
         try {
             $this->service->verifyUser($validated["data"]["email"]);
-            redirectAndDie($this->redirectUrl, "Email verified successfully.", "success");
+            redirectAndDie("/ticketing-system/login.php", "Email verified successfully.", "success");
         } catch (\Throwable $th) {
-            redirectAndDie($this->redirectUrl, "Failed to verify email. Please try again later.");
+            redirectAndDie("/ticketing-system/resend-code.php", "Failed to verify email. Please try again later.");
         }
     }
 

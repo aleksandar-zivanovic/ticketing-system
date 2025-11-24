@@ -10,7 +10,7 @@
         </div>
     <?php
         if (!isset($_GET['source']) || strlen($_GET['source']) < 5) {
-            header('Location: /ticketing-system/public/index.php');
+            header('Location: /ticketing-system/index.php');
             die;
         }
 

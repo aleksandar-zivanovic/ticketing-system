@@ -19,7 +19,7 @@ class RegisterController extends BaseController
     protected function redirectLoggedIn(): void
     {
         if (isLoggedIn()) {
-            redirectAndDie("/ticketing-system/public/profile.php?user=" . cleanString($_SESSION["user_id"]), "You are already registered.", "info");
+            redirectAndDie("/ticketing-system/profile.php?user=" . cleanString($_SESSION["user_id"]), "You are already registered.", "info");
         }
     }
 
@@ -111,7 +111,7 @@ class RegisterController extends BaseController
         saveFormValuesToSession(['password', 'rpassword']);
 
         // Set redirect URL in case of failure
-        $this->redirectUrl = "/ticketing-system/public/forms/register.php";
+        $this->redirectUrl = "/ticketing-system/forms/register.php";
 
         $validation = $this->validateRequest();
         $this->handleValidation($validation);

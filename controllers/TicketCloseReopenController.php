@@ -55,7 +55,7 @@ class TicketCloseReopenController extends BaseController
             return ["success" => false, "message" => "Invalid ticket ID.", "url" => "index"];
         }
 
-        $this->redirectUrl = "/ticketing-system/public/admin/view-ticket.php?ticket=" . $data["ticket_id"];
+        $this->redirectUrl = "/ticketing-system/admin/view-ticket.php?ticket=" . $data["ticket_id"];
 
         $data["user_id"] = $this->validateId($_SESSION["user_id"]);
         if ($data["user_id"] === false) {

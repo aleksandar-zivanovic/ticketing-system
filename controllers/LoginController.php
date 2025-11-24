@@ -72,7 +72,7 @@ class LoginController extends BaseController
             session_regenerate_id(true);
 
             // Redirect based on user role
-            $redirectData = fn($role) => ["/ticketing-system/public/{$role}/{$role}-ticket-listing.php", "Login successful.", "success"];
+            $redirectData = fn($role) => ["/ticketing-system/{$role}/{$role}-ticket-listing.php", "Login successful.", "success"];
 
             if (trim($_SESSION['user_role']) === "admin") {
                 redirectAndDie(...$redirectData("admin"));

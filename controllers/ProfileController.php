@@ -101,7 +101,7 @@ class ProfileController extends BaseController
             return ["success" => false, "message" => "Invalid user ID.", "url" => "index"];
         }
         // Creates redirection URL
-        $this->redirectUrl = "/ticketing-system/public/profile.php?user={$IdFromSession}";
+        $this->redirectUrl = "/ticketing-system/profile.php?user={$IdFromSession}";
 
         // Validates profile ID from the form
         if (!$this->hasValue($_POST["profile_id"])) {
@@ -165,6 +165,8 @@ class ProfileController extends BaseController
             $values["password_current"] = trim($_POST["password_current"]);
             $values["password"] = trim($_POST["password_new"]);
             $values["password_confirmation"] = trim($_POST["password_confirmation"]);
+            $values["name"] = cleanString($_SESSION["user_name"]);
+            $values["surname"] = cleanString($_SESSION["user_surname"]);
         }
 
         $values["session_user_id"]   = (int) trim($_SESSION["user_id"]);
@@ -184,13 +186,14 @@ class ProfileController extends BaseController
         // Validates the request and handles post-validation actions
         $validation = $this->validateUpdateRequest();
         $this->handleValidation($validation);
-        $data      = $validation["data"];
-        $loginPage = "/ticketing-system/login.php";
+        $data       = $validation["data"];
+        $loginPage  = "/ticketing-system/login.php";
+        $notificationEmail = $data["emailFromSession"];
         unset($data["emailFromSession"]);
 
         // Calls the service to update the user data
         try {
-            $this->service->update($data);
+            $this->service->update($data, $notificationEmail);
 
             if ($data["action"] === "updatePassword") {
                 $_SESSION = [];

@@ -1,17 +1,15 @@
 <?php
-require_once ROOT . 'helpers/functions.php';
+require_once ROOT . 'helpers' . DS . 'functions.php';
 require_once 'BaseService.php';
-require_once 'EmailService.php';
-require_once ROOT . 'classes/User.php';
+require_once 'UserNotificationsService.php';
+require_once ROOT . 'classes' . DS . 'User.php';
 
 class VerificationService extends BaseService
 {
-    private EmailService $emailService;
     private User $user;
 
     public function __construct()
     {
-        $this->emailService = new EmailService();
         $this->user = new User();
     }
 
@@ -75,38 +73,6 @@ class VerificationService extends BaseService
     }
 
     /**
-     * Build the verification email content.
-     * 
-     * @param string $email The user's email address.
-     * @param string $name The user's first name.
-     * @param string $surname The user's surname.
-     * @param string $verificationCode The generated verification code.
-     * @param string $action The action triggering the email ("resend", "update_email" and "registration").
-     * @return array An associative array containing 'subject', 'body', and 'altBody' keys for the email.
-     */
-    private function buildVerificationEmail(string $email, string $name, string $surname, string $verificationCode, string $action): array
-    {
-        $verificationUrl  = "http://localhost/ticketing-system/email-verification.php";
-        $subject          = 'Verification email';
-
-        if ($action === "resend" || $action === "update_email") {
-            // Creates email message body. You can customize the email body as needed.
-            $body = 'Hello, ' . $name . ' ' . $surname . '!<br> Click on this link:  <a href="' . $verificationUrl . '?email=' . $email . '&verification_code=' . $verificationCode . '">' . $verificationUrl . '?email=' . $email . '&verification_code=' . $verificationCode . '</a></b> to verify your email address.';
-
-            // Creates plain text alternative body for email clients that do not support HTML.
-            $altBody = 'Copy this URL in your broswer navigation bar and click enter to verify your email address: href="' . $verificationUrl . '?email=' . $email . '&verification_code=' . $verificationCode . '">' . $verificationUrl . '?email=' . $email . '&verification_code=' . $verificationCode;
-        } elseif ($action === "registration") {
-            // Creates email message body. You can customize the email body as needed.
-            $body = 'Welcome ' . $name . ' ' . $surname . '!<br> Thank you for registering. Please click on this link:  <a href="' . $verificationUrl . '?email=' . $email . '&verification_code=' . $verificationCode . '">' . $verificationUrl . '?email=' . $email . '&verification_code=' . $verificationCode . '</a></b> to verify your email address and activate your account.';
-
-            // Creates plain text alternative body for email clients that do not support HTML.
-            $altBody = 'Copy this URL in your broswer navigation bar and click enter to verify your email address: href="' . $verificationUrl . '?email=' . $email . '&verification_code=' . $verificationCode . '">' . $verificationUrl . '?email=' . $email . '&verification_code=' . $verificationCode;
-        }
-
-        return ['subject' => $subject, 'body' => $body, 'altBody' => $altBody];
-    }
-
-    /**
      * Send a verification email to the user.
      * 
      * @param string $email The user's email address.
@@ -116,7 +82,7 @@ class VerificationService extends BaseService
      * @return void
      * @throws RuntimeException If the database update fails.
      * @throws Exception If email sending fails.
-     * @see EmailService::sendEmail()
+     * @see UserNotificationsService::sendVerificationEmail()
      * @see User::addVerificationCodeToUser()
      */
     public function sendNow(string $email, string $name, string $surname, string $action): void
@@ -131,11 +97,8 @@ class VerificationService extends BaseService
             $this->user->markAsUnverified($email);
         }
 
-        // Build the email content
-        ['subject' => $subject, 'body' => $body, 'altBody' => $altBody] = $this->buildVerificationEmail($email, $name, $surname, $verificationCode, $action);
-
-        // Sends the email
-        $this->emailService->sendEmail(email: $email, name: $name, surname: $surname, subject: $subject, body: $body, altBody: $altBody);
+        $userNotificationsService = new UserNotificationsService();
+        $userNotificationsService->sendVerificationEmail($email, $name, $surname, $verificationCode, $action);
     }
 
     /**

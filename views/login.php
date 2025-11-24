@@ -2,9 +2,9 @@
 if (isLoggedIn()) {
     // Redirect to user ticket listing if already logged in
     if (trim($_SESSION['user_role']) === "admin") {
-        redirectAndDie("/ticketing-system/public/admin/admin-ticket-listing.php");
+        redirectAndDie("/ticketing-system/admin/admin-ticket-listing.php");
     } else {
-        redirectAndDie("/ticketing-system/public/user/user-ticket-listing.php");
+        redirectAndDie("/ticketing-system/user/user-ticket-listing.php");
     }
 }
 
@@ -57,7 +57,9 @@ require_once ROOT . 'helpers' . DS . 'view_helpers.php';
             <div class="mt-6">
                 <p class="text-gray-800 text-sm text-center">Forgot password? <a href="reset-password.php" class="text-blue-600 font-semibold hover:underline ml-1">Reset password.</a></p>
 
-                <p class="text-gray-800 text-sm mt-2 text-center">Don't have and account? <a href="register.php" class="text-blue-600 font-semibold hover:underline ml-1">Register here.</a></p>
+                <p class="text-gray-800 text-sm mt-2 text-center">Haven't received verification email? <a href="resend-code.php" class="text-blue-600 font-semibold hover:underline ml-1">Resend verification email.</a></p>
+
+                <p class="text-gray-800 text-sm mt-2 text-center">Don't have an account? <a href="register.php" class="text-blue-600 font-semibold hover:underline ml-1">Register here.</a></p>
             </div>
         </form>
     </div>

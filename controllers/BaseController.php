@@ -66,7 +66,7 @@ class BaseController
     {
         if ($validation["success"] === false) {
             if ((isset($validation["url"]) && $validation["url"] === "index") || $this->redirectUrl === null) {
-                redirectAndDie("/ticketing-system/public/index.php", $validation["message"]);
+                redirectAndDie("/ticketing-system/index.php", $validation["message"]);
             } else {
                 redirectAndDie($this->redirectUrl, $validation["message"]);
             }

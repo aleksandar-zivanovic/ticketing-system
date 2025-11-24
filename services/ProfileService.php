@@ -1,7 +1,8 @@
 <?php
 require_once ROOT . 'classes' . DS . 'User.php';
-require_once ROOT . 'services' . DS . 'VerificationService.php';
 require_once ROOT . 'services' . DS . 'BaseService.php';
+require_once ROOT . 'services' . DS . 'VerificationService.php';
+require_once ROOT . 'services' . DS . 'UserNotificationsService.php';
 
 class ProfileService extends BaseService
 {
@@ -170,23 +171,32 @@ class ProfileService extends BaseService
      * Updates the user's profile information or password.
      *
      * @param array $data The data to update, including 'action' key to specify the type of update.
+     * @param string $notificationEmail The email address to send notifications to.
      * @return void
      * @throws \RuntimeException If a request to the database fails.
      * @see User::updateUserRow()
      * @see User::updatePassword()
      * @see VerificationService::sendNow()
      */
-    public function update(array $data): void
+    public function update(array $data, string $notificationEmail): void
     {
-        if ($data["action"] === "updateProfile") {
+        $action = $data["action"];
+        unset($data["action"]);
+
+        if ($action === "updateProfile") {
             // Removes surplus data from $data array for the updateUserRow() method
             unset(
-                $data["action"],
                 $data["session_user_id"],
-                $data["session_user_role"]
+                $data["session_user_role"],
+                $data["notificationEmail"]
             );
 
             $this->user->updateUserRow($data, $data["id"]);
+
+            // Updates session variables
+            $_SESSION["user_name"]    = $data["name"];
+            $_SESSION["user_surname"] = $data["surname"];
+            $_SESSION["user_phone"]   = $data["phone"];
 
             if (isset($data["email"])) {
                 // Initiates the verification service to handle email change verification
@@ -199,10 +209,15 @@ class ProfileService extends BaseService
             }
         }
 
-        if ($data["action"] === "updatePassword") {
+        if ($action === "updatePassword") {
             $hashedPassword = $this->hashPassword($data["password"]);
-            unset($data["action"]);
             $this->user->updatePassword($data["id"], $hashedPassword);
+        }
+
+        // Sends a profile/password update notification email if the email is not being changed
+        if (!isset($data["email"])) {
+            $userNotificationsService = new UserNotificationsService();
+            $userNotificationsService->sendProfileUpdateNotificationEmail($notificationEmail, $data["name"], $data["surname"], $action);
         }
     }
 }
