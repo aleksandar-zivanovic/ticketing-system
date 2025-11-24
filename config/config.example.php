@@ -5,6 +5,9 @@ define("ROOT", realpath(dirname(__FILE__)) . DS . ".." . DS);
 // Set actual application domain (e.g., "google.com").
 define("APP_DOMAIN", "example.com");
 
+// Administrator email address for receiving critical notifications (e.g. "admin@example.com").
+define('ADMIN_EMAIL', 'admin@example.com');
+
 // Set highest ticket priority level.
 // Set this to a priority level that exists in your database.
 define("HIGHEST_PRIORITY", "your_highest_priority_value");

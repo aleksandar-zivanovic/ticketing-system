@@ -91,4 +91,35 @@ class UserNotificationsService extends BaseService
         // Sends the email
         $this->emailService->sendEmail(email: $email, name: $name, surname: $surname, subject: $subject, body: $body, altBody: $altBody);
     }
+
+    /**
+     * Sends an old email change notification to the user's previous email address.
+     * 
+     * @param string $oldEmail The user's old email address.
+     * @param string $newEmail The user's new email address.
+     * @param string $name The user's first name.
+     * @param string $surname The user's surname.
+     * @return void
+     * @throws Exception If email sending fails.
+     * @see EmailService::sendEmail()
+     */
+    public function sendOldEmailChangeNotification(string $oldEmail, string $newEmail, string $name, string $surname): void
+    {
+        $subject = 'Email Change Notification';
+        $siteUrl = "http://localhost/ticketing-system/";
+        $rollbackLink = "http://localhost/ticketing-system/rollback_email_change.php?email={$oldEmail}";
+
+        // Build the email content
+        $body    = require_once ROOT . 'EmailTemplates' . DS . 'old_email_change_notification.php';
+  
+        // Plain text alternative body
+        $altBody =
+            "Hello {$name} {$surname},\n" .
+            "This is to inform you that your email address has been changed from {$oldEmail} to {$newEmail}.\n" .
+            "If you did not make this change, please contact our support team immediately.\n" .
+            "Visit our site: {$siteUrl}";
+
+        // Sends the email
+        $this->emailService->sendEmail(email: $oldEmail, name: $name, surname: $surname, subject: $subject, body: $body, altBody: $altBody);
+    }
 }

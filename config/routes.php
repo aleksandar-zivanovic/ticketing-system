@@ -1,10 +1,10 @@
 <?php
 
 return [
-    // "/index.php"                   => [
-    //     "handler" => [HomeController::class, "show"],
-    //     "params"  => ["home.php"]
-    // ],
+    "/index.php"                   => [
+        "handler" => [HomeController::class, "show"],
+        "params"  => ["home.php"]
+    ],
     "/admin-ticket-listing"         => [
         "handler" => [TicketListingController::class, "show"],
         "params"  => ["admin", "all", "admin-ticket-listing.php"]
@@ -113,9 +113,4 @@ return [
         "handler" => [SearchController::class, "showResults"]
     ],
     "/tests/",
-    "../EmailTemplates/test.php",
-    "/"                   => [
-        "handler" => [HomeController::class, "show"],
-        "params"  => ["home.php"]
-    ],
 ];

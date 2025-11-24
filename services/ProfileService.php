@@ -182,6 +182,7 @@ class ProfileService extends BaseService
     {
         $action = $data["action"];
         unset($data["action"]);
+        $userNotificationsService = new UserNotificationsService();
 
         if ($action === "updateProfile") {
             // Removes surplus data from $data array for the updateUserRow() method
@@ -201,11 +202,13 @@ class ProfileService extends BaseService
             if (isset($data["email"])) {
                 // Initiates the verification service to handle email change verification
                 $verificationService = new VerificationService();
+                
                 // Sends verification email to the new email address
                 $verificationService->sendNow($data["email"], $data["name"], $data["surname"], "update_email");
-                // DONE: send confirmation code to new email address
-                // TODO: send notification email to old email address
-                // TODO: make email_change_requests table
+
+                // Sends notification email to the old email address about the email change
+                $userNotificationsService->sendOldEmailChangeNotification($notificationEmail, $data["email"], $data["name"], $data["surname"]);
+                // TODO: make roll back system
             }
         }
 
@@ -216,7 +219,6 @@ class ProfileService extends BaseService
 
         // Sends a profile/password update notification email if the email is not being changed
         if (!isset($data["email"])) {
-            $userNotificationsService = new UserNotificationsService();
             $userNotificationsService->sendProfileUpdateNotificationEmail($notificationEmail, $data["name"], $data["surname"], $action);
         }
     }
