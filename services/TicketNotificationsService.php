@@ -29,6 +29,8 @@ class TicketNotificationsService extends BaseService
     public function createTicketNotification(string $email, string $name, string $surname, string $title, string $description, int $ticketId): void
     {
         $subject = "Create Ticket Notification";
+        $linkUrl  = $this->siteUrl . "user/user-view-ticket.php?ticket=" . $ticketId;
+        $linkText = "Click Here to View Your Ticket:";
 
         // Build the email content
         $body    = require_once ROOT . 'EmailTemplates' . DS . 'create_ticket_notification_email.php';
@@ -63,19 +65,18 @@ class TicketNotificationsService extends BaseService
      */
     public function takeTicketNotification(string $email, string $name, string $surname, string $title, int $ticketId): void
     {
-        // Implementation for taking ticket notification email
-        // Email se salje kreatoru tikeata
-
-        $subject = "Your ticket is assigned to an administrator";
+        $subject  = "Your ticket is assigned to an administrator";
+        $linkUrl  = $this->siteUrl . "user/user-view-ticket.php?ticket=" . $ticketId;
+        $linkText = "Click Here to View Your Ticket:";
 
         // Build the email content
-        $body    = require_once ROOT . 'EmailTemplates' . DS . 'take_ticket_notification_email.php';
+        $body     = require_once ROOT . 'EmailTemplates' . DS . 'take_ticket_notification_email.php';
 
         // Plain text alternative body
-        $altBody =
+        $altBody  =
             "Hello {$name} {$surname},\n" .
             "Your ticket \"{$title}\" with ID {$ticketId} is assigned to an administrator.\n\n" .
-            "You can view the ticket here: {$this->siteUrl}user/user-view-ticket.php?ticket={$ticketId}\n\n" .
+            "You can view the ticket here: {$linkUrl}\n\n" .
             "Best regards,\n" .
             "The Ticketing System Team";
 
@@ -86,7 +87,6 @@ class TicketNotificationsService extends BaseService
     {
         // Implementation for updating ticket notification email
         // Email se salje kreatoru tikeata
-        // - take a ticket
         // - reopen ticket
         // - close ticket
         // - split ticket

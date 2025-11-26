@@ -35,15 +35,16 @@ class UserNotificationsService extends BaseService
         string $verificationCode,
         string $action
     ): void {
-        $verificationUrl  = $this->siteUrl . "email-verification.php";
-        $subject          = 'Verification email';
+        $linkUrl  = $this->siteUrl . "email-verification.php?email=" . $email . "&verification_code=" . $verificationCode;
+        $linkText = "Click Here to Verify Your Email";
+        $subject  = 'Verification email';
 
-        $body = require_once ROOT . 'EmailTemplates' . DS . 'verification_code_email.php';
+        $body     = require_once ROOT . 'EmailTemplates' . DS . 'verification_code_email.php';
 
-        $altBody =
+        $altBody  =
             "Hello {$name} {$surname},\n" .
             "Copy the URL below into your browser's address bar and press Enter to verify your email address:\n" .
-            "{$verificationUrl}?email={$email}&verification_code={$verificationCode}";
+            "{$linkUrl}";
 
         // Sends the email
         $this->emailService->sendEmail(email: $email, name: $name, surname: $surname, subject: $subject, body: $body, altBody: $altBody);
@@ -74,6 +75,8 @@ class UserNotificationsService extends BaseService
         }
 
         $subject = ucfirst($change) . " Update Notification";
+        $linkUrl  = $this->siteUrl . "profile.php?user=58";
+        $linkText = "Click Here to Visit Your Profile";
 
         // Build the email content
         $body    = require_once ROOT . 'EmailTemplates' . DS . 'profile_update_notification_email.php';
@@ -83,7 +86,9 @@ class UserNotificationsService extends BaseService
             "Hello {$name} {$surname},\n" .
             "This is to inform you that your {$change} has been successfully updated.\n" .
             "If you did not make this change, please contact our support team immediately.\n" .
-            "Visit our site: {$this->siteUrl}";
+            "Visit our site: {$this->siteUrl}\n\n" .
+            "Best regards,\n" .
+            "The Ticketing System Team";
 
         // Sends the email
         $this->emailService->sendEmail(email: $email, name: $name, surname: $surname, subject: $subject, body: $body, altBody: $altBody);
@@ -102,18 +107,19 @@ class UserNotificationsService extends BaseService
      */
     public function sendOldEmailChangeNotification(string $oldEmail, string $newEmail, string $name, string $surname): void
     {
-        $subject = 'Email Change Notification';
-        $rollbackLink = $this->siteUrl . "rollback_email_change.php?email={$oldEmail}";
+        $subject  = "Email Change Notification";
+        $linkUrl  = $this->siteUrl . "rollback_email_change.php?email={$oldEmail}";
+        $linkText = "Click Here to Cancel the Change";
 
         // Build the email content
-        $body    = require_once ROOT . 'EmailTemplates' . DS . 'old_email_change_notification.php';
+        $body     = require_once ROOT . 'EmailTemplates' . DS . 'old_email_change_notification.php';
 
         // Plain text alternative body
-        $altBody =
+        $altBody  =
             "Hello {$name} {$surname},\n" .
             "This is to inform you that your email address has been changed from {$oldEmail} to {$newEmail}.\n" .
             "If you did not make this change, please contact our support team immediately.\n" .
-            "Visit our site: {$this->siteUrl}";
+            "or click the following link to cancel the change: {$linkUrl}";
 
         // Sends the email
         $this->emailService->sendEmail(email: $oldEmail, name: $name, surname: $surname, subject: $subject, body: $body, altBody: $altBody);
