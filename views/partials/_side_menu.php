@@ -78,8 +78,8 @@
         title: "<strong>Contact</strong>",
         icon: "info",
         html: `
-        <span class="mdi mdi-cellphone-check"></span> 012 3456789</br>
-        <span class="mdi mdi-email"></span> example@example.com</br>
+        <span class="mdi mdi-cellphone-check"></span> 012 3456789<br>
+        <span class="mdi mdi-email"></span> example@example.com<br>
   `,
         showCloseButton: true,
       });

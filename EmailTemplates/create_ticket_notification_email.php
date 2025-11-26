@@ -11,12 +11,12 @@ $html = "
 
 <body style='background-color:grey;'>
     <table align='center' border='0' cellpadding='0' cellspacing='0'
-        width='550' bgcolor='white' style='border:2px solid black'>
+        width='100%' bgcolor='white' style='border:2px solid black'>
         <tbody>
             <tr>
                 <td align='center'>
                     <table align='center' border='0' cellpadding='0'
-                        cellspacing='0' class='col-550' width='550'>
+                        cellspacing='0' class='col-550' width='100%'>
                         <tbody>
                             <tr>
                                 <td align='center' style='background-color: rgba(31,41,55,1);
@@ -43,9 +43,9 @@ $html = "
 
                     <h2 style='text-align: left;
                         align-items: center;'>
-                        Email Change Notification
+                        {$subject}
                     </h2>
-                    <p class='data'
+                    <div class='data'
                         style='text-align: justify-all;
                         align-items: center; 
                         font-size: 15px;
@@ -53,12 +53,20 @@ $html = "
                         <span style='font-weight: 400; display:inline-block; margin-bottom:10px;'>
                             Dear {$name} {$surname},
                         </span><br>
-                        We received a request to change the email address for your account in our application. <br>
-                        The new email address that was requested is: <strong>{$newEmail}</strong>.<br>
-                        If you initiated this change, no further action is required.<br>
-                        If you <strong>did not</strong> request this change, please contact the administrator immediately at <strong>" . ADMIN_EMAIL . "</strong> or click the following link to cancel the change:
+
+                        <p>Your ticket has been created in the system.</p>
+
+                        <strong>Ticket ID:</strong> 
+                        <p style='font-style: italic;'>{$ticketId}</p>
+                        <strong>Title:</strong> 
+                        <p style='font-style: italic;'>{$title}</p>
+                        <strong>Description:</strong> 
+                        <p style='font-style: italic;'>{$description}</p>
+
+                        You can view the ticket here:
+                        
                         <p>
-                            <a href='{$rollbackLink}'
+                            <a href='{$siteUrl}user/user-view-ticket.php?ticket={$ticketId}'
                                 style='display: inline-block; 
                                     text-decoration: none; 
                                     color: white; 
@@ -68,13 +76,13 @@ $html = "
                                     font-weight: bold;
                                     background-color: rgb(37, 99, 235, 1);
                                     text-align: center;'>
-                                Click Here to Cancel Email Change
+                                Click Here to View Your Ticket
                             </a>
                         </p>
 
-                        Thank you,
+                        Thank you,<br>
                         The Ticketing System Team
-                    </p>
+                    </div>
                 </td>
             </tr>
         </tbody>

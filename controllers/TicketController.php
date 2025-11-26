@@ -170,9 +170,14 @@ class TicketController extends BaseController
         $validation = $this->validateCreateRequest();
         $this->handleValidation($validation);
 
+        $emailDetails = $this->getCurrentUserForEmail();
+        $email   = $emailDetails["email"];
+        $name    = $emailDetails["name"];
+        $surname = $emailDetails["surname"];
+
         // Create ticket
         try {
-            $ticketId = $this->service->createTicket(data: $validation["data"], split: false, ticketAttachments: null);
+            $ticketId = $this->service->createTicket(data: $validation["data"], email: $email, name: $name, surname: $surname, ticketAttachments: null, split: false);
             redirectAndDie(
                 "/ticketing-system/user/user-view-ticket.php?ticket={$ticketId}",
                 "New ticket created with ID: {$ticketId}",

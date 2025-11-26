@@ -117,4 +117,18 @@ class BaseController
         }
         return ["success" => true];
     }
+
+    /**
+     * Retrieves the current user's email, name, and surname from the session for email purposes.
+     * 
+     * @return array An associative array containing 'email', 'name', and 'surname' of the current user.
+     */
+    protected function getCurrentUserForEmail(): array
+    {
+        return [
+            'email'   => cleanString($_SESSION['user_email']) ?? '',
+            'name'    => cleanString($_SESSION['user_name']) ?? '',
+            'surname' => cleanString($_SESSION['user_surname']) ?? ''
+        ];
+    }
 }

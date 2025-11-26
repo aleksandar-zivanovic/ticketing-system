@@ -2,6 +2,7 @@
 require_once ROOT . 'classes' . DS . 'Ticket.php';
 require_once ROOT . 'classes' . DS . 'User.php';
 require_once ROOT . 'services' . DS . 'BaseService.php';
+require_once ROOT . 'services' . DS . 'TicketNotificationsService.php';
 require_once ROOT . 'services' . DS . 'TicketShowService.php';
 
 class TicketService extends BaseService
@@ -9,6 +10,7 @@ class TicketService extends BaseService
     private Ticket $ticketModel;
     private User $userModel;
     private TicketShowService $ticketShowService;
+    private TicketNotificationsService $notificationsService;
     private array|false $ticketDetails;
 
     public function __construct()
@@ -16,6 +18,7 @@ class TicketService extends BaseService
         $this->ticketModel = new Ticket();
         $this->userModel = new User();
         $this->ticketShowService = new TicketShowService();
+        $this->notificationsService = new TicketNotificationsService();
     }
 
     public function validateShowCreate($data): array
@@ -237,7 +240,12 @@ class TicketService extends BaseService
      * Creates a ticket using the Ticket class.
      * 
      * @param array $data Associative array containing ticket data.
-     * @param ?callable $onTicketCreated Callback function to receive the new ticket ID.
+     * @param string $email The email of the user creating the ticket.
+     * @param string $name The first name of the user creating the ticket.
+     * @param string $surname The last name of the user creating the ticket.
+     * @param ?array $ticketAttachments Formatted array of attachments for multiple tickets, null a single ticket. Default is null.
+     * @param bool $split Indicates if the ticket is part of a split operation. Default is false.
+     * @param ?int $parentId The ID of the parent ticket if this ticket is a child ticket. Default is null.
      * @return int Returns the ID of the newly created ticket.
      * 
      * @throws RuntimeException If the query execution fails.
@@ -246,12 +254,14 @@ class TicketService extends BaseService
      * @see Ticket::createTicket()
      * @see Attachment::processImages()
      */
-    // {
     public function createTicket(
-        ?array $data,
+        array $data,
+        string $email,
+        string $name,
+        string $surname,
         ?array $ticketAttachments = null,
         bool $split = false,
-        ?int $parentId = null,
+        ?int $parentId = null
     ): int {
         if (!isset($attachment)) {
             require_once ROOT . 'classes' . DS . 'Attachment.php';
@@ -267,6 +277,9 @@ class TicketService extends BaseService
 
         // Proccesses files if they are attached in form:
         $this->processAttachments($lastInsertId, $split, $ticketAttachments, $attachment, $parentId);
+
+        // Sends notification email about ticket creation
+        $this->notificationsService->createTicketNotification($email, $name, $surname, $data['title'], $data['description'], $lastInsertId);
 
         return $lastInsertId;
     }
