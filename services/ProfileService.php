@@ -21,12 +21,12 @@ class ProfileService extends BaseService
             if ($data["session_user_role"] !== "admin") {
                 // Admins can see other users' profiles
                 logError("tried to view or update user ID: {$data["id"]} profile by the user {$_SESSION['user_email']} with IP: " . getIp());
-                return ["success" => false, "message" => "Can't view or update other user's profile.", "url" => "index"];
+                return ["success" => false, "message" => "Can't view or update other user's profile.", "url" => "error"];
             }
 
             // Admins cannot see other admins' profiles
             if ($theUser["role_id"] === USER_ROLES["admin"]) {
-                return ["success" => false, "message" => "Can't view or update other admin's profile.", "url" => "index"];
+                return ["success" => false, "message" => "Can't view or update other admin's profile.", "url" => "error"];
             }
         }
         return ["success" => true];

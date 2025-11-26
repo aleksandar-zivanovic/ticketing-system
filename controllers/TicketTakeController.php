@@ -21,23 +21,23 @@ class TicketTakeController extends BaseController
     {
         // Check request method
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            return ["success" => false, "message" => "Invalid request method.", "url" => "index"];
+            return ["success" => false, "message" => "Invalid request method.", "url" => "error"];
         }
 
         // Check action
         if (!isset($_POST["take_ticket"]) || $_POST["take_ticket"] !== "Take the Ticket") {
-            return ["success" => false, "message" => "Invalid action.", "url" => "index"];
+            return ["success" => false, "message" => "Invalid action.", "url" => "error"];
         }
 
         // Validate the presence of the ticket ID
         if (!$this->hasValue($_POST["ticket_id"])) {
-            return ["success" => false, "message" => "Ticket ID is required.", "url" => "index"];
+            return ["success" => false, "message" => "Ticket ID is required.", "url" => "error"];
         }
 
         // Sanitize and validate the ticket ID
         $data["ticket_id"] = $this->validateId($_POST["ticket_id"]);
         if ($data["ticket_id"] === false) {
-            return ["success" => false, "message" => "Invalid ticket ID.", "url" => "index"];
+            return ["success" => false, "message" => "Invalid ticket ID.", "url" => "error"];
         }
 
         $this->redirectUrl = "/ticketing-system/admin/view-ticket.php?ticket=" . $data["ticket_id"];

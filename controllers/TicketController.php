@@ -26,18 +26,18 @@ class TicketController extends BaseController
             !isset($_POST['user_action']) ||
             $_POST['user_action'] !== "Create Ticket"
         ) {
-            return ["success" => false, "message" => "Invalid request method or user action.", "url" => "index"];
+            return ["success" => false, "message" => "Invalid request method or user action.", "url" => "error"];
         }
 
         // Validates existence of the URL from the form input.
         if ($this->hasValue($_POST["error_page"]) === false) {
-            return ["success" => false, "message" => "Error page URL is missing.", "url" => "index"];
+            return ["success" => false, "message" => "Error page URL is missing.", "url" => "error"];
         }
 
         // Validates and sanitizes URL
         $values["url"] = $this->validateUrl($_POST["error_page"]);
         if ($values["url"] === false) {
-            return ["success" => false, "message" => "Invalid error page URL.", "url" => "index"];
+            return ["success" => false, "message" => "Invalid error page URL.", "url" => "error"];
         }
 
         // Validates and sanitizes title
@@ -94,7 +94,7 @@ class TicketController extends BaseController
 
         $source = $this->validateUrl(trim(($_GET["source"])));
         if ($source === false) {
-            return ["success" => false, "message" => "Invalid source URL.", "url" => "index"];
+            return ["success" => false, "message" => "Invalid source URL.", "url" => "error"];
         }
 
         return $this->service->validateShowCreate(["source" => $source]);
@@ -116,24 +116,24 @@ class TicketController extends BaseController
             !isset($_POST['delete_ticket']) ||
             $_POST['delete_ticket'] !== "Delete Ticket"
         ) {
-            return ["success" => false, "message" => "Invalid request method or user action.", "url" => "index"];
+            return ["success" => false, "message" => "Invalid request method or user action.", "url" => "error"];
         }
 
         // Validates existence of ticket ID from the form input.
         if (!isset($_POST["ticket_id"]) || empty($_POST["ticket_id"])) {
-            return ["success" => false, "message" => "Ticket ID is missing.", "url" => "index"];
+            return ["success" => false, "message" => "Ticket ID is missing.", "url" => "error"];
         }
 
         // Validates and sanitizes ticket ID
         $data["ticket_id"] = $this->validateId($_POST["ticket_id"]);
         if ($data["ticket_id"] === false) {
-            return ["success" => false, "message" => "Invalid ticket ID.", "url" => "index"];
+            return ["success" => false, "message" => "Invalid ticket ID.", "url" => "error"];
         }
 
         // Validates and sanitizes user ID from session
         $data["user_id"] = $this->validateId($_SESSION["user_id"]);
         if ($data["user_id"] === false) {
-            return ["success" => false, "message" => "Invalid user.", "url" => "index"];
+            return ["success" => false, "message" => "Invalid user.", "url" => "error"];
         }
 
         // Fetches ticket creator ID to determine redirection URL after deletion
@@ -141,7 +141,7 @@ class TicketController extends BaseController
 
         // If ticket does not exist
         if ($creatorId === false) {
-            return ["success" => false, "message" => "Ticket not found.", "url" => "index"];
+            return ["success" => false, "message" => "Ticket not found.", "url" => "error"];
         }
 
         // Sets redirection URL based on whether the user is the ticket creator or an admin

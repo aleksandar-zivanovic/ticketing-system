@@ -22,13 +22,13 @@ class TicketSplitController extends BaseController
             !isset($_POST['user_action']) ||
             $_POST['user_action'] !== "Split Ticket"
         ) {
-            return ["success" => false, "message" => "Invalid request method or user action.", "url" => "index"];
+            return ["success" => false, "message" => "Invalid request method or user action.", "url" => "error"];
         }
 
         // Validate and set errorTicketId
         $values["error_ticket_id"] = $this->validateId($_POST["error_ticket_id"]);
         if ($values["error_ticket_id"] === false) {
-            return ["success" => false, "message" => "Ticket ID is invalid.", "url" => "index"];
+            return ["success" => false, "message" => "Ticket ID is invalid.", "url" => "error"];
         }
 
         // Sets redirection url for error handling

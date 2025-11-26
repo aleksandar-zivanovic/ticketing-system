@@ -22,12 +22,12 @@ class TicketCloseReopenController extends BaseController
     {
         // Validates that the request method is POST.
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            return ["success" => false, "message" => "Invalid request method.", "url" => "index"];
+            return ["success" => false, "message" => "Invalid request method.", "url" => "error"];
         }
 
         // Validates that either "close_ticket" or "reopen_ticket" is set in POST data.
         if (!isset($_POST["close_ticket"]) && !isset($_POST["reopen_ticket"])) {
-            return ["success" => false, "message" => "No action specified.", "url" => "index"];
+            return ["success" => false, "message" => "No action specified.", "url" => "error"];
         }
 
         // Determines the action based on which button was pressed.
@@ -42,24 +42,24 @@ class TicketCloseReopenController extends BaseController
         }
 
         if ($data["action"] === null) {
-            return ["success" => false, "message" => "Invalid action.", "url" => "index"];
+            return ["success" => false, "message" => "Invalid action.", "url" => "error"];
         }
 
         // Validates and sanitizes the ticket ID.
         if (!isset($_POST["ticket_id"]) || empty($_POST["ticket_id"])) {
-            return ["success" => false, "message" => "Missing ticket ID.", "url" => "index"];
+            return ["success" => false, "message" => "Missing ticket ID.", "url" => "error"];
         }
 
         $data["ticket_id"] = $this->validateId($_POST["ticket_id"]);
         if ($data["ticket_id"] === false) {
-            return ["success" => false, "message" => "Invalid ticket ID.", "url" => "index"];
+            return ["success" => false, "message" => "Invalid ticket ID.", "url" => "error"];
         }
 
         $this->redirectUrl = "/ticketing-system/admin/view-ticket.php?ticket=" . $data["ticket_id"];
 
         $data["user_id"] = $this->validateId($_SESSION["user_id"]);
         if ($data["user_id"] === false) {
-            return ["success" => false, "message" => "Invalid user ID from session.", "url" => "index"];
+            return ["success" => false, "message" => "Invalid user ID from session.", "url" => "error"];
         }
 
         if ($data["action"] === "close") {

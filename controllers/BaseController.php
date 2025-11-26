@@ -65,8 +65,8 @@ class BaseController
     protected function handleValidation(array $validation): void
     {
         if ($validation["success"] === false) {
-            if ((isset($validation["url"]) && $validation["url"] === "index") || $this->redirectUrl === null) {
-                redirectAndDie("/ticketing-system/index.php", $validation["message"]);
+            if ((isset($validation["url"]) && $validation["url"] === "error") || $this->redirectUrl === null) {
+                redirectAndDie(ERROR_PAGE, $validation["message"]);
             } else {
                 redirectAndDie($this->redirectUrl, $validation["message"]);
             }
@@ -105,7 +105,7 @@ class BaseController
         } elseif ($method === "GET") {
             $data = $_GET;
         } else {
-            return ["success" => false, "message" => "Unsupported request method.", "url" => "index"];
+            return ["success" => false, "message" => "Unsupported request method.", "url" => "error"];
         }
 
         if (
@@ -113,7 +113,7 @@ class BaseController
             empty($data[$methodParam]) ||
             ($method === "POST" && $data[$methodParam] !== $expectedValue)
         ) {
-            return ["success" => false, "message" => "Invalid request method or user action.", "url" => "index"];
+            return ["success" => false, "message" => "Invalid request method or user action.", "url" => "error"];
         }
         return ["success" => true];
     }

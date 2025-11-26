@@ -69,7 +69,7 @@ class BaseService
     {
         $theUser = $userModel->getAllWhere("users", "id = {$data['id']}")[0];
         if (empty($theUser)) {
-            return ["success" => false, "message" => "User not found.", "url" => "index"];
+            return ["success" => false, "message" => "User not found.", "url" => "error"];
         }
 
         return [

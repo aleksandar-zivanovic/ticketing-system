@@ -28,7 +28,7 @@ class ProfileController extends BaseController
         // Validates user ID from $_GET
         $data["id"] = $this->validateId($_GET["user"]);
         if ($data["id"] === false) {
-            return ["success" => false, "message" => "Invalid user ID.", "url" => "index"];
+            return ["success" => false, "message" => "Invalid user ID.", "url" => "error"];
         }
 
         $data["session_user_id"]   = (int) trim($_SESSION["user_id"]);
@@ -70,7 +70,7 @@ class ProfileController extends BaseController
     {
         // Validates request method
         if ($_SERVER["REQUEST_METHOD"] !== "POST") {
-            return ["success" => false, "message" => "Invalid request method.", "url" => "index"];
+            return ["success" => false, "message" => "Invalid request method.", "url" => "error"];
         }
 
         // Validates if action $_POST keys are set correctly
@@ -78,17 +78,17 @@ class ProfileController extends BaseController
             !isset($_POST["update_profile"]) && !isset($_POST["update_pwd"]) ||
             isset($_POST["update_profile"]) && isset($_POST["update_pwd"])
         ) {
-            return ["success" => false, "message" => "Invalid action submission.", "url" => "index"];
+            return ["success" => false, "message" => "Invalid action submission.", "url" => "error"];
         }
 
         // Validates update profile action from the form
         if (isset($_POST["update_profile"]) && trim($_POST["update_profile"]) !== "updateProfile") {
-            return ["success" => false, "message" => "Invalid profile update submission.", "url" => "index"];
+            return ["success" => false, "message" => "Invalid profile update submission.", "url" => "error"];
         }
 
         // Validates update password action from the form
         if (isset($_POST["update_pwd"]) && trim($_POST["update_pwd"]) !== "updatePassword") {
-            return ["success" => false, "message" => "Invalid password update submission.", "url" => "index"];
+            return ["success" => false, "message" => "Invalid password update submission.", "url" => "error"];
         }
 
         // Determines action type
@@ -98,7 +98,7 @@ class ProfileController extends BaseController
         // Validates user ID from session
         $IdFromSession = $this->validateId($_SESSION["user_id"]);
         if ($IdFromSession === false) {
-            return ["success" => false, "message" => "Invalid user ID.", "url" => "index"];
+            return ["success" => false, "message" => "Invalid user ID.", "url" => "error"];
         }
         // Creates redirection URL
         $this->redirectUrl = "/ticketing-system/profile.php?user={$IdFromSession}";

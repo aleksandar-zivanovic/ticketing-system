@@ -44,3 +44,11 @@ define("TICKET_STATUSES", [
 // Session refresh interval in seconds.
 // Defines how often user session data is revalidated against the database.
 define('SESSION_REFRESH_INTERVAL', 300); // 5 minutes
+
+/*
+ * Error page configuration
+ * 
+ * This constant defines the path to the error page used in the application.
+ * It allows for easy modification of the error page location if needed.
+ */
+define('ERROR_PAGE', 'error.php');

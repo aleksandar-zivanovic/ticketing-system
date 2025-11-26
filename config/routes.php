@@ -2,8 +2,12 @@
 
 return [
     "/index.php"                   => [
-        "handler" => [HomeController::class, "show"],
+        "handler" => [PageController::class, "show"],
         "params"  => ["home.php"]
+    ],
+    "/error.php"                   => [
+        "handler" => [PageController::class, "show"],
+        "params"  => ["error.php"]
     ],
     "/admin-ticket-listing"         => [
         "handler" => [TicketListingController::class, "show"],
