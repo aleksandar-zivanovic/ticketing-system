@@ -10,13 +10,12 @@
         </div>
     <?php
         if (!isset($_GET['source']) || strlen($_GET['source']) < 5) {
-            header('Location: /ticketing-system/index.php');
-            die;
+            redirectAndDie("index.php", "Invalid source URL for ticket creation.");
         }
 
         require_once '_session_messages.php';
 
-        // cleaning soruce error page URL
+        // cleans source error page URL
         $sourceUrl = cleanString(filter_input(INPUT_GET, "source", FILTER_SANITIZE_URL));
     endif;
 
