@@ -64,7 +64,7 @@ class TicketTakeController extends BaseController
         $this->handleValidation($validation);
 
         try {
-            $this->service->takeTicket($validation["data"]["ticket_id"], $validation["data"]["admin_id"]);
+            $this->service->takeTicket($validation["data"]["ticket_id"], $validation["data"]["admin_id"], $validation["data"]["creator_id"], $validation["data"]["title"]);
             redirectAndDie(
                 $this->redirectUrl,
                 "The ticket ID:{$validation["data"]["ticket_id"]} is assigned to you!",

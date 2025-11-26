@@ -22,7 +22,7 @@ $html = "
                                 <td align='center' style='background-color: rgba(31,41,55,1);
                                            height: 50px;'>
 
-                                    <a href='{$siteUrl}' style='text-decoration: none;'>
+                                    <a href='{$this->siteUrl}' style='text-decoration: none;'>
                                         <p style='color:white;
                                                   font-weight:bold;'>
                                             Ticketing System

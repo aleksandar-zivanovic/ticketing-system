@@ -1,15 +1,18 @@
 <?php
 require_once ROOT . 'classes' . DS . 'Ticket.php';
+require_once ROOT . 'services' . DS . 'TicketNotificationsService.php';
 
 class TicketTakeService
 {
     private Ticket $ticketModel;
     private User $userModel;
+    private TicketNotificationsService $notificationService;
 
     public function __construct()
     {
         $this->ticketModel = new Ticket();
         $this->userModel   = new User();
+        $this->notificationService = new TicketNotificationsService();
     }
 
     /**
@@ -58,7 +61,22 @@ class TicketTakeService
             return ["success" => false, "message" => "Ticket creator mismatch."];
         }
 
+        $data["title"] = $theTicket["title"];
+
         return ["success" => true, "data" => $data];
+    }
+
+    /**
+     * Retrieves user details by user ID.
+     *
+     * @param int $userID The ID of the user.
+     * @return array An associative array containing user details.
+     * @throws RuntimeException If database request failed.
+     * @see User::getUserById() for fetching user details.
+     */
+    private function getUserDetails(int $userID): array
+    {
+        return $this->userModel->getUserById($userID);
     }
 
     /**
@@ -66,11 +84,21 @@ class TicketTakeService
      *
      * @param int $ticketID The ID of the ticket to be taken.
      * @param int $adminID The ID of the admin user taking the ticket.
+     * @param int $creatorID The ID of the ticket creator.
+     * @param string $title The title of the ticket.
      * @throws RuntimeException If the ticket assignment fails.
+     * @return void
+     * @see User::getUserById() for fetching user details.
      * @see Ticket::takeTicket() for updating the ticket assignment in the database.
      */
-    public function takeTicket(int $ticketID, int $adminID): void
+    public function takeTicket(int $ticketID, int $adminID, int $creatorID, string $title): void
     {
+        // Fetch the ticket creator details
+        $creator = $this->getUserDetails($creatorID);
+
         $this->ticketModel->takeTicket($ticketID, $adminID);
+
+        // Send notification email to the ticket creator
+        $this->notificationService->takeTicketNotification($creator["email"], $creator["name"], $creator["surname"], $title, $ticketID);
     }
 }

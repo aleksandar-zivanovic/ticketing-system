@@ -8,6 +8,7 @@ class UserNotificationsService extends BaseService
     // +verifikacioni emailovi, promena podataka od strane korisnika i promena role od strane administratora
 
     private EmailService $emailService;
+    private $siteUrl = "http://localhost/ticketing-system/";
 
     public function __construct()
     {
@@ -34,11 +35,8 @@ class UserNotificationsService extends BaseService
         string $verificationCode,
         string $action
     ): void {
-        $verificationUrl  = "http://localhost/ticketing-system/email-verification.php";
+        $verificationUrl  = $this->siteUrl . "email-verification.php";
         $subject          = 'Verification email';
-
-        // // Build the email content
-        // ['subject' => $subject, 'body' => $body, 'altBody' => $altBody] = $this->buildVerificationEmail($email, $name, $surname, $verificationCode, $action);
 
         $body = require_once ROOT . 'EmailTemplates' . DS . 'verification_code_email.php';
 
@@ -76,7 +74,6 @@ class UserNotificationsService extends BaseService
         }
 
         $subject = ucfirst($change) . " Update Notification";
-        $siteUrl = "http://localhost/ticketing-system/";
 
         // Build the email content
         $body    = require_once ROOT . 'EmailTemplates' . DS . 'profile_update_notification_email.php';
@@ -86,7 +83,7 @@ class UserNotificationsService extends BaseService
             "Hello {$name} {$surname},\n" .
             "This is to inform you that your {$change} has been successfully updated.\n" .
             "If you did not make this change, please contact our support team immediately.\n" .
-            "Visit our site: {$siteUrl}";
+            "Visit our site: {$this->siteUrl}";
 
         // Sends the email
         $this->emailService->sendEmail(email: $email, name: $name, surname: $surname, subject: $subject, body: $body, altBody: $altBody);
@@ -106,18 +103,17 @@ class UserNotificationsService extends BaseService
     public function sendOldEmailChangeNotification(string $oldEmail, string $newEmail, string $name, string $surname): void
     {
         $subject = 'Email Change Notification';
-        $siteUrl = "http://localhost/ticketing-system/";
-        $rollbackLink = "http://localhost/ticketing-system/rollback_email_change.php?email={$oldEmail}";
+        $rollbackLink = $this->siteUrl . "rollback_email_change.php?email={$oldEmail}";
 
         // Build the email content
         $body    = require_once ROOT . 'EmailTemplates' . DS . 'old_email_change_notification.php';
-  
+
         // Plain text alternative body
         $altBody =
             "Hello {$name} {$surname},\n" .
             "This is to inform you that your email address has been changed from {$oldEmail} to {$newEmail}.\n" .
             "If you did not make this change, please contact our support team immediately.\n" .
-            "Visit our site: {$siteUrl}";
+            "Visit our site: {$this->siteUrl}";
 
         // Sends the email
         $this->emailService->sendEmail(email: $oldEmail, name: $name, surname: $surname, subject: $subject, body: $body, altBody: $altBody);
