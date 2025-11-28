@@ -40,7 +40,7 @@ class TicketTakeController extends BaseController
             return ["success" => false, "message" => "Invalid ticket ID.", "url" => "error"];
         }
 
-        $this->redirectUrl = "/ticketing-system/admin/view-ticket.php?ticket=" . $data["ticket_id"];
+        $this->redirectUrl = BASE_URL . "admin/view-ticket.php?ticket=" . $data["ticket_id"];
 
         // Validate and sanitize the current user ID
         $data["admin_id"] = $this->validateId(cleanString($_SESSION["user_id"]));

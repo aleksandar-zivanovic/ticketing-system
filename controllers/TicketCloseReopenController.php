@@ -55,7 +55,7 @@ class TicketCloseReopenController extends BaseController
             return ["success" => false, "message" => "Invalid ticket ID.", "url" => "error"];
         }
 
-        $this->redirectUrl = "/ticketing-system/admin/view-ticket.php?ticket=" . $data["ticket_id"];
+        $this->redirectUrl = BASE_URL . "admin/view-ticket.php?ticket=" . $data["ticket_id"];
 
         $data["user_id"] = $this->validateId($_SESSION["user_id"]);
         if ($data["user_id"] === false) {
@@ -84,11 +84,19 @@ class TicketCloseReopenController extends BaseController
         // Validates the request and handles any validation errors.
         $validated = $this->validateRequest();
         $this->handleValidation($validated);
+        $data = [
+            "ticket_id"  => $validated["data"]["ticket_id"],
+            "action"     => $validated["data"]["action"],
+            "creator_id" => $validated["data"]["creator_id"],
+            "title"      => $validated["data"]["title"],
+        ];
 
-        // Executes the action.
+        // Prepares success message.
         $successfulAction = $validated["data"]["action"] === "close" ? "closed" : "reopened";
+
+        // Attempts to close or reopen the ticket.
         try {
-            $this->service->closeReopenTicket($validated["data"]["ticket_id"], $validated["data"]["action"]);
+            $this->service->closeReopenTicket($data);
             redirectAndDie($this->redirectUrl, "Ticket successfully {$successfulAction}.", "success");
         } catch (\Throwable $th) {
             redirectAndDie($this->redirectUrl, "Failed to {$validated['data']['action']} the ticket.");

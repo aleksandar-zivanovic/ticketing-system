@@ -6,9 +6,9 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Registration page</title>
-    <link rel="stylesheet" href="/ticketing-system/public/css/form.css">
-    <link rel="stylesheet" href="/ticketing-system/public/css/font-awesome.min.css">
-    <link rel="stylesheet" href="/ticketing-system/public/css/tailwind-output.css">
+    <link rel="stylesheet" href="<?= BASE_URL ?>public/css/form.css">
+    <link rel="stylesheet" href="<?= BASE_URL ?>public/css/font-awesome.min.css">
+    <link rel="stylesheet" href="<?= BASE_URL ?>public/css/tailwind-output.css">
 </head>
 
 <body>
@@ -21,7 +21,7 @@
 
         <?php require_once ROOT . 'views' . DS . 'partials' . DS . '_session_messages.php'; ?>
 
-        <form action="/ticketing-system/register_action.php" method="POST">
+        <form action="<?= BASE_URL ?>register_action.php" method="POST">
             <div class="grid sm:grid-cols-2 gap-8">
 
                 <?php
@@ -56,7 +56,7 @@
                 renderingButton('user_action', 'Register');
                 ?>
             </div>
-            <p class="text-gray-800 text-sm mt-6 text-center">Already have an account? <a href="/ticketing-system/login.php" class="text-blue-600 font-semibold hover:underline ml-1">Login here</a></p>
+            <p class="text-gray-800 text-sm mt-6 text-center">Already have an account? <a href="<?= BASE_URL ?>login.php" class="text-blue-600 font-semibold hover:underline ml-1">Login here</a></p>
         </form>
     </div>
 </body>

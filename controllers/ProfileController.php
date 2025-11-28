@@ -101,7 +101,7 @@ class ProfileController extends BaseController
             return ["success" => false, "message" => "Invalid user ID.", "url" => "error"];
         }
         // Creates redirection URL
-        $this->redirectUrl = "/ticketing-system/profile.php?user={$IdFromSession}";
+        $this->redirectUrl = BASE_URL . "profile.php?user={$IdFromSession}";
 
         // Validates profile ID from the form
         if (!$this->hasValue($_POST["profile_id"])) {
@@ -187,7 +187,7 @@ class ProfileController extends BaseController
         $validation = $this->validateUpdateRequest();
         $this->handleValidation($validation);
         $data       = $validation["data"];
-        $loginPage  = "/ticketing-system/login.php";
+        $loginPage  = BASE_URL . "login.php";
         $notificationEmail = $data["emailFromSession"];
         unset($data["emailFromSession"]);
 

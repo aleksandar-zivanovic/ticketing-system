@@ -2,6 +2,9 @@
 const DS = DIRECTORY_SEPARATOR;
 define("ROOT", realpath(dirname(__FILE__)) . DS . ".." . DS);
 
+// Configure the application base URL (e.g., "https://google.com/").
+define('BASE_URL', 'https://example.com/');
+
 // Set actual application domain (e.g., "google.com").
 define("APP_DOMAIN", "example.com");
 

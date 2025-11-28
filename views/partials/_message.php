@@ -51,7 +51,7 @@ foreach ($allMessages as $message):
             $attachments = explode(',', $message['file']);
 
             foreach ($attachments as $attachment) {
-                $attachmentUrl = '/ticketing-system/public/img/ticket_images/' . $attachment;
+                $attachmentUrl = BASE_URL . 'public/img/ticket_images/' . $attachment;
         ?>
                 <a class="m-2 inline-block" href='<?= $attachmentUrl ?>' target="_blank"><img width='150' src='<?= $attachmentUrl ?>' /></a>
 

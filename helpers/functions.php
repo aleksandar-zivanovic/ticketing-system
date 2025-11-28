@@ -204,7 +204,7 @@ function verifyUserFromSession(): void
 {
     $theUser = getUserFromSession();
     if ($theUser === null) {
-        logout("/ticketing-system/login.php");
+        logout(BASE_URL . "login.php");
     }
 }
 
@@ -228,7 +228,7 @@ function refreshSessionIfNeeded(): void
         $theUser = getUserFromSession();
 
         if (empty($theUser) || (int) $_SESSION["session_version"] !== $theUser["session_version"]) {
-            logout("/ticketing-system/login.php");
+            logout(BASE_URL . "login.php");
         }
 
         $_SESSION['last_check']      = time();
@@ -251,7 +251,7 @@ function refreshSessionIfNeeded(): void
 function requireLogin(): void
 {
     if (!isLoggedIn()) {
-        logout("/ticketing-system/login.php");
+        logout(BASE_URL . "login.php");
     }
 
     verifyUserFromSession();

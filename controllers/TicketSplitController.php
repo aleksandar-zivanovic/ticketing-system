@@ -32,7 +32,7 @@ class TicketSplitController extends BaseController
         }
 
         // Sets redirection url for error handling
-        $this->redirectUrl = "/ticketing-system/admin/split-ticket.php?ticket=" . $values["error_ticket_id"];
+        $this->redirectUrl = BASE_URL . "admin/split-ticket.php?ticket=" . $values["error_ticket_id"];
 
         // Validate form data
         // Gets titles from the form
@@ -124,7 +124,7 @@ class TicketSplitController extends BaseController
         try {
             $this->ticketSplitService->splitTicket($validation["data"]);
             redirectAndDie(
-                "/ticketing-system/admin/admin-ticket-listing.php",
+                BASE_URL . "admin/admin-ticket-listing.php",
                 "The ticket is split successfully.",
                 "success"
             );

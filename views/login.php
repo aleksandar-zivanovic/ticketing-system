@@ -2,9 +2,9 @@
 if (isLoggedIn()) {
     // Redirect to user ticket listing if already logged in
     if (trim($_SESSION['user_role']) === "admin") {
-        redirectAndDie("/ticketing-system/admin/admin-ticket-listing.php");
+        redirectAndDie(BASE_URL . "admin/admin-ticket-listing.php");
     } else {
-        redirectAndDie("/ticketing-system/user/user-ticket-listing.php");
+        redirectAndDie(BASE_URL . "user/user-ticket-listing.php");
     }
 }
 ?>
@@ -17,9 +17,9 @@ if (isLoggedIn()) {
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login page</title>
-    <link rel="stylesheet" href="/ticketing-system/public/css/form.css">
-    <link rel="stylesheet" href="/ticketing-system/public/css/font-awesome.min.css">
-    <link rel="stylesheet" href="/ticketing-system/public/css/tailwind-output.css">
+    <link rel="stylesheet" href="<?= BASE_URL ?>public/css/form.css">
+    <link rel="stylesheet" href="<?= BASE_URL ?>public/css/font-awesome.min.css">
+    <link rel="stylesheet" href="<?= BASE_URL ?>public/css/tailwind-output.css">
 </head>
 
 <body>
@@ -35,7 +35,7 @@ if (isLoggedIn()) {
         include_once ROOT . 'views' . DS . 'partials' . DS . '_session_messages.php';
         ?>
 
-        <form action="/ticketing-system/public/actions/login_action.php" method="POST">
+        <form action="<?= BASE_URL ?>login_action.php" method="POST">
             <div class="grid gap-8">
                 <?php
                 // email field

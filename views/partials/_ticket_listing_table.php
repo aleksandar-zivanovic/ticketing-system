@@ -97,8 +97,8 @@
                                     Link formation is left in the view for performance reasons,
                                     to avoid adding an extra foreach in the controller
                                     -->
-                                    <a href="/ticketing-system/<?= $panel === "admin" ? "admin/view-ticket" :
-                                                                    "user/user-view-ticket" ?>.php?ticket=<?= $ticket["id"] ?>">
+                                    <a href="<?= BASE_URL ?><?= $panel === "admin" ? "admin/view-ticket" :
+                                                                "user/user-view-ticket" ?>.php?ticket=<?= $ticket["id"] ?>">
                                         <?php
                                         echo strlen($ticket['title']) > 25 ? substr($ticket['title'], 0, 22) . "..." : $ticket['title'];
                                         ?>

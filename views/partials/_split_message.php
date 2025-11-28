@@ -5,7 +5,7 @@ if (!empty($parent)) {
 
 if (!empty($child)) {
     $infoMessage = "Ticket is created during splitting ticket:";
-    $infoUrl     = '<a href="/ticketing-system/user/user-view-ticket.php?ticket=' . $parentTicket[0]["id"] . '" class="font-bold text-blue-600 hover:text-blue-700" target="_blank">' . ucfirst($parentTicket[0]["title"]) . '</a>';
+    $infoUrl     = '<a href="' . BASE_URL . 'user/user-view-ticket.php?ticket=' . $parentTicket[0]["id"] . '" class="font-bold text-blue-600 hover:text-blue-700" target="_blank">' . ucfirst($parentTicket[0]["title"]) . '</a>';
 }
 
 $stringLenght = strlen($infoMessage);
@@ -27,7 +27,7 @@ $hyphens      = str_repeat("-", $stringLenght + ceil($stringLenght / 10));
             foreach ($childrenTickets as $ticket) :
             ?>
                 <li>
-                    <a href="/ticketing-system/user/user-view-ticket.php?ticket=<?= $ticket["id"] ?>" class="font-bold text-blue-600 hover:text-blue-700" target="_blank"><?= ucfirst($ticket["title"]) ?></a>
+                    <a href="<?= BASE_URL ?>user/user-view-ticket.php?ticket=<?= $ticket["id"] ?>" class="font-bold text-blue-600 hover:text-blue-700" target="_blank"><?= ucfirst($ticket["title"]) ?></a>
                 </li>
             <?php
             endforeach;

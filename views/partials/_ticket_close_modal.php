@@ -6,7 +6,7 @@
     </header>
     <section class="modal-card-body">
       <div class="p-8">
-        <form method="POST" action="/ticketing-system/public/actions/ticket_close_action.php">
+        <form method="POST" action="<?= BASE_URL ?>public/actions/ticket_close_action.php">
           <input type="hidden" name="ticket_id" value=<?= $theTicket['id'] ?>>
           <label for="closingSelect" class="w-full block py-2">
             Choose a ticket closing reason

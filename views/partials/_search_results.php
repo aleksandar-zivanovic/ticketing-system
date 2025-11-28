@@ -62,7 +62,7 @@
                                     Link formation is left in the view for performance reasons,
                                     to avoid adding an extra foreach in the controller
                                     -->
-                                    <a href="/ticketing-system/admin/view-ticket.php?ticket=<?= $result["id"] ?>">
+                                    <a href="<?= BASE_URL ?>admin/view-ticket.php?ticket=<?= $result["id"] ?>">
                                         <?php
                                         echo strlen($result['title']) > 25 ? substr($result['title'], 0, 22) . "..." : $result['title'];
                                         ?>
@@ -70,7 +70,7 @@
                                 </td>
 
                                 <td data-label="Body" title="<?= $result['body']; ?>">
-                                    <a href="/ticketing-system/admin/view-ticket.php?ticket=<?= $result["id"] ?>">
+                                    <a href="<?= BASE_URL ?>admin/view-ticket.php?ticket=<?= $result["id"] ?>">
                                         <?php
                                         echo strlen($result['body']) > 50 ? substr($result['body'], 0, 47) . "..." : $result['body'];
                                         ?>
@@ -131,7 +131,7 @@
 
                                 <td data-label="Name & Surname">
                                     <span class="px-1 p-1">
-                                        <a href="/ticketing-system/profile.php?user=<?= $result['id'] ?>" target="_blank" class="hover:underline hover:text-blue-600">
+                                        <a href="<?= BASE_URL ?>profile.php?user=<?= $result['id'] ?>" target="_blank" class="hover:underline hover:text-blue-600">
                                             <?= $result['name'] . " " . $result['surname']; ?>
                                         </a>
                                     </span>
@@ -150,7 +150,7 @@
                                 <td data-label="Department"><?= $result["department_name"]; ?></td>
 
                                 <td data-label="Tickets">
-                                        <a href="/ticketing-system/admin/user-tickets-list?user=<?= $result['id'] ?>" target="_blank" class="button small blue">View tickets</a>
+                                        <a href="<?= BASE_URL ?>admin/user-tickets-list?user=<?= $result['id'] ?>" target="_blank" class="button small blue">View tickets</a>
                                 </td>
                             </tr>
 

@@ -29,7 +29,7 @@ class UserListingController extends BaseController
             // Show the user listing view
             $this->render("users_listing.php", $data);
         } catch (\Throwable $th) {
-            redirectAndDie("/ticketing-system/index.php", $th->getMessage() . " | " . $th->getFile() . " | " . $th->getLine(), "fail");
+            redirectAndDie(BASE_URL . " error.php", $th->getMessage() . " | " . $th->getFile() . " | " . $th->getLine(), "fail");
         }
     }
 }

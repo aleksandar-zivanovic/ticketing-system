@@ -2,7 +2,7 @@
     <div class="flex flex-col md:flex-row items-center justify-between space-y-6 md:space-y-0">
         <h1 class="title">Users listing | <span class="text-gray-500 font-thin">Total: <?= $userCount ?></span></h1>
         <div class="flex flex-col md:flex-row items-center justify-between space-y-6 md:space-y-0">
-            <form action="http://localhost/ticketing-system/admin/users-listing">
+            <form action="<?= BASE_URL ?>admin/users-listing">
                 <?php
                 // Include order by buttons partial
                 require_once ROOT . 'views' . DS . 'partials' . DS . '_table_order_by_buttons.php';
@@ -75,7 +75,7 @@
 
                                 <td data-label="Name & Surname">
                                     <span class="px-1 p-1">
-                                        <a href="/ticketing-system/profile.php?user=<?= $user['id'] ?>" target="_blank" class="hover:underline hover:text-blue-600">
+                                        <a href="<?= BASE_URL ?>profile.php?user=<?= $user['id'] ?>" target="_blank" class="hover:underline hover:text-blue-600">
                                             <?= $user['name'] . " " . $user['surname']; ?>
                                         </a>
                                     </span>
@@ -95,7 +95,7 @@
 
                                 <td data-label="Tickets">
                                     <?php if ($user["tickets_count"] > 0) : ?>
-                                        <a href="/ticketing-system/admin/user-tickets-list?user=<?= $user['id'] ?>" target="_blank" class="button small blue">View tickets</a>
+                                        <a href="<?= BASE_URL ?>admin/user-tickets-list?user=<?= $user['id'] ?>" target="_blank" class="button small blue">View tickets</a>
                                     <?php else : ?>
                                         <i>No tickets</i>
                                     <?php endif; ?>

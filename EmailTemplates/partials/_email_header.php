@@ -18,12 +18,10 @@ $html = "
                         cellspacing='0' class='col-550' width='100%'>
                         <tbody>
                             <tr>
-                                <td align='center' style='background-color: rgba(31,41,55,1);
-                                           height: 50px;'>
+                                <td align='center' style='background-color: rgba(31,41,55,1); height: 50px;'>
 
-                                    <a href='{$this->siteUrl}' style='text-decoration: none;'>
-                                        <p style='color:white;
-                                                  font-weight:bold;'>
+                                    <a href='" . BASE_URL . "' style='text-decoration: none;'>
+                                        <p style='color:white; font-weight:bold;'>
                                             Ticketing System
                                         </p>
                                     </a>
@@ -40,8 +38,7 @@ $html = "
                     border-bottom: 2px solid #361B0E;
                     background-color: white;'>
 
-                    <h2 style='text-align: left;
-                        align-items: center;'>
+                    <h2 style='text-align: left; align-items: center;'>
                         {$subject}
                     </h2>
                     <div class='data'

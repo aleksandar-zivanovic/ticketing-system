@@ -5,22 +5,8 @@ if (!empty($split)) {
   $page = "Split " . $page;
 }
 
+include_once ROOT . 'views' . DS . 'partials' . DS . '_head.php';
 ?>
-
-<!DOCTYPE html>
-<html lang="en" class="">
-
-<head>
-  <meta charset="utf-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title><?= !empty($split) ? "Split $page" :  $page ?></title>
-
-  <!-- Tailwind is included -->
-  <link rel="stylesheet" href="/ticketing-system/public/css/admin-one-main.css">
-  <link rel="stylesheet" href="/ticketing-system/public/css/font-awesome.min.css">
-  <link rel="stylesheet" href="/ticketing-system/public/css/tailwind-output.css">
-</head>
 
 <body>
 

@@ -21,7 +21,7 @@ class VerificationController extends BaseController
      */
     public function validateResendRequest(): array
     {
-        $this->redirectUrl = "/ticketing-system/resend-code.php";
+        $this->redirectUrl = BASE_URL . "resend-code.php";
 
         if (
             $_SERVER['REQUEST_METHOD'] !== "POST" ||
@@ -108,9 +108,9 @@ class VerificationController extends BaseController
 
         try {
             $this->service->verifyUser($validated["data"]["email"]);
-            redirectAndDie("/ticketing-system/login.php", "Email verified successfully.", "success");
+            redirectAndDie(BASE_URL . "login.php", "Email verified successfully.", "success");
         } catch (\Throwable $th) {
-            redirectAndDie("/ticketing-system/resend-code.php", "Failed to verify email. Please try again later.");
+            redirectAndDie(BASE_URL . "resend-code.php", "Failed to verify email. Please try again later.");
         }
     }
 

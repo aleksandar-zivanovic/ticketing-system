@@ -27,7 +27,7 @@ class TicketShowController extends BaseController
 
     public function show(string $view, array|string $data = []): void
     {
-        $this->redirectUrl = "/ticketing-system/admin/admin-ticket-listing.php";
+        $this->redirectUrl = BASE_URL . "admin/admin-ticket-listing.php";
         $validation = $this->validateRequest();
 
         $validation["data"]["panel"] = $data;

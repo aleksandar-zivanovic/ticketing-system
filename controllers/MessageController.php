@@ -162,8 +162,8 @@ class MessageController extends BaseController
 
         $this->redirectUrl =
             $validation["created_by"] == trim($_SESSION["user_id"]) ?
-            "/ticketing-system/user/user-view-ticket.php?ticket=" . $validation["ticket_id"] :
-            "/ticketing-system/admin/view-ticket.php?ticket=" . $validation["ticket_id"];
+            BASE_URL . "user/user-view-ticket.php?ticket=" . $validation["ticket_id"] :
+            BASE_URL . "admin/view-ticket.php?ticket=" . $validation["ticket_id"];
 
         $this->handleValidation($validation);
 

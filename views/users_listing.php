@@ -1,23 +1,13 @@
-<!DOCTYPE html>
-
-<head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title><?= $page = "Users Listing" ?></title>
-
-    <!-- Tailwind is included -->
-    <link rel="stylesheet" href="/ticketing-system/public/css/tailwind-output.css">
-    <link rel="stylesheet" href="/ticketing-system/public/css/admin-one-main.css">
-    <link rel="stylesheet" href="/ticketing-system/public/css/font-awesome.min.css">
-</head>
+<?php
+$page = "Users Listing";
+$panel = "admin";
+include_once ROOT . 'views' . DS . 'partials' . DS . '_head.php';
+?>
 
 <body>
     <div id="app">
 
         <?php
-        $panel = "admin";
-
         // import header navigation bar
         include_once ROOT . 'views' . DS . 'partials' . DS . '_navigation_bar.php';
 

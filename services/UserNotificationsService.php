@@ -4,11 +4,7 @@ require_once 'EmailService.php';
 
 class UserNotificationsService extends BaseService
 {
-    // This class can be expanded with methods to handle user notifications
-    // +verifikacioni emailovi, promena podataka od strane korisnika i promena role od strane administratora
-
     private EmailService $emailService;
-    private $siteUrl = "http://localhost/ticketing-system/";
 
     public function __construct()
     {
@@ -35,7 +31,7 @@ class UserNotificationsService extends BaseService
         string $verificationCode,
         string $action
     ): void {
-        $linkUrl  = $this->siteUrl . "email-verification.php?email=" . $email . "&verification_code=" . $verificationCode;
+        $linkUrl  = BASE_URL . "email-verification.php?email=" . $email . "&verification_code=" . $verificationCode;
         $linkText = "Click Here to Verify Your Email";
         $subject  = 'Verification email';
 
@@ -75,7 +71,7 @@ class UserNotificationsService extends BaseService
         }
 
         $subject = ucfirst($change) . " Update Notification";
-        $linkUrl  = $this->siteUrl . "profile.php?user=58";
+        $linkUrl  = BASE_URL . "profile.php?user=58";
         $linkText = "Click Here to Visit Your Profile";
 
         // Build the email content
@@ -86,7 +82,7 @@ class UserNotificationsService extends BaseService
             "Hello {$name} {$surname},\n" .
             "This is to inform you that your {$change} has been successfully updated.\n" .
             "If you did not make this change, please contact our support team immediately.\n" .
-            "Visit our site: {$this->siteUrl}\n\n" .
+            "Visit our site: " . BASE_URL . "\n\n" .
             "Best regards,\n" .
             "The Ticketing System Team";
 
@@ -108,7 +104,7 @@ class UserNotificationsService extends BaseService
     public function sendOldEmailChangeNotification(string $oldEmail, string $newEmail, string $name, string $surname): void
     {
         $subject  = "Email Change Notification";
-        $linkUrl  = $this->siteUrl . "rollback_email_change.php?email={$oldEmail}";
+        $linkUrl  = BASE_URL . "rollback_email_change.php?email={$oldEmail}";
         $linkText = "Click Here to Cancel the Change";
 
         // Build the email content

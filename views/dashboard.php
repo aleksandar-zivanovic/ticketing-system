@@ -1,25 +1,7 @@
 <?php
 require_once ROOT . 'config' . DS . 'features-config.php';
+require_once ROOT . 'views' . DS . 'partials' . DS . '_head.php';
 ?>
-
-<!DOCTYPE html>
-<html lang="en" class="">
-
-<head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title><?= $page ?></title>
-
-    <link rel="stylesheet" href="/ticketing-system/public/css/admin-one-main.css">
-    <!-- Tailwind is included -->
-    <link rel="stylesheet" href="/ticketing-system/public/css/tailwind-output.css">
-    <link rel="stylesheet" href="/ticketing-system/public/css/font-awesome.min.css">
-    <!-- Chart.js-->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
-
-</head>
 
 <body>
     <div id="app">

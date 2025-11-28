@@ -6,9 +6,9 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Resend Verification Code</title>
-    <link rel="stylesheet" href="/ticketing-system/public/css/form.css">
-    <link rel="stylesheet" href="/ticketing-system/public/css/font-awesome.min.css">
-    <link rel="stylesheet" href="/ticketing-system/public/css/tailwind-output.css">
+    <link rel="stylesheet" href="<?= BASE_URL ?>public/css/form.css">
+    <link rel="stylesheet" href="<?= BASE_URL ?>public/css/font-awesome.min.css">
+    <link rel="stylesheet" href="<?= BASE_URL ?>public/css/tailwind-output.css">
 </head>
 
 <body>

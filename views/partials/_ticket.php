@@ -66,7 +66,7 @@
                     value: "Split Ticket",
                     bgColor: "bg-blue-600",
                     type: "link",
-                    link: "/ticketing-system/admin/split-ticket.php?ticket=" . $theTicket['id']
+                    link: BASE_URL . "admin/split-ticket.php?ticket=" . $theTicket['id']
                 );
                 echo "</div>";
             }
@@ -79,7 +79,7 @@
                 $_SESSION["user_id"] !== $theTicket["created_by"]
             ) :
             ?>
-                <form class="p-8" method="POST" action="/ticketing-system/take_ticket_action.php">
+                <form class="p-8" method="POST" action="<?= BASE_URL ?>take_ticket_action.php">
                     <input type="hidden" name="ticket_id" value=<?= $theTicket["id"] ?>>
                     <input type="hidden" name="creator_id" value=<?= $theTicket["created_by"] ?>>
                     <div class="field grouped">
@@ -130,7 +130,7 @@
 
                     foreach ($attachments as $attachment) {
                 ?>
-                        <a class="m-2 inline-block" href='/ticketing-system/public/img/ticket_images/<?= $attachment ?>' target="_blank"><img width='150' src='/ticketing-system/public/img/ticket_images/<?= $attachment ?>' /></a>
+                        <a class="m-2 inline-block" href='<?= BASE_URL ?>public/img/ticket_images/<?= $attachment ?>' target="_blank"><img width='150' src='<?= BASE_URL ?>public/img/ticket_images/<?= $attachment ?>' /></a>
 
                 <?php
                     } // closing foreach
@@ -152,7 +152,7 @@
                     $hasChildren === false
                 ) :
 
-                    $actionLink = "/ticketing-system/public/actions/ticket_" . ($theTicket['status_name'] === "closed" ? "reopen" : "close") . "_action.php";
+                    $actionLink = BASE_URL . "ticket_" . ($theTicket['status_name'] === "closed" ? "reopen" : "close") . "_action.php";
             ?>
                     <form class="p-8" method="POST" action="<?= $actionLink ?>">
                         <input type="hidden" name="ticket_id" value=<?= $theTicket['id'] ?>>

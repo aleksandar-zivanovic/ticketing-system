@@ -103,7 +103,7 @@ class TicketController extends BaseController
     public function show(): void
     {
         $validation = $this->validateCreateShowRequest();
-        $this->redirectUrl = "/ticketing-system/create_ticket.php?{$validation["data"]["source"]}";
+        $this->redirectUrl = BASE_URL . "create-ticket.php?{$validation["data"]["source"]}";
         $this->handleValidation($validation);
         $this->render("create_ticket.php", $validation["data"]);
     }
@@ -149,7 +149,7 @@ class TicketController extends BaseController
             "user/user-view-ticket.php?ticket=" :
             "admin/view-ticket.php?ticket=";
 
-        $this->redirectUrl = "/ticketing-system/" . $redirectUrlSegment . $data["ticket_id"];
+        $this->redirectUrl = BASE_URL . $redirectUrlSegment . $data["ticket_id"];
 
         return $this->service->validateDelete($data);
     }
@@ -179,13 +179,13 @@ class TicketController extends BaseController
         try {
             $ticketId = $this->service->createTicket(data: $validation["data"], email: $email, name: $name, surname: $surname, ticketAttachments: null, split: false);
             redirectAndDie(
-                "/ticketing-system/user/user-view-ticket.php?ticket={$ticketId}",
+                BASE_URL . "user/user-view-ticket.php?ticket={$ticketId}",
                 "New ticket created with ID: {$ticketId}",
                 "success"
             );
         } catch (\Throwable $th) {
             redirectAndDie(
-                "/ticketing-system/forms/create_ticket.php?source=" . $validation["url"],
+                BASE_URL . "create-ticket.php?source=" . $validation["url"],
                 "Ticket creation failed. Please try again."
             );
         }
@@ -206,9 +206,9 @@ class TicketController extends BaseController
         try {
             $this->service->deleteTicket();
             if (str_contains($this->redirectUrl, "user-view-ticket.php")) {
-                $this->redirectUrl = "/ticketing-system/user/user-ticket-listing.php";
+                $this->redirectUrl = BASE_URL . "user/user-ticket-listing.php";
             } else {
-                $this->redirectUrl = "/ticketing-system/admin/admin-ticket-listing.php";
+                $this->redirectUrl = BASE_URL . "admin/admin-ticket-listing.php";
             }
             redirectAndDie(
                 $this->redirectUrl,

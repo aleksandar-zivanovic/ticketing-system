@@ -1,21 +1,9 @@
 <?php
 $panel = "profile";
 $page  = "Profile page";
+
+include_once ROOT . 'views' . DS . 'partials' . DS . '_head.php';
 ?>
-<!DOCTYPE html>
-<html lang="en" class="">
-
-<head>
-  <meta charset="utf-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title><?= $page ?></title>
-
-  <!-- Tailwind is included -->
-  <link rel="stylesheet" href="/ticketing-system/public/css/tailwind-output.css">
-  <link rel="stylesheet" href="/ticketing-system/public/css/admin-one-main.css">
-  <link rel="stylesheet" href="/ticketing-system/public/css/font-awesome.min.css">
-</head>
 
 <body>
 
@@ -54,7 +42,7 @@ $page  = "Profile page";
             </p>
           </header>
           <div class="card-content">
-            <form method="POST" action="/ticketing-system/public/actions/profile_update_action.php">
+            <form method="POST" action="<?= BASE_URL ?>public/actions/profile_update_action.php">
               <!-- <div class="field">
                 <label class="label">Avatar</label>
                 <div class="field-body">
@@ -191,7 +179,7 @@ $page  = "Profile page";
             </p>
           </header>
           <div class="card-content">
-            <form method="POST" action="/ticketing-system/public/actions/profile_update_action.php">
+            <form method="POST" action="<?= BASE_URL ?>public/actions/profile_update_action.php">
               <div class="field">
                 <label class="label">Current password</label>
                 <div class="control">

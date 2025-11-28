@@ -1,17 +1,7 @@
-<?php $page = "Edit message"; ?>
-<!DOCTYPE html>
-<html lang="en" class="">
-
-<head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title><?= $page ?></title>
-
-    <!-- Tailwind is included -->
-    <link rel="stylesheet" href="/ticketing-system/public/css/admin-one-main.css">
-
-</head>
+<?php
+$page = "Edit message";
+include_once ROOT . 'views' . DS . 'partials' . DS . '_head.php';
+?>
 
 <body>
 
@@ -31,7 +21,7 @@
         <section class="section main-section">
             <div class="card mb-6">
                 <div class="card-content">
-                    <form id="editMessageForm" method="POST" action="/ticketing-system/message_action.php" enctype="multipart/form-data">
+                    <form id="editMessageForm" method="POST" action="<?= BASE_URL ?>message_action.php" enctype="multipart/form-data">
 
                         <div class="field">
                             <label class="label">Message</label>
@@ -63,7 +53,7 @@
                                 foreach ($attachments as $key => $attachment) :
                             ?>
                                     <div id="attachment-<?= $key ?>" class="flex flex-col items-center" onclick="manageAttachments(<?= $key ?>)">
-                                        <img id="image-<?= $key ?>" width='150' src='/ticketing-system/public/img/ticket_images/<?= $attachment ?>' title="<?= $attachment ?>" />
+                                        <img id="image-<?= $key ?>" width="150" src="<?= BASE_URL ?>public/img/ticket_images/<?= $attachment ?>" title="<?= $attachment ?>" />
                                         <button id="delete-btn-<?= $key ?>" type="button" class="button red">
                                             Delete image
                                         </button>
@@ -100,7 +90,7 @@
     </div>
 
     <!-- JavaScript file -->
-    <script src="/ticketing-system/public/js/main.js"></script>
+    <script src="<?= BASE_URL ?>public/js/main.js"></script>
 
     <script>
         document.addEventListener("DOMContentLoaded", function() {

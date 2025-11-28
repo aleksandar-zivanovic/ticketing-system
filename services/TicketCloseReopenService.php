@@ -2,18 +2,21 @@
 require_once ROOT . 'classes' . DS . 'Ticket.php';
 require_once ROOT . 'classes' . DS . 'User.php';
 require_once ROOT . 'classes' . DS . 'Message.php';
+require_once ROOT . 'services' . DS . 'TicketNotificationsService.php';
 
 class TicketCloseReopenService
 {
     private Ticket $ticketModel;
     private User $userModel;
     private Message $messageModel;
+    private TicketNotificationsService $notificationsService;
 
     public function __construct()
     {
         $this->ticketModel  = new Ticket();
         $this->userModel    = new User();
         $this->messageModel = new Message();
+        $this->notificationsService = new TicketNotificationsService();
     }
 
     /**
@@ -30,12 +33,15 @@ class TicketCloseReopenService
     public function validate(array $data): array
     {
         $ticket = $this->ticketModel->fetchTicketById($data["ticket_id"]);
+        $data["title"]      = $ticket['title'];
+        $data["creator_id"] = $ticket['created_by'];
 
         // Checks if ticket exists.
         if ($ticket === false) {
             return ["success" => false, "message" => "Ticket not found."];
         }
 
+        // Fetches the handler's details
         $user = $this->userModel->getUserById($data["user_id"]);
 
         // Checks if user exists.
@@ -116,15 +122,21 @@ class TicketCloseReopenService
 
     /**
      * Close or Reopen the ticket, depending of $action value.
+     * Sends notification email to the ticket creator.
      * 
-     * @param int $ticketId The ticket ID from the form
-     * @param string $action The action to perform: "close" or "reopen".
+     * @param array $data The validated data array containing: ticket_id, creator_id and action (close|reopen).
      * @return void
      * @throws RuntimeException If the database query fails
      * @see Ticket::closeReopenTicket()
      */
-    public function closeReopenTicket(int $ticketId, string $action): void
+    public function closeReopenTicket(array $data): void
     {
-        $this->ticketModel->closeReopenTicket($ticketId, $action);
+        // Fetch the ticket creator details
+        $creator = $this->userModel->getUserById($data["creator_id"]);
+        $this->ticketModel->closeReopenTicket($data["ticket_id"], $data["action"]);
+
+        // Send notification email to the ticket creator
+        // string $email, string $name, string $surname, string $title, string $description, int $ticketId, string $action
+        $this->notificationsService->closeReopenNotification($creator["email"], $creator["name"], $creator["surname"], $data["title"], $data["ticket_id"], $data["action"]);
     }
 }

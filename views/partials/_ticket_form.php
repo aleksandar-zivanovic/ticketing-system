@@ -21,7 +21,7 @@
     $brackets = !empty($split) ? "[0]" : "";
     ?>
 
-    <form action="/ticketing-system/<?= empty($split) ? "create_ticket_action.php" : "split_ticket_action.php" ?>" method="POST" enctype="multipart/form-data">
+    <form action="<?= BASE_URL ?><?= empty($split) ? "create_ticket_action.php" : "split_ticket_action.php" ?>" method="POST" enctype="multipart/form-data">
         <?= !empty($split) ? '<div id="tickets-container">' : ''; ?>
         <div class="grid sm:grid-cols-1 gap-8 <?= !empty($split) ? 'ticket-block' : ''; ?>">
             <?php
@@ -69,7 +69,7 @@
             <?php
             if (!empty($split)) {
                 // Cancel splitting action button
-                renderingButton("user_action", "Cancel splitting", "text-white", "bg-red-500", "hover:bg-red-600", "mb-4", type: "link", link: "/ticketing-system/public/admin/view-ticket.php?ticket=" . $theTicket["id"]);
+                renderingButton("user_action", "Cancel splitting", "text-white", "bg-red-500", "hover:bg-red-600", "mb-4", type: "link", link: BASE_URL . "admin/view-ticket.php?ticket=" . $theTicket["id"]);
 
                 // Process splitting action button
                 renderingButton("user_action", "Split Ticket");

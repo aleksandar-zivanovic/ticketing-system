@@ -6,7 +6,6 @@ require_once ROOT . 'services' . DS . 'EmailService.php';
 class TicketNotificationsService extends BaseService
 {
     private EmailService $emailService;
-    private $siteUrl = "http://localhost/ticketing-system/";
 
     public function __construct()
     {
@@ -29,7 +28,7 @@ class TicketNotificationsService extends BaseService
     public function createTicketNotification(string $email, string $name, string $surname, string $title, string $description, int $ticketId): void
     {
         $subject = "Create Ticket Notification";
-        $linkUrl  = $this->siteUrl . "user/user-view-ticket.php?ticket=" . $ticketId;
+        $linkUrl  = BASE_URL . "user/user-view-ticket.php?ticket=" . $ticketId;
         $linkText = "Click Here to View Your Ticket:";
 
         // Build the email content
@@ -42,7 +41,7 @@ class TicketNotificationsService extends BaseService
             "Ticket ID: {$ticketId}.\n" .
             "Title: {$title}.\n" .
             "Description: {$description}.\n" .
-            "You can view the ticket here: {$this->siteUrl}user/user-view-ticket.php?ticket={$ticketId}\n\n" .
+            "You can view the ticket here: " . BASE_URL . "user/user-view-ticket.php?ticket={$ticketId}\n\n" .
             "Best regards,\n" .
             "The Ticketing System Team";
 
@@ -66,7 +65,7 @@ class TicketNotificationsService extends BaseService
     public function takeTicketNotification(string $email, string $name, string $surname, string $title, int $ticketId): void
     {
         $subject  = "Your ticket is assigned to an administrator";
-        $linkUrl  = $this->siteUrl . "user/user-view-ticket.php?ticket=" . $ticketId;
+        $linkUrl  = BASE_URL . "user/user-view-ticket.php?ticket=" . $ticketId;
         $linkText = "Click Here to View Your Ticket:";
 
         // Build the email content
@@ -83,18 +82,40 @@ class TicketNotificationsService extends BaseService
         $this->emailService->sendEmail(email: $email, name: $name, surname: $surname, subject: $subject, body: $body, altBody: $altBody);
     }
 
-    private function handlingTicketNotification(): void
+    /**
+     * Send a ticket close or reopen notification email to the user.
+     * 
+     * @param string $email The user's email address.
+     * @param string $name The user's first name.
+     * @param string $surname The user's surname.
+     * @param string $title The title of the ticket.
+     * @param int $ticketId The ID of the ticket.
+     * @param string $action The action performed on the ticket ("close" or "reopen").
+     * 
+     * @return void
+     * @throws Exception If email sending fails.
+     * @see EmailService::sendEmail()
+     */
+    public function closeReopenNotification(string $email, string $name, string $surname, string $title, int $ticketId, string $action): void
     {
-        // Implementation for updating ticket notification email
-        // Email se salje kreatoru tikeata
-        // - reopen ticket
-        // - close ticket
-        // - split ticket
-    }
+        $ucfirstAction   = ucfirst($action);
+        $actionPastTense = $action === "close" ? "closed" : "reopened";
+        $subject         = "Ticket {$ucfirstAction} Notification";
+        $linkUrl         = BASE_URL . "user/user-view-ticket.php?ticket=" . $ticketId;
+        $linkText        = "Click Here to View Your Ticket:";
 
-    private function messagesTicketNotification(): void
-    {
-        // Implementation for assigning ticket notification email
-        // Email se salje ucesnicima chata na tiketu, osim onome ko je poslao poruku
+        // Build the email content
+        $body            = require_once ROOT . 'EmailTemplates' . DS . 'close_reopen_ticket_notification_email.php';
+
+        // Plain text alternative body
+        $altBody  =
+            "Hello {$name} {$surname},\n" .
+            "Your ticket \"{$title}\" with ID {$ticketId} is {$actionPastTense}.\n\n" .
+            "You can view the ticket here: {$linkUrl}\n\n" .
+            "Best regards,\n" .
+            "The Ticketing System Team";
+
+        // Sends the email
+        $this->emailService->sendEmail(email: $email, name: $name, surname: $surname, subject: $subject, body: $body, altBody: $altBody);
     }
 }

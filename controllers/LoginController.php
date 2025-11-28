@@ -25,7 +25,7 @@ class LoginController extends BaseController
      */
     public function validateRequest(): array
     {
-        $this->redirectUrl = "/ticketing-system/login.php";
+        $this->redirectUrl = BASE_URL . "login.php";
 
         if ($_SERVER['REQUEST_METHOD'] !== "POST") {
             return ["success" => false, "message" => "Invalid request method."];
@@ -72,7 +72,7 @@ class LoginController extends BaseController
             session_regenerate_id(true);
 
             // Redirect based on user role
-            $redirectData = fn($role) => ["/ticketing-system/{$role}/{$role}-ticket-listing.php", "Login successful.", "success"];
+            $redirectData = fn($role) => [BASE_URL . "{$role}/{$role}-ticket-listing.php", "Login successful.", "success"];
 
             if (trim($_SESSION['user_role']) === "admin") {
                 redirectAndDie(...$redirectData("admin"));
