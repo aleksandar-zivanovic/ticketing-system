@@ -1,5 +1,4 @@
 <?php
-require_once ROOT . 'helpers' . DS . 'view_helpers.php';
 require_once ROOT . 'config' . DS . 'features-config.php';
 ?>
 

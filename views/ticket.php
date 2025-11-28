@@ -1,6 +1,4 @@
 <?php
-require_once ROOT . 'helpers' . DS . 'view_helpers.php';
-
 // Set $page and $data varaiables
 $page = "Ticket: " . $theTicket['title'];
 if (!empty($split)) {

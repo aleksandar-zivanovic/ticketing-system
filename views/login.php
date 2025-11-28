@@ -7,8 +7,6 @@ if (isLoggedIn()) {
         redirectAndDie("/ticketing-system/user/user-ticket-listing.php");
     }
 }
-
-require_once ROOT . 'helpers' . DS . 'view_helpers.php';
 ?>
 
 <!DOCTYPE html>

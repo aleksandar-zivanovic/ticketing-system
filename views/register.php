@@ -1,5 +1,3 @@
-<?php require_once ROOT . 'helpers' . DS . 'view_helpers.php'; ?>
-
 <!DOCTYPE html>
 <html lang="en">
 

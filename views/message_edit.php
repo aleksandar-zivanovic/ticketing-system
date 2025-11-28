@@ -18,8 +18,6 @@
     <div id="app">
 
         <?php
-        require_once ROOT . 'helpers' . DS . 'view_helpers.php';
-        
         // import header navigation bar
         include_once ROOT . 'views' . DS . 'partials' . DS . '_navigation_bar.php';
 

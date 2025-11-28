@@ -4,6 +4,7 @@
       Ticketing <b class="font-black">System</b>
     </div>
   </div>
+  <!-- tpl:template-loaded -->
   <div class="menu is-menu-main">
     <p class="menu-label">General</p>
     <ul class="menu-list">

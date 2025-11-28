@@ -1,6 +1,4 @@
 <?php
-require_once ROOT . 'helpers' . DS . 'view_helpers.php';
-
 // Determine page title and breadcrumbs based on panel and action
 if ($panel === "user") {
   $page = "My tickets listing";

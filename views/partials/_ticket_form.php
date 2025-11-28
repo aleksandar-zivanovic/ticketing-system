@@ -1,6 +1,5 @@
 <div class="max-w-4xl mx-auto font-[sans-serif] p-6">
     <?php
-    require_once ROOT . 'helpers' . DS . 'view_helpers.php';
     if (empty($split)) :
     ?>
         <div class="text-center mb-16">
