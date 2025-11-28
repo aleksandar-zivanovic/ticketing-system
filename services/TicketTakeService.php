@@ -67,26 +67,14 @@ class TicketTakeService
     }
 
     /**
-     * Retrieves user details by user ID.
-     *
-     * @param int $userID The ID of the user.
-     * @return array An associative array containing user details.
-     * @throws RuntimeException If database request failed.
-     * @see User::getUserById() for fetching user details.
-     */
-    private function getUserDetails(int $userID): array
-    {
-        return $this->userModel->getUserById($userID);
-    }
-
-    /**
      * Assigns a ticket to an admin user.
+     * Retrieves user details by user ID.
      *
      * @param int $ticketID The ID of the ticket to be taken.
      * @param int $adminID The ID of the admin user taking the ticket.
      * @param int $creatorID The ID of the ticket creator.
      * @param string $title The title of the ticket.
-     * @throws RuntimeException If the ticket assignment fails.
+     * @throws RuntimeException If the ticket assignment fails or database request failed.
      * @return void
      * @see User::getUserById() for fetching user details.
      * @see Ticket::takeTicket() for updating the ticket assignment in the database.
@@ -94,7 +82,7 @@ class TicketTakeService
     public function takeTicket(int $ticketID, int $adminID, int $creatorID, string $title): void
     {
         // Fetch the ticket creator details
-        $creator = $this->getUserDetails($creatorID);
+        $creator = $this->userModel->getUserById($creatorID);
 
         $this->ticketModel->takeTicket($ticketID, $adminID);
 
