@@ -72,7 +72,7 @@ class TicketListingService
      * @param string $action Action type for the listing (e.g., "all", "my", "handling")
      * @param string $panel "admin" or "user" – determines ticket scope and links
      * @param string|null $sortBy Filter to sort by (status, priority, department, etc.)
-     * @param string $orderBy "ASC" | "DESC" or "newest" | "oldest"
+     * @param string $orderBy "ASC" | "DESC" or "oldest" | "newest"
      * @param string|null $table Column from tickets table
      * @param int $limit Number of tickets per page
      * @param int $userId User ID from session to filter tickets for a specific user

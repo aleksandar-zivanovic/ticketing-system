@@ -29,7 +29,7 @@ class TicketListingController extends BaseController
    * @param string $action Action type for the listing (e.g., "all", "my", "handling", "users-tickets")
    * @param string $panel "admin" or "user" – determines ticket scope and links
    * @param string $sortBy Filter to sort by (status, priority, department, etc.)
-   * @param string $orderBy "ASC" | "DESC" or "newest" | "oldest"
+   * @param string $orderBy "ASC" | "DESC" or "oldest" | "newest"
    * @param string|null $table Column from tickets table
    * @param int $limit Number of tickets per page
    * @param array $options Additional options for pagination

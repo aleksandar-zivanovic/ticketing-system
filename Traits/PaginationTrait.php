@@ -72,12 +72,12 @@ trait PaginationTrait
 
     /**
      * Validates the 'order_by' parameter from the GET request.
-     * 
-     * @return string Returns "DESC" for "newest" and "ASC" for any other value.
+     *
+     * @return string Returns "ASC" for "oldest" and "DESC" for any other value.
      */
     public function validateOrderByRequest(): string
     {
-        return (isset($_GET["order_by"]) && trim($_GET["order_by"]) === "newest") ?  "DESC" : "ASC";
+        return (isset($_GET["order_by"]) && trim($_GET["order_by"]) === "oldest") ?  "ASC" : "DESC";
     }
 
     /**

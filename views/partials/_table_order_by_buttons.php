@@ -3,7 +3,7 @@
     class="button <?php echo $orderBy === "DESC" ? "green" : "light"; ?>"
     name="order_by"
     value="newest">
-    <i class="fa fa-solid fa-arrow-up"></i>
+    <i class="fa fa-solid fa-arrow-down"></i>
 </button>
 
 <button
@@ -11,5 +11,5 @@
     class="button <?php echo $orderBy === "ASC" ? "green" : "light"; ?>"
     name="order_by"
     value="oldest">
-    <i class="fa fa-solid fa-arrow-down"></i>
+    <i class="fa fa-solid fa-arrow-up"></i>
 </button>
