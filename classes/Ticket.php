@@ -321,6 +321,7 @@ class Ticket extends BaseModel
                         u1.surname AS admin_surname, 
                         u2.name AS creator_name, 
                         u2.surname AS creator_surname,
+                        u2.email AS creator_email,
                         GROUP_CONCAT(ta.id) AS attachment_id, 
                         GROUP_CONCAT(ta.file_name) AS file, 
                         ta.ticket AS from_ticket 

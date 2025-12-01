@@ -14,7 +14,14 @@ class TicketSplitController extends BaseController
         $this->ticketShowService = new TicketShowService();
     }
 
-    public function validateRequest(): array
+    /**
+     * Validates $_POST request data for splitting a ticket.
+     *
+     * Checks required fields and performs sanitization. Also runs additional validation via service.
+     * @return array Validation result with 'success' key and either 'data' or 'message' key.
+     * @see TicketSplitService::validateData()
+     */
+    public function validateSplitRequest(): array
     {
         // Validates request method and user action
         if (
@@ -53,17 +60,6 @@ class TicketSplitController extends BaseController
             }
         }
 
-        // Gets url from the form
-        // Only $_POST["error_page"][0] has a string value; [1], [2], etc. are empty.
-        if (!isset($_POST["error_page"][0]) || empty($_POST["error_page"][0])) {
-            return ["success" => false, "message" => "Url is not set"];
-        }
-
-        $values["error_page"] = $this->validateUrl($_POST["error_page"][0]);
-        if ($values["error_page"] === false) {
-            return ["success" => false, "message" => "URL is not valid."];
-        }
-
         // Gets departments from the form. 
         $values["error_department"] = [];
         foreach ($_POST["error_department"] as $departmentId) {
@@ -84,22 +80,18 @@ class TicketSplitController extends BaseController
             $values["error_priority"][] = $sanatizedPriorityId;
         }
 
-        // Gets creators ID from the form
-        $values["error_user_id"] = $this->validateId($_POST["error_user_id"]);
-        if ($values["error_user_id"] === false) {
-            return ["success" => false, "message" => "User ID is invalid."];
-        }
-
         // Service validation layer
-        $serviceValidation = $this->ticketSplitService->validateData($values["error_ticket_id"], $values);
+        $serviceValidation = $this->ticketSplitService->validateSplitData($values["error_ticket_id"], $values);
         if ($serviceValidation["success"] === false) {
             return $serviceValidation;
         }
+        $values += $serviceValidation;
 
         return ["success" => true, "data" => $values];
     }
 
     /**
+     * Split ticket acition.
      * Splits a ticket into multiple tickets based on the validated data.
      *
      * @return void
@@ -114,7 +106,7 @@ class TicketSplitController extends BaseController
     public function splitTicket(): void
     {
         // Validates the request data
-        $validation = $this->validateRequest();
+        $validation = $this->validateSplitRequest();
 
         $this->handleValidation($validation);
 
@@ -136,6 +128,13 @@ class TicketSplitController extends BaseController
         }
     }
 
+    /**
+     * Validates $_GET request data for showing the split ticket form.
+     *
+     * Checks required fields and performs sanitization. Also runs additional validation via service.
+     * @return array Validation result with 'success' key and either 'data' or 'message' key.
+     * @see TicketShowService::validate()
+     */
     public function validateShowRequest(): array
     {
         if (!isset($_SERVER['REQUEST_METHOD']) || $_SERVER['REQUEST_METHOD'] !== "GET") {
@@ -156,6 +155,11 @@ class TicketSplitController extends BaseController
         return $this->ticketShowService->validate($data);
     }
 
+    /**
+     * Renders the split ticket form.
+     * 
+     * @return void
+     */
     public function show(): void
     {
         $validation = $this->validateShowRequest();

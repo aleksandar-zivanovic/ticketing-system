@@ -278,8 +278,10 @@ class TicketService extends BaseService
         // Proccesses files if they are attached in form:
         $this->processAttachments($lastInsertId, $split, $ticketAttachments, $attachment, $parentId);
 
-        // Sends notification email about ticket creation
-        $this->notificationsService->createTicketNotification($email, $name, $surname, $data['title'], $data['description'], $lastInsertId);
+        // Sends notification email about ticket creation if the ticket is not created by splitting process
+        if ($split === false) {
+            $this->notificationsService->createTicketNotification($email, $name, $surname, $data['title'], $data['description'], $lastInsertId);
+        }
 
         return $lastInsertId;
     }

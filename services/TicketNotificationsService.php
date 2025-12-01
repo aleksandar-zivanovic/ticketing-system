@@ -118,4 +118,38 @@ class TicketNotificationsService extends BaseService
         // Sends the email
         $this->emailService->sendEmail(email: $email, name: $name, surname: $surname, subject: $subject, body: $body, altBody: $altBody);
     }
+
+    /**
+     * Send a ticket split notification email to the user.
+     * 
+     * @param string $email The user's email address.
+     * @param string $name The user's first name.
+     * @param string $surname The user's surname.
+     * @param string $title The title of the original ticket.
+     * @param int $ticketId The ID of the original ticket.
+     * @param array $childTickets An associative array containing 'child_tickets_titles' and 'child_tickets_ids'.
+     * 
+     * @return void
+     * @throws Exception If email sending fails.
+     * @see EmailService::sendEmail()
+     */
+    public function splitTicketNotification(string $email, string $name, string $surname, string $title, int $ticketId, array $childTickets): void
+    {
+        $subject  = "Your ticket has been split into new tickets";
+        $linkUrl  = BASE_URL . "user/user-view-ticket.php?ticket=" . $ticketId;
+        $linkText = "Click Here to View Original Ticket:";
+
+        // Build the email content
+        $body     = require_once ROOT . 'EmailTemplates' . DS . 'split_ticket_notification_email.php';
+
+        // Plain text alternative body
+        $altBody  =
+            "Hello {$name} {$surname},\n" .
+            "Your ticket \"{$title}\" with ID {$ticketId} has been split into multiple tickets.\n\n" .
+            "You can view the ticket here: {$linkUrl}\n\n" .
+            "Best regards,\n" .
+            "The Ticketing System Team";
+
+        $this->emailService->sendEmail(email: $email, name: $name, surname: $surname, subject: $subject, body: $body, altBody: $altBody);
+    }
 }

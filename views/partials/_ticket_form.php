@@ -31,9 +31,6 @@
             // choose priority
             renderingSelectOption("Choose priority", "error_priority" . $brackets, $priorities);
 
-            // error page url
-            renderingInputField(null, "error_page" . $brackets, "hidden", null, $sourceUrl);
-
             // title
             renderingInputField("Title:", "error_title" . $brackets, "text", "Enter title");
 
@@ -44,9 +41,6 @@
             renderingInputField("Insert error images:", "error_images"  . $brackets . "[]", "file", "");
 
             if (!empty($split)) {
-                // creator's ID
-                renderingInputField(null, "error_user_id", "hidden", null, $theTicket["created_by"]);
-
                 // ticket's ID
                 renderingInputField(null, "error_ticket_id", "hidden", null, $theTicket["id"]);
             }
@@ -95,7 +89,7 @@
             clone.querySelectorAll('select, input, textarea').forEach(el => {
                 let name = el.getAttribute('name');
                 // Preserve universal input values and skip unnamed inputs
-                if (!name || el.name === "error_user_id" || el.name === "error_ticket_id") {
+                if (el.name === "error_ticket_id") {
                     return;
                 }
 
