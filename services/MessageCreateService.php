@@ -1,8 +1,17 @@
 <?php
-require_once 'MessageService.php';
+require_once ROOT . 'services' . DS . 'MessageService.php';
+require_once ROOT . 'services' . DS . 'MessageNotificationsService.php';
 
 class MessageCreateService extends MessageService
 {
+    private MessageNotificationsService $notificationsService;
+
+    public function __construct()
+    {
+        parent::__construct();
+        $this->notificationsService = new MessageNotificationsService();
+    }
+
     /**
      * Validates the data for creating a message.
      * 
@@ -20,7 +29,7 @@ class MessageCreateService extends MessageService
         }
 
         // Validates if the user is the ticket creator or an admin
-        if ($validation["created_by"] !== $data["user_id"] && $data["user_role"] !== "admin") {
+        if ($validation["message_creator"] !== $data["user_id"] && $data["user_role"] !== "admin") {
             return [
                 "success" => false,
                 "message" => "You do not have permission to add a message to this ticket.",
@@ -56,9 +65,9 @@ class MessageCreateService extends MessageService
      * @throws Exception If there is an error in upload process, file format or file extension is wrong.
      * @see Message::createMessage()
      */
-    public function createMessage(string $body, int $ticketId, int $userId): void
+    public function createMessage(array $data): void
     {
-        $messageId = $this->messageModel->createMessage(ticketId: $ticketId, userId: $userId, message: $body);
+        $messageId = $this->messageModel->createMessage(ticketId: $data["ticket_id"], userId: $data["message_creator"], message: $data["body"]);
 
         $imagesUpload = $this->uploadFiles($messageId);
 
@@ -66,5 +75,17 @@ class MessageCreateService extends MessageService
             $this->messageModel->deleteMessage($messageId);
             throw new RuntimeException("Error uploading message attachments.");
         }
+
+        // Send notifications to participants except the message creator
+        $this->notificationsService->sendNewMessageNotification(
+            title: $data["ticket_title"],
+            ticketId: $data["ticket_id"],
+            date: $data["date"],
+            ticketCreatorId: $data["ticket_creator"],
+            messageCreatorId: $data["message_creator"],
+            messageCreatorFullName: $data["message_creator_full_name"],
+            messageContent: $data["body"],
+            is_creator: $data["ticket_creator"] === $data["message_creator"]
+        );
     }
 }

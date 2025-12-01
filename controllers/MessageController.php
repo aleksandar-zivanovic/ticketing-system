@@ -101,6 +101,18 @@ class MessageController extends BaseController
             return ["success" => false, "message" => "Invalid user role.", "ticket_id" => $values["ticketId"]];
         }
 
+        $messageCreatorName = cleanString($_SESSION["user_name"]);
+        if (empty($values["user_role"])) {
+            return ["success" => false, "message" => "Invalid user role.", "ticket_id" => $values["ticketId"]];
+        }
+
+        $messageCreatorSurname = cleanString($_SESSION["user_surname"]);
+        if (empty($values["user_role"])) {
+            return ["success" => false, "message" => "Invalid user role.", "ticket_id" => $values["ticketId"]];
+        }
+
+        $values["message_creator_full_name"] = $messageCreatorName . " " . $messageCreatorSurname;
+
         // Service selection based on action
         if ($action === "edit_message") {
             // Validates and sanitizes message ID
@@ -161,7 +173,7 @@ class MessageController extends BaseController
         $validation = $this->validateRequest();
 
         $this->redirectUrl =
-            $validation["created_by"] == trim($_SESSION["user_id"]) ?
+            $validation["message_creator"] == trim($_SESSION["user_id"]) ?
             BASE_URL . "user/user-view-ticket.php?ticket=" . $validation["ticket_id"] :
             BASE_URL . "admin/view-ticket.php?ticket=" . $validation["ticket_id"];
 
@@ -169,7 +181,7 @@ class MessageController extends BaseController
 
         try {
             if ($this->service instanceof MessageCreateService) {
-                $this->service->createMessage($validation["body"], $validation["ticket_id"], $validation["user_id"]);
+                $this->service->createMessage($validation);
                 $message = "Message created successfully.";
             } elseif ($this->service instanceof MessageEditService) {
                 $this->service->editMessage($validation);

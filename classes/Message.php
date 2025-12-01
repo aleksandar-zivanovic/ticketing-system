@@ -197,4 +197,31 @@ class Message extends BaseModel
             throw new RuntimeException("Something went wrong. Try again later!");
         }
     }
+
+    /**
+     * Retrieves all participants in a conversation for a specific ticket, excluding the message creator.
+     * 
+     * @param int $ticketId ID of the ticket.
+     * @param int $messageCreator ID of the message creator to be excluded.
+     * @return array An array of participants' user IDs, emails, names, and surnames.
+     * @throws RuntimeException If there is an error during the database operation.
+     */
+    public function getConversationParticipantsExceptMessageCreator(int $ticketId, int $messageCreator): array
+    {
+        try {
+            $query = "SELECT DISTINCT m.user, u.email, u.name, u.surname
+                FROM messages m
+                INNER JOIN users u ON u.id = m.user
+                WHERE m.ticket = :ticketId AND m.user <> :messageCreator";
+
+            $stmt = $this->getConn()->prepare($query);
+            $stmt->bindValue(':ticketId', $ticketId, PDO::PARAM_INT);
+            $stmt->bindValue(':messageCreator', $messageCreator, PDO::PARAM_INT);
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (\PDOException $e) {
+            logError("User::getAllUsersInConversation failed. ", ['message' => $e->getMessage(), 'code' => $e->getCode()]);
+            throw new RuntimeException("Request failed. Try again.");
+        }
+    }
 }

@@ -44,7 +44,7 @@ foreach ($allMessages as $message):
         </div>
     </div>
 
-    <div>
+    <div class="flex justify-<?= $position ?>">
         <?php
         // Adds attachment files
         if ($message['file']) {

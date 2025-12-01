@@ -28,6 +28,7 @@ class MessageService extends BaseService
             return ["success" => false, "message" => "Message not found.", "url" => "index.php"];
         }
 
+        // TODO: delete this code if not needed
         // // Checks if the user is a ticket creator
         // $isCreator = $this->isCreator($messageDetails["ticket"], $data["userId"]);
 
@@ -35,7 +36,7 @@ class MessageService extends BaseService
         $isCreator = $ticket["created_by"] === $data["userId"];
 
         return [
-            "success" => true, 
+            "success" => true,
             "data" => [
                 "messageId"      => $data["messageId"],
                 "isCreator"      => $isCreator,
@@ -57,20 +58,21 @@ class MessageService extends BaseService
         $this->ticketDetails = $this->ticketModel->fetchTicketDetails($ticketId);
     }
 
-    /**
-     * Checks if the user is the creator of the ticket.
-     * 
-     * @param int $ticketId ID of the ticket.
-     * @param int $userId ID of the user.
-     * @return bool Returns true if the user is the creator, false otherwise.
-     * @throws RuntimeException If query execution fails.
-     * @see Ticket::fetchTicketDetails()
-     */
-    public function isCreator(int $ticketId, int $userId): bool
-    {
-        $ticket = $this->ticketModel->fetchTicketById($ticketId);
-        return $ticket["created_by"] === $userId;
-    }
+    // TODO: delete this method if not needed
+    // /**
+    //  * Checks if the user is the creator of the ticket.
+    //  * 
+    //  * @param int $ticketId ID of the ticket.
+    //  * @param int $userId ID of the user.
+    //  * @return bool Returns true if the user is the creator, false otherwise.
+    //  * @throws RuntimeException If query execution fails.
+    //  * @see Ticket::fetchTicketDetails()
+    //  */
+    // public function isCreator(int $ticketId, int $userId): bool
+    // {
+    //     $ticket = $this->ticketModel->fetchTicketById($ticketId);
+    //     return $ticket["created_by"] === $userId;
+    // }
 
     /**
      * Validates the data for the message.
@@ -104,12 +106,15 @@ class MessageService extends BaseService
         }
 
         return [
-            "success"    => true,
-            "body"       => $data["body"],
-            "ticket_id"  => $data["ticketId"],
-            "user_role"  => $data["user_role"],
-            "user_id"    => $data["user_id"],
-            "created_by" => $this->ticketDetails["created_by"]
+            "success"         => true,
+            "date"            => date("Y-m-d H:i:s"),
+            "body"            => $data["body"],
+            "ticket_id"       => $data["ticketId"],
+            "user_role"       => $data["user_role"],
+            "message_creator" => $data["user_id"],
+            "message_creator_full_name" => $data["message_creator_full_name"],
+            "ticket_creator"  => $this->ticketDetails["created_by"],
+            "ticket_title"    => $this->ticketDetails["title"],
         ];
     }
 }
