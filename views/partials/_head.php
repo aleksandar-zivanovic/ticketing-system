@@ -8,7 +8,7 @@
   <title><?= $page ?></title>
 
   <!-- Tailwind is included -->
-  <link rel="stylesheet" href="<?= BASE_URL ?>public/css/tailwind-output.css">
   <link rel="stylesheet" href="<?= BASE_URL ?>public/css/admin-one-main.css">
+  <link rel="stylesheet" href="<?= BASE_URL ?>public/css/tailwind-output.css">
   <link rel="stylesheet" href="<?= BASE_URL ?>public/css/font-awesome.min.css">
 </head>

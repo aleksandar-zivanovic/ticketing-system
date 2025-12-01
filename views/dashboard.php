@@ -43,7 +43,13 @@ require_once ROOT . 'views' . DS . 'partials' . DS . '_head.php';
 
             require_once ROOT . 'views' . DS . 'partials' . DS . '_dashboard_user_statistic_cards.php';
         }
+        ?>
 
+        <!-- Chart.js-->
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
+
+        <?php
         // Avoids rendering tables and chart for no tickets for users
         if ($panel === "admin" || ($panel === "user" && $countAllTickets > 0)) {
 
