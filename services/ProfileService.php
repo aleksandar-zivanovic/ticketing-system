@@ -63,8 +63,25 @@ class ProfileService extends BaseService
                 "id" => $data["id"],
                 "theUser" => $theUser,
                 "session_user_id" => $data["session_user_id"],
+                "link_to_user_tickets" => $this->createTicketListingLink($data["session_user_role"], $data["id"])
             ]
         ];
+    }
+
+    /**
+     * Creates an user's ticket listing link based on the user's role.
+     *
+     * @param string $userRole The role of the user (e.g., 'admin', 'user').
+     * @param int $userId The ID of the user.
+     * @return string The generated ticket listing link.
+     */
+    private function createTicketListingLink(string $userRole, int $userId): string
+    {
+        return BASE_URL . (
+            $userRole === "admin"
+            ? "admin/user-tickets-list?user=" . $userId
+            : "user/user-ticket-listing.php"
+        );
     }
 
     /**
@@ -202,7 +219,7 @@ class ProfileService extends BaseService
             if (isset($data["email"])) {
                 // Initiates the verification service to handle email change verification
                 $verificationService = new VerificationService();
-                
+
                 // Sends verification email to the new email address
                 $verificationService->sendNow($data["email"], $data["name"], $data["surname"], "update_email");
 

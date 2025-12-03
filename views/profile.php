@@ -167,6 +167,27 @@ include_once ROOT . 'views' . DS . 'partials' . DS . '_head.php';
                 <input type="text" readonly value="<?= $theUser['email'] ?>" class="input is-static">
               </div>
             </div>
+            <hr>
+            <!-- Link to user's tickets listing -->
+            <div class="field">
+              <div class="control">
+                <div>
+                  <?php
+                  renderingButton(
+                    "add-ticket-btn",
+                    "User's Tickets",
+                    "text-white",
+                    "bg-blue-600",
+                    "hover:bg-blue-700",
+                    "my-4",
+                    "mdi mdi-plus-thick",
+                    type: "link",
+                    link: $link_to_user_tickets
+                  );
+                  ?>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
