@@ -29,6 +29,14 @@ include_once ROOT . 'views' . DS . 'partials' . DS . '_head.php';
 
     </div>
 
+    <!-- JavaScript file -->
+    <script type="text/javascript" src="<?= BASE_URL ?>public/js/main.js"></script>
+
+    <script>
+        // Toggle select all checkboxes
+        toggleSelectAll()
+    </script>
+
 </body>
 
 </html>

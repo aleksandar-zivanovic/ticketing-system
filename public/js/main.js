@@ -1,11 +1,13 @@
-function sendUrl() {
-  let currentUrl = window.location.href;
-  let encodedUrl = encodeURIComponent(currentUrl);
-  window.location.href =
-    "/ticketing-system/public/forms/create_ticket.php?source=" + encodedUrl;
-}
+/**
+ * Function that creates and returns a handler for managing attachment IDs
+ * 
+ * The function maintains a local array of IDs to track which attachments
+ * are marked for deletion. It updates the UI accordingly and stores the
+ * current state in sessionStorage under the key 'attachmentIds'.
+ *
+ * @returns {void}
+ */
 
-// Function that creates and returns a handler for managing attachment IDs
 function createAttachmentHandler() {
   let ids = []; // `ids` je lokalna za ovu funkciju i koristi se unutar nje
   return function manageAttachments(id) {
@@ -46,3 +48,26 @@ function createAttachmentHandler() {
 
 // Make the function available globally by assigning it to the `window` object
 window.manageAttachments = createAttachmentHandler();
+
+/**
+ * Toggles the selection of all checkboxes with the class 'checkbox-input'
+ * when the checkbox with the ID 'select_all' is changed.
+ *
+ * Usage: Call this function after the DOM is fully loaded.
+ *
+ * Example:
+ * window.onload = function() {
+ *   toggleSelectAll();
+ * };
+ *
+ * @returns {void}
+ */
+function toggleSelectAll() {
+  const selectAll = document.getElementById("select_all");
+  if (selectAll) {
+    const checkboxes = document.querySelectorAll(".checkbox-input");
+    selectAll.addEventListener("change", function () {
+      checkboxes.forEach((cb) => (cb.checked = this.checked));
+    });
+  }
+}

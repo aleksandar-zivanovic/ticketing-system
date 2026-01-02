@@ -1,0 +1,117 @@
+<?php
+require_once ROOT . 'controllers' . DS . 'BaseController.php';
+require_once ROOT . 'services' . DS . 'UserBulkActionService.php';
+
+
+class UserBulkActionController extends BaseController
+{
+    private UserBulkActionService $userBulkActionService;
+
+    public function __construct()
+    {
+        $this->userBulkActionService = new UserBulkActionService();
+    }
+
+    public function validateRequest(): array
+    {
+        if ($_SERVER["REQUEST_METHOD"] !== "POST") {
+            return ["success" => false, "message" => "Invalid request method.", "url" => "error"];
+        }
+
+        if (!isset($_POST["user_actions"]) || empty($_POST["user_actions"])) {
+            return ["success" => false, "message" => "No user action specified.", "url" => "error"];
+        }
+
+        // Check if user IDs are provided
+        if (!isset($_POST["user_ids"]) || empty($_POST["user_ids"])) {
+            return ["success" => false, "message" => "No user IDs provided.", "url" => "error"];
+        }
+
+        // Validate user IDs
+        $userIds = $_POST["user_ids"];
+        if (is_string($userIds)) {
+            $validatedIds = $this->validateId($userIds);
+        } elseif (is_array($userIds)) {
+            $validatedIds = [];
+            foreach ($userIds as $id) {
+                $userId = $this->validateId($id);
+                if ($userId === false) {
+                    return ["success" => false, "message" => "Invalid user ID provided: {$id}."];
+                }
+                $validatedIds[] = $userId;
+            }
+        }
+
+        // Determine the action to be performed
+        if ($this->hasValue($_POST["user_actions"]) === false) {
+            return ["success" => false, "message" => "No user action specified."];
+        }
+        $userActionValue = $_POST["user_actions"];
+
+        // Verify the action using the service
+        $serviceVerification = $this->userBulkActionService->verify([
+            "userIds" => $validatedIds,
+            "userActionValue" => $userActionValue
+        ]);
+
+        if ($serviceVerification["success"] === false) {
+            return $serviceVerification;
+        }
+
+        return [
+            "success" => true,
+            "data" => [
+                "userIds" => $validatedIds,
+                ...$serviceVerification
+            ]
+        ];
+    }
+
+    /**
+     * Create a success message based on the action performed.
+     *
+     * @param array $ids An array of user IDs.
+     * @param string $action The action performed.
+     * @return string The success message.
+     */
+    private function createSuccessMessage(array $ids, string $action): string
+    {
+        $message = "";
+
+        switch ($action) {
+            case "changeRole":
+                $message = "Successfully changed role status for users: " . implode(", ", $ids);
+                break;
+            case "changeDepartment":
+                # code...
+                break;
+            case "sendBulkEmail":
+                # code...
+                break;
+            case "passwordReset":
+                # code...
+                break;
+            case "deleteUser":
+                # code...
+                break;
+        }
+
+        return $message;
+    }
+
+    public function execute(): void
+    {
+        $this->redirectUrl = BASE_URL . "admin/users-listing";
+        $validation = $this->validateRequest();
+        $this->handleValidation($validation);
+        dd($validation);
+        try {
+            $method = $validation["data"]["action"];
+            $this->userBulkActionService->$method($validation["data"]);
+            $message = $this->createSuccessMessage($validation["data"]["userIds"], $validation["data"]["action"]);
+            redirectAndDie($this->redirectUrl, $message, "info");
+        } catch (\Throwable $th) {
+            dd("Error executing action: " . $th->getMessage());
+        }
+    }
+}

@@ -36,6 +36,9 @@ return [
     "/admin/users-listing"          => [
         "handler" => [UserListingController::class, "show"],
     ],
+    "/admin/users-actions"            => [
+        "handler" => [UserBulkActionController::class, "execute"],
+    ],
     "/admin/split-ticket"           => [
         "handler" => [TicketSplitController::class, "show"],
     ],

@@ -5,14 +5,20 @@ class BaseController
     protected ?string $redirectUrl = null;
 
     /**
-     * Checks if a string variable, assigned from $_POST, is defined and not empty.
+     * Checks if a variable exists and is not empty. Used for both strings and arrays.
      *
-     * @param string $variable The variable to check.
+     * @param string|array $value The variable to check.
      * @return bool True if the variable exists and is not empty, false otherwise.
      */
-    public function hasValue(string $value): bool
+    public function hasValue(string|array $value): bool
     {
-        return isset($value) && !empty(trim($value));
+        if (is_string($value)) {
+            return isset($value) && !empty(trim($value));
+        } elseif (is_array($value)) {
+            return isset($value) && !empty($value);
+        }
+
+        return false;
     }
 
     /**

@@ -170,16 +170,16 @@ abstract class BaseModel
             throw new InvalidArgumentException("The number of rows and where values must match.");;
         }
 
-        $setClauses = [];
+        $setColumnPlaceholders = [];
         foreach ($columns as $row) {
             foreach ($row as $key => $_) {
-                $setClauses[] = "{$key} = :{$key}";
+                $setColumnPlaceholders[] = "{$key} = :{$key}";
             }
             break;
         }
 
         $where = implode(", ", array_keys($whereClauses[0]));
-        $query = "UPDATE {$tableName} SET " . implode(", ", $setClauses) . " WHERE {$where} = :{$where}";
+        $query = "UPDATE {$tableName} SET " . implode(", ", $setColumnPlaceholders) . " WHERE {$where} = :{$where}";
 
         $conn = $this->getConn();
 
@@ -193,6 +193,112 @@ abstract class BaseModel
                 $stmt->execute();
             }
 
+            $conn->commit();
+        } catch (\PDOException $e) {
+            $conn->rollBack();
+            logError("Update for {$tableName} failed. ", ['message' => $e->getMessage(), 'code' => $e->getCode()]);
+            throw new RuntimeException("BaseModel::updateRows. Failed to update {$tableName} table. " . $e->getMessage());
+        }
+    }
+
+    /**
+     * Updates rows in the database using parentheses operators in WHERE clause. Update is done with transction.
+     * 
+     * @param string $tableName Table for update.
+     * @param array  $columns Array of columns and values to update. Each sub-array must contain 
+     * the same set of keys. Expects array formatted as: 
+     *  [
+     *      ["column1" => "value1", "column2" => "value2"], 
+     *      ["column1" => "value3", "column2" => "value4"], 
+     *  ]
+     * @param array $whereClauses Each sub-array must have one or more key-value pairs 
+     * representing column(s) and their match value(s) as arrays, e.g.: [["id" => [5, 8, 12]], ["statusId" => [1, 3]]]
+     * @param string $operator Parentheses operator to use in WHERE clause. Supported operators: IN, NOT IN, BETWEEN, NOT BETWEEN.
+     * 
+     * @return void
+     * @throws InvalidArgumentException if unsupported operator is provided,
+     * or if unsupported parameter types are provided.
+     * @throws RuntimeException if the update fails.
+     */
+    public function updateRowsWithParenthesesOperators(string $tableName, array $columns, array $whereClauses, string $operator): void
+    {
+        $operatorsWithParentheses = ["IN", "NOT IN", "BETWEEN", "NOT BETWEEN"];
+        if (in_array($operator, $operatorsWithParentheses) === false) {
+            throw new InvalidArgumentException("Unsupported operator: {$operator}");
+        }
+
+        $setColumnPlaceholders = [];
+        foreach ($columns as $row) {
+            foreach ($row as $key => $_) {
+                $columnNames[] = $key;
+                $setColumnPlaceholders[] = "{$key} = :{$key}";
+            }
+        }
+        $columnPlaceholders = implode(", ", $setColumnPlaceholders);
+
+        $columnValuesToBind = [];
+        foreach ($columns as $row) {
+            foreach ($row as $key => $value) {
+                $columnValuesToBind[$key][] = $value;
+            }
+        }
+
+        $whereColumnPlaceholders = [];
+        $whereColumnValuesToBind = [];
+        foreach ($whereClauses as $key => $clause) {
+            // column name, e.g. "id"
+            $whereColumnName = implode("", array_keys($clause));
+
+            // array of values to bind for the column, e.g. [5, 8, 12] 
+            $whereColumnValuesToBind[$whereColumnName] = $clause[$whereColumnName];
+
+            // array of placeholders for the column, e.g. [":id1", ":id2", ":id3"]
+            $whereColumnPlaceholders[$whereColumnName] = [];
+            $count = count($clause[$whereColumnName]);
+            foreach ($clause[$whereColumnName] as $key => $_) {
+                $placeholder = ":{$whereColumnName}{$key}";
+                if ($count > 1 and $key < $count - 1) {
+                    $placeholder .= ", ";
+                }
+                $whereColumnPlaceholders[$whereColumnName][] = $placeholder;
+            }
+        }
+
+        // creates WHERE clause string e.g. "id IN (:id1, :id2, :id3) AND statusId IN (:statusId1, :statusId2)"
+        $whereClauseString = "";
+        foreach ($whereColumnPlaceholders as $columnName => $placeholders) {
+            $placeholdersString = implode("", $placeholders);
+            $whereClauseString .= "{$columnName} {$operator} ({$placeholdersString}) AND ";
+        }
+
+        if (str_ends_with($whereClauseString, " AND ")) {
+            $whereClauseString = substr($whereClauseString, 0, -5);
+        }
+
+        $query = "UPDATE {$tableName} SET {$columnPlaceholders} WHERE {$whereClauseString}";
+
+        try {
+            $conn = $this->getConn();
+            $conn->beginTransaction();
+            $stmt = $conn->prepare($query);
+
+            // binds values for SET placeholders (:column = value)
+            foreach ($columnValuesToBind as $columnName => $val) {
+                $this->bindValues($stmt, [$columnName => $val[0]]); // only one value per column for SET
+            }
+
+            // binds values for WHERE placeholders (filters / conditions)
+            foreach ($whereColumnPlaceholders as $columnName => $placeholders) {
+                foreach ($placeholders as $key => $placeholder) {
+                    $cleanPlaceholder = trim($placeholder, " :,");
+                    $this->bindValues(
+                        $stmt,
+                        [$cleanPlaceholder => $whereColumnValuesToBind[$columnName][$key]]
+                    );
+                }
+            }
+
+            $stmt->execute();
             $conn->commit();
         } catch (\PDOException $e) {
             $conn->rollBack();

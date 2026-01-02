@@ -1104,6 +1104,10 @@ video {
   padding-right: 1.25rem;
 }
 
+.ps-4 {
+  padding-inline-start: 1rem;
+}
+
 .text-center {
   text-align: center;
 }
