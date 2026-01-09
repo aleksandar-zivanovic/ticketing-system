@@ -1,8 +1,17 @@
 <?php
 require_once ROOT . 'services' . DS . 'BaseService.php';
+require_once ROOT . 'services' . DS . 'UserBulkActionNotificationService.php';
 
 class UserBulkActionService extends BaseService
 {
+
+    private UserBulkActionNotificationService $notificationService;
+
+    public function __construct()
+    {
+        $this->notificationService = new UserBulkActionNotificationService();
+    }
+
     /**
      * Verify the user action and its parameters.
      *
@@ -71,9 +80,32 @@ class UserBulkActionService extends BaseService
             operator: "IN"
         );
 
+        // Process user(s) for actions blocked and unverified
+
+        $timestamp = date("Y-m-d H:i:s");
+
+        // Prepare data for sending notifications
+        $performedBy = [
+            "ids"       => $data["userIds"],
+            "email"     => $data["email"],
+            "name"      => $data["name"],
+            "surname"   => $data["surname"],
+            "action"    => "changed role",
+            "plural"    => count($data["userIds"]) > 1 ? "s" : "",
+            "idsString" => implode(", ", $data["userIds"]),
+        ];
+
+        // Fetch details of affected users for notifications
+        $usersDetails = $user->getAllWhereSafe("users", "id", "IN", $data["userIds"]);
+
         // Send notification emails to affected users
-        
-        // TODO: Log the role change actions
+        $this->notificationService->createChangeRoleNotification($usersDetails, $data["roleId"]);
+
+        // Send notification email to the user who performed the action
+        $this->notificationService->createActionPerformerNotification($data["userIds"], $performedBy, $timestamp);
+
+        // TODO: Log the role change actions, after the audit system has been created
+
 
     }
 }

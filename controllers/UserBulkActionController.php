@@ -101,13 +101,18 @@ class UserBulkActionController extends BaseController
 
     public function execute(): void
     {
-        $this->redirectUrl = BASE_URL . "admin/users-listing";
+        $this->redirectUrl = BASE_URL . "admin" . DS . "users-listing";
         $validation = $this->validateRequest();
         $this->handleValidation($validation);
-        dd($validation);
+
         try {
             $method = $validation["data"]["action"];
-            $this->userBulkActionService->$method($validation["data"]);
+            $this->userBulkActionService->$method([
+                ...$validation["data"],
+                "email"   => cleanString($_SESSION["user_email"]),
+                "name"    => cleanString($_SESSION["user_name"]),
+                "surname" => cleanString($_SESSION["user_surname"]),
+            ]);
             $message = $this->createSuccessMessage($validation["data"]["userIds"], $validation["data"]["action"]);
             redirectAndDie($this->redirectUrl, $message, "info");
         } catch (\Throwable $th) {

@@ -74,7 +74,9 @@ abstract class BaseModel
     }
 
     /**
-     * Fetches all data for a certain table for the WHERE condition.
+     * Fetches rows using a raw WHERE clause.
+     * ⚠️ This method DOES NOT use parameter binding.
+     *
      * Returns multidimensional associative array.
      * 
      * @param string $table Database table name you are fetching data from.
@@ -107,6 +109,74 @@ abstract class BaseModel
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (\PDOException $e) {
             logError("BaseModel::getAllWhere failed. Failed to fetch data from {$table} table. ", ['message' => $e->getMessage(), 'code' => $e->getCode()]);
+            throw new RuntimeException("Request failed. Try again.");
+        }
+    }
+
+    /**
+     * Fetches rows using a parameterized WHERE condition.
+     * Uses prepared statements and bound parameters.
+     * Supports operators: =, !=, IN, NOT IN, BETWEEN, NOT BETWEEN.
+     * 
+     * Returns multidimensional associative array.
+     * 
+     * @param string $table Database table name you are fetching data from.
+     * @param string $column Column name for the WHERE condition.
+     * @param string $operator Comparison operator for the WHERE condition (e.g. '=', '!=', 'IN', 'NOT IN', 'BETWEEN', 'NOT BETWEEN').
+     * @param array $values Values to be used in the WHERE condition.
+     * @param int|null $limit Optional limit for number of returned rows.
+     * @param int|null $offset Optional offset for the returned rows.
+     * @return array An associative array containing row details from the specified table or an empty array if not found.
+     * @throws RuntimeException if request failed.
+     */
+    public function getAllWhereSafe(string $table, string $column, string $operator, array $values, ?int $limit = null, ?int $offset = null): array
+    {
+        $query = "SELECT * FROM {$table} WHERE {$column} ";
+
+        if (in_array($operator, ["IN", "NOT IN", "BETWEEN", "NOT BETWEEN"]) === false) {
+            // Creates a placeholder for single value operators
+            $query .= " :{$column} ";
+        } else {
+            // Creates placeholders for each value for operators with multiple values
+            $placeholders = [];
+            foreach ($values as $key => $_) {
+                $placeholders[] = ":{$column}{$key}";
+            }
+
+            if (in_array($operator, ["IN", "NOT IN"]) === true) {
+                $placeholdersString = implode(", ", $placeholders);
+                $query .= " {$operator} ({$placeholdersString}) ";
+            }
+
+            if (in_array($operator, ["BETWEEN", "NOT BETWEEN"]) === true) {
+                $query .= " {$operator} {$placeholders[0]} AND {$placeholders[1]}";
+            }
+        }
+
+        if ($limit !== null) {
+            $query .= " LIMIT {$limit}";
+        }
+
+        if ($offset !== null) {
+            $query .= " OFFSET {$offset}";
+        }
+
+        $stmt = $this->getConn()->prepare($query);
+
+        try {
+            if (in_array($operator, ["IN", "NOT IN", "BETWEEN", "NOT BETWEEN"]) === false) {
+                $this->bindValues($stmt, ["{$column}" => $values[0]]);
+            } else {
+                foreach ($placeholders as $key => $placeholder) {
+                    $placeholderName = substr($placeholder, 1); // removes leading colon
+                    $this->bindValues($stmt, [$placeholderName => $values[$key]]);
+                }
+            }
+
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (\PDOException $e) {
+            logError("BaseModel::getAllWhereSafe failed. Failed to fetch data from {$table} table. ", ['message' => $e->getMessage(), 'code' => $e->getCode()]);
             throw new RuntimeException("Request failed. Try again.");
         }
     }
@@ -321,6 +391,11 @@ abstract class BaseModel
     private function bindValues(PDOStatement $stmt, array $row): void
     {
         foreach ($row as $key => $value) {
+            // Check for invalid parameter key
+            if (str_contains($key, ":")) {
+                throw new InvalidArgumentException("Parameter key should not contain colon (:). Given key: {$key}");
+            }
+
             if (is_string($value)) {
                 $type = PDO::PARAM_STR;
             } elseif (is_int($value)) {
