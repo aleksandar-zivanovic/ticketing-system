@@ -2,8 +2,10 @@
 require_once 'BaseController.php';
 require_once ROOT . "services" . DS . "LoginService.php";
 require_once ROOT . "Exceptions" . DS . "AccountNotVerifiedException.php";
+require_once ROOT . "Exceptions" . DS . "AccountBlockedException.php";
 
 use Exceptions\AccountNotVerifiedException;
+use Exceptions\AccountBlockedException;
 
 class LoginController extends BaseController
 {
@@ -79,14 +81,12 @@ class LoginController extends BaseController
             } else {
                 redirectAndDie(...$redirectData("user"));
             }
-        } catch (AccountNotVerifiedException $e) {
+        } catch (AccountNotVerifiedException | AccountBlockedException $e) {
             redirectAndDie($this->redirectUrl, $e->getMessage(), "info");
         } catch (\Throwable $th) {
             redirectAndDie($this->redirectUrl, "Login failed.");
         }
     }
-
-
 
     /**
      * Renders a view file and passes data to it.

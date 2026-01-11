@@ -62,25 +62,34 @@ class UserBulkActionService extends BaseService
      * Change the role of one or multiple users.
      *
      * @param array $data An associative array containing 'userIds' and 'roleId'.
+     * 
      * @return void
+     * @throws RuntimeException if the update in User::updateRowsWithParenthesesOperators() fails
+     * @throws RuntimeException if fetching users in User::getAllWhereSafe() fails
+     * @throws Exception If a problem occurs during sending the email.
+     * @see User::updateRowsWithParenthesesOperators()
+     * @see User::getAllWhereSafe()
+     * @see UserBulkActionNotificationService::createChangeRoleNotification()
      */
     public function changeRole(array $data)
     {
         require_once ROOT . 'classes' . DS . 'User.php';
         $user = new User();
 
+        $columns = [
+            ["role_id" => $data["roleId"]],
+            USER_ROLES["unverified"] !== $data["roleId"] ? ["verified" => 1] : ["verified" => 0],
+            ["verification_code" => NULL]
+        ];
+
         $user->updateRowsWithParenthesesOperators(
             tableName: "users",
-            columns: [                              // columns to be updated
-                ["role_id" => $data["roleId"]],
-            ],
+            columns: $columns,                      // columns to be updated
             whereClauses: [                         // WHERE clauses
                 ["id" => $data["userIds"]],
             ],
             operator: "IN"
         );
-
-        // Process user(s) for actions blocked and unverified
 
         $timestamp = date("Y-m-d H:i:s");
 

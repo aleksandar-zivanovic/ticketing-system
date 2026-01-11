@@ -50,7 +50,12 @@ class LoginService extends BaseService
 
         // Check if the account is verified
         if ($user['u_verified'] !== 1) {
-            throw new AccountNotVerifiedException();
+            throw new Exceptions\AccountNotVerifiedException();
+        }
+
+        // Check if the account is blocked
+        if ($user['u_role_id'] === USER_ROLES["blocked"]) {
+            throw new Exceptions\AccountBlockedException();
         }
 
         // Update session version to invalidate other sessions
