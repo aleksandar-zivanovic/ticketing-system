@@ -49,6 +49,57 @@ define("TICKET_STATUSES", [
 define('SESSION_REFRESH_INTERVAL', 300); // 5 minutes
 
 /*
+ * USER_ROLES array defines the mapping of user roles to their corresponding integer values in the database.
+ * This configuration allows for easy reference and modification of user roles within the application.
+ * 
+ * The array assigned to the `USER_ROLES` constant is just an example. It can be modified
+ * to include different user roles and their associated integer values according to the needs of the
+ * application and how the roles are stored in the database.
+ * 
+ * Format:
+ *  - Key: The user role (e.g., "user", "admin")
+ *  - Value: The integer value representing the role in the database (e.g., 1, 3)
+ * 
+ * Example:
+ *  - "superadmin" => 4
+ * 
+ * If new roles are added to the database, the corresponding values should be updated here.
+ */
+define("USER_ROLES", [
+    "user"       => 1,
+    "moderator"  => 2,
+    "admin"      => 3,
+    "unverified" => 4,
+    "blocked"    => 5,
+]);
+
+/*
+ * DEPARTMENTS array defines the mapping of departments to their corresponding integer values in the database.
+ * This configuration allows for easy reference and modification of departments within the application.
+ * 
+ * The array assigned to the `DEPARTMENTS` constant is just an example. It can be modified
+ * to include different departments and their associated integer values according to the needs of the
+ * application and how the departments are stored in the database.
+ * 
+ * Format:
+ *  - Key: The department name (e.g., "Human Resources", "Finance")
+ *  - Value: The integer value representing the department in the database (e.g., 2, 3)
+ *
+ * Example:
+ *  - "General Management" => 2
+ * 
+ * If new departments are added to the database, the corresponding values should be updated here.
+ */
+define("DEPARTMENTS", [
+    "Unassigned"             => 1,
+    "Human Resources"        => 2,
+    "Finance"                => 3,
+    "Operations"             => 4,
+    "Marketing"              => 5,
+    "Information Technology" => 6,
+]);
+
+/*
  * Error page configuration
  * 
  * This constant defines the path to the error page used in the application.
