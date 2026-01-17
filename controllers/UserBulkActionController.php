@@ -18,9 +18,11 @@ class UserBulkActionController extends BaseController
             return ["success" => false, "message" => "Invalid request method.", "url" => "error"];
         }
 
-        if (!isset($_POST["user_actions"]) || empty($_POST["user_actions"])) {
+        // Determine the action to be performed
+        if ($this->hasValue($_POST["user_actions"]) === false) {
             return ["success" => false, "message" => "No user action specified.", "url" => "error"];
         }
+        $userActionValue = $_POST["user_actions"];
 
         // Check if user IDs are provided
         if (!isset($_POST["user_ids"]) || empty($_POST["user_ids"])) {
@@ -41,12 +43,6 @@ class UserBulkActionController extends BaseController
                 $validatedIds[] = $userId;
             }
         }
-
-        // Determine the action to be performed
-        if ($this->hasValue($_POST["user_actions"]) === false) {
-            return ["success" => false, "message" => "No user action specified."];
-        }
-        $userActionValue = $_POST["user_actions"];
 
         // Verify the action using the service
         $serviceVerification = $this->userBulkActionService->verify([
@@ -83,7 +79,7 @@ class UserBulkActionController extends BaseController
                 $message = "Successfully changed role status for users: " . implode(", ", $ids);
                 break;
             case "changeDepartment":
-                # code...
+                $message = "Successfully changed department status for users: " . implode(", ", $ids);
                 break;
             case "sendBulkEmail":
                 # code...

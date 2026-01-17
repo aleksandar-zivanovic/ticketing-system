@@ -23,7 +23,7 @@ class UserBulkActionNotificationService extends BaseService
      * @throws Exception If a problem occurs during sending the email.
      * @see EmailService::sendEmail()
      */
-    public function createActionPerformerNotification(array $userIds, array $performedBy, string $timestamp): void
+    public function sendActionPerformerNotification(array $userIds, array $performedBy, string $timestamp): void
     {
         $idsString = implode(", ", $userIds);
         $plural    = count($userIds) > 1 ? "s" : "";
@@ -61,7 +61,7 @@ class UserBulkActionNotificationService extends BaseService
      * @throws Exception If a problem occurs during sending the email.
      * @see EmailService::sendEmail()
      */
-    public function createChangeRoleNotification(array $usersDetails, int $roleId): void
+    public function sendChangeRoleNotification(array $usersDetails, int $roleId): void
     {
         $roleName = array_flip(USER_ROLES)[$roleId];
         $subject  = "Your role has been changed";
@@ -88,5 +88,10 @@ class UserBulkActionNotificationService extends BaseService
             // Sends the email
             $this->emailService->sendEmail(email: $email, name: $name, surname: $surname, subject: $subject, body: $body, altBody: $altBody);
         }
+    }
+
+    public function sendChangeDepartmentNotification(array $usersDetails, int $departmentId): void
+    {
+        dd("Not implemented yet.");
     }
 }

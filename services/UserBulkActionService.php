@@ -34,12 +34,9 @@ class UserBulkActionService extends BaseService
         // Verify change a department
         if (str_starts_with($data["userActionValue"], "dp_")) {
             $value = substr($data["userActionValue"], 3);
-            require_once ROOT . 'classes' . DS . 'Department.php';
-            $department = new Department();
-            $departments = $department->getAllDepartments();
-            foreach ($departments as $dept) {
-                if ($value === $dept['name']) {
-                    return ["success" => true, "action" => "changeDepartment", "departmentId" => $dept['id']];
+            foreach (DEPARTMENTS as $departmentName => $departmentID) {
+                if ($value === $departmentName) {
+                    return ["success" => true, "action" => "changeDepartment", "departmentId" => $departmentID];
                 }
             }
             return ["success" => false, "message" => "Invalid department specified."];
@@ -69,7 +66,7 @@ class UserBulkActionService extends BaseService
      * @throws Exception If a problem occurs during sending the email.
      * @see User::updateRowsWithParenthesesOperators()
      * @see User::getAllWhereSafe()
-     * @see UserBulkActionNotificationService::createChangeRoleNotification()
+     * @see UserBulkActionNotificationService::sendChangeRoleNotification()
      */
     public function changeRole(array $data)
     {
@@ -108,13 +105,57 @@ class UserBulkActionService extends BaseService
         $usersDetails = $user->getAllWhereSafe("users", "id", "IN", $data["userIds"]);
 
         // Send notification emails to affected users
-        $this->notificationService->createChangeRoleNotification($usersDetails, $data["roleId"]);
+        $this->notificationService->sendChangeRoleNotification($usersDetails, $data["roleId"]);
 
         // Send notification email to the user who performed the action
-        $this->notificationService->createActionPerformerNotification($data["userIds"], $performedBy, $timestamp);
+        $this->notificationService->sendActionPerformerNotification($data["userIds"], $performedBy, $timestamp);
 
         // TODO: Log the role change actions, after the audit system has been created
 
+
+    }
+
+    public function changeDepartment(array $data) 
+    {
+        require_once ROOT . 'classes' . DS . 'User.php';
+        $user = new User();
+
+        $columns = [
+            ["department_id" => $data["departmentId"]],
+        ];
+
+        $user->updateRowsWithParenthesesOperators(
+            tableName: "users",
+            columns: $columns,                      // columns to be updated
+            whereClauses: [                         // WHERE clauses
+                ["id" => $data["userIds"]],
+            ],
+            operator: "IN"
+        );
+
+        $timestamp = date("Y-m-d H:i:s");
+
+        // Prepare data for sending notifications
+        $performedBy = [
+            "ids"       => $data["userIds"],
+            "email"     => $data["email"],
+            "name"      => $data["name"],
+            "surname"   => $data["surname"],
+            "action"    => "changed department",
+            "plural"    => count($data["userIds"]) > 1 ? "s" : "",
+            "idsString" => implode(", ", $data["userIds"]),
+        ];
+
+        // Fetch details of affected users for notifications
+        $usersDetails = $user->getAllWhereSafe("users", "id", "IN", $data["userIds"]);
+
+        // Send notification emails to affected users
+        $this->notificationService->sendChangeDepartmentNotification($usersDetails, $data["departmentId"]);
+
+        // Send notification email to the user who performed the action
+        $this->notificationService->sendActionPerformerNotification($data["userIds"], $performedBy, $timestamp);
+
+        // TODO: Log the department change actions, after the audit system has been created
 
     }
 }
