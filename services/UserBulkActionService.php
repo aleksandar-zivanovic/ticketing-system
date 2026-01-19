@@ -6,10 +6,12 @@ class UserBulkActionService extends BaseService
 {
 
     private UserBulkActionNotificationService $notificationService;
+    private User $user;
 
     public function __construct()
     {
         $this->notificationService = new UserBulkActionNotificationService();
+        $this->user = new User();
     }
 
     /**
@@ -20,12 +22,19 @@ class UserBulkActionService extends BaseService
      */
     public function verify($data): array
     {
+        // TODO: Add affected users' ids verification
         // Verify change an user role
         if (str_starts_with($data["userActionValue"], "ur_")) {
             $value = substr($data["userActionValue"], 3);
             foreach (USER_ROLES as $roleName => $roleId) {
                 if ($value === $roleName) {
-                    return ["success" => true, "action" => "changeRole", "roleId" => $roleId];
+                    return [
+                        "success"    => true,
+                        "newValueId" => $roleId,
+                        "method"     => "changeRole",
+                        "action"     => "changed role",
+                        "message"    => "Successfully changed role status for users: " . implode(", ", $data["userIds"]),
+                    ];
                 }
             }
             return ["success" => false, "message" => "Invalid role specified."];
@@ -36,7 +45,13 @@ class UserBulkActionService extends BaseService
             $value = substr($data["userActionValue"], 3);
             foreach (DEPARTMENTS as $departmentName => $departmentID) {
                 if ($value === $departmentName) {
-                    return ["success" => true, "action" => "changeDepartment", "departmentId" => $departmentID];
+                    return [
+                        "success"  => true,
+                        "newValueId" => $departmentID,
+                        "method"     => "changeDepartment",
+                        "action"     => "changed department",
+                        "message"    => "Successfully changed department status for users: " . implode(", ", $data["userIds"]),
+                    ];
                 }
             }
             return ["success" => false, "message" => "Invalid department specified."];
@@ -48,8 +63,6 @@ class UserBulkActionService extends BaseService
                 return ["success" => true, "action" => "sendBulkEmail"];
             case 'password_reset':
                 return ["success" => true, "action" => "passwordReset"];
-            case 'delete_user':
-                return ["success" => true, "action" => "deleteUser"];
             default:
                 return ["success" => false, "message" => "Unauthorized user action specified."];
         }
@@ -70,92 +83,98 @@ class UserBulkActionService extends BaseService
      */
     public function changeRole(array $data)
     {
-        require_once ROOT . 'classes' . DS . 'User.php';
-        $user = new User();
-
         $columns = [
-            ["role_id" => $data["roleId"]],
-            USER_ROLES["unverified"] !== $data["roleId"] ? ["verified" => 1] : ["verified" => 0],
+            ["role_id" => $data["newValueId"]],
+            USER_ROLES["unverified"] !== $data["newValueId"] ? ["verified" => 1] : ["verified" => 0],
             ["verification_code" => NULL]
         ];
 
-        $user->updateRowsWithParenthesesOperators(
-            tableName: "users",
-            columns: $columns,                      // columns to be updated
-            whereClauses: [                         // WHERE clauses
-                ["id" => $data["userIds"]],
-            ],
-            operator: "IN"
-        );
-
-        $timestamp = date("Y-m-d H:i:s");
-
-        // Prepare data for sending notifications
-        $performedBy = [
-            "ids"       => $data["userIds"],
-            "email"     => $data["email"],
-            "name"      => $data["name"],
-            "surname"   => $data["surname"],
-            "action"    => "changed role",
-            "plural"    => count($data["userIds"]) > 1 ? "s" : "",
-            "idsString" => implode(", ", $data["userIds"]),
-        ];
-
-        // Fetch details of affected users for notifications
-        $usersDetails = $user->getAllWhereSafe("users", "id", "IN", $data["userIds"]);
-
-        // Send notification emails to affected users
-        $this->notificationService->sendChangeRoleNotification($usersDetails, $data["roleId"]);
-
-        // Send notification email to the user who performed the action
-        $this->notificationService->sendActionPerformerNotification($data["userIds"], $performedBy, $timestamp);
+        // Handle notifications for the role change
+        $this->handleUserBulkActionNotifications($data, $columns);
 
         // TODO: Log the role change actions, after the audit system has been created
 
+    }
+
+    /**
+     * Change the department of one or multiple users.
+     *
+     * @param array $data An associative array containing 'userIds' and 'departmentId'.
+     * 
+     * @return void
+     * @throws RuntimeException if the update in User::updateRowsWithParenthesesOperators() fails
+     * @throws RuntimeException if fetching users in User::getAllWhereSafe() fails
+     * @throws Exception If a problem occurs during sending the email.
+     * @see User::getAllWhereSafe()
+     * @see User::updateRowsWithParenthesesOperators()
+     * @see UserBulkActionNotificationService::sendChangeDepartmentNotification()
+     */
+    public function changeDepartment(array $data)
+    {
+        $columns = [
+            ["department_id" => $data["newValueId"]],
+        ];
+
+        // Handle notifications for the department change
+        $this->handleUserBulkActionNotifications($data, $columns);
+
+        // TODO: Log the department change actions, after the audit system has been created
 
     }
 
-    public function changeDepartment(array $data) 
+    /**
+     * Handle notifications for user bulk actions.
+     *
+     * @param array $data An associative array containing user action data.
+     * @param array $columns An array of columns to be updated in the database.
+     * 
+     * @return void
+     * @throws RuntimeException if the update in User::updateRowsWithParenthesesOperators() fails
+     * @throws RuntimeException if fetching users in User::getAllWhereSafe() fails
+     * @throws Exception If a problem occurs during sending the email.
+     * @see User::getAllWhereSafe()
+     * @see User::updateRowsWithParenthesesOperators()
+     * @see UserBulkActionNotificationService::sendChangeDepartmentNotification()
+     */
+    private function handleUserBulkActionNotifications(array $data, array $columns): void
     {
-        require_once ROOT . 'classes' . DS . 'User.php';
-        $user = new User();
-
-        $columns = [
-            ["department_id" => $data["departmentId"]],
-        ];
-
-        $user->updateRowsWithParenthesesOperators(
-            tableName: "users",
-            columns: $columns,                      // columns to be updated
-            whereClauses: [                         // WHERE clauses
-                ["id" => $data["userIds"]],
-            ],
-            operator: "IN"
-        );
-
-        $timestamp = date("Y-m-d H:i:s");
-
         // Prepare data for sending notifications
         $performedBy = [
             "ids"       => $data["userIds"],
             "email"     => $data["email"],
             "name"      => $data["name"],
             "surname"   => $data["surname"],
-            "action"    => "changed department",
+            "action"    => $data["action"],
             "plural"    => count($data["userIds"]) > 1 ? "s" : "",
             "idsString" => implode(", ", $data["userIds"]),
         ];
 
         // Fetch details of affected users for notifications
-        $usersDetails = $user->getAllWhereSafe("users", "id", "IN", $data["userIds"]);
+        $usersDetails = $this->user->getAllWhereSafe("users", "id", "IN", $data["userIds"]);
 
-        // Send notification emails to affected users
-        $this->notificationService->sendChangeDepartmentNotification($usersDetails, $data["departmentId"]);
+        $timestamp = date("Y-m-d H:i:s");
+
+        // Update users in the database only if the action is not "sent email"
+        if ($performedBy["action"] !== "sent email") {
+            $this->user->updateRowsWithParenthesesOperators(
+                tableName: "users",
+                columns: $columns,                      // columns to be updated
+                whereClauses: [                         // WHERE clauses
+                    ["id" => $data["userIds"]],
+                ],
+                operator: "IN"
+            );
+        }
+
+        $method = "send" . ucfirst($data["method"]) . "Notification";
+
+        if (!method_exists($this->notificationService, $method)) {
+            throw new RuntimeException("Notification method $method does not exist.");
+        }
+        // Send notification/bulk emails to affected users
+        $this->notificationService->$method($usersDetails, $data["newValueId"]);
 
         // Send notification email to the user who performed the action
         $this->notificationService->sendActionPerformerNotification($data["userIds"], $performedBy, $timestamp);
-
-        // TODO: Log the department change actions, after the audit system has been created
-
     }
 }

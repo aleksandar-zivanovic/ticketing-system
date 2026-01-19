@@ -27,14 +27,12 @@ class UserBulkActionNotificationService extends BaseService
     {
         $idsString = implode(", ", $userIds);
         $plural    = count($userIds) > 1 ? "s" : "";
-
-        $subject  = "User Action Performed - {$performedBy["action"]}";
-        // $message  = "You {$performedBy["action"]} for user{$plural} with ID{$plural}: {$idsString} at {$timestamp}";
-        $linkText = "Click Here to Visit Admin Panel";
-        $linkUrl  = BASE_URL . "admin/users-listing.php";
-        $email    = $performedBy["email"];
-        $name     = $performedBy["name"];
-        $surname  = $performedBy["surname"];
+        $subject   = "User Action Performed - {$performedBy["action"]}";
+        $linkText  = "Click Here to Visit Admin Panel";
+        $linkUrl   = BASE_URL . "admin" . DS . "users-listing.php";
+        $email     = $performedBy["email"];
+        $name      = $performedBy["name"];
+        $surname   = $performedBy["surname"];
 
         // Build the email content
         $body     = require_once ROOT . 'EmailTemplates' . DS . 'action_performer_notification_email.php';
@@ -52,22 +50,21 @@ class UserBulkActionNotificationService extends BaseService
     }
 
     /**
-     * Creates a notification for users whose role has been changed.
+     * Sends a notification to users when their profile is updated.
      *
      * @param array $usersDetails An array containing details of the affected users.
-     * @param int $roleId The ID of the new role.
+     * @param string $subject The subject of the email.
+     * @param array $messages An array containing the email messages. Format:
+     *                        - "altBody": The plain text alternative body.
+     *                        - "template": The HTML template body.
      * @return void
      *
      * @throws Exception If a problem occurs during sending the email.
      * @see EmailService::sendEmail()
      */
-    public function sendChangeRoleNotification(array $usersDetails, int $roleId): void
+    private function sendUserNotification(array $usersDetails, string $subject, array $messages): void
     {
-        $roleName = array_flip(USER_ROLES)[$roleId];
-        $subject  = "Your role has been changed";
-        // $message  = "Your role has been changed to: " . $roleName;
-        $linkText = "Click Here to Visit Your Profile";
-
+        $linkText       = "Click Here to Visit Your Profile";
         foreach ($usersDetails as $user) {
             $linkUrl  = BASE_URL . "profile.php?user=" . $user["id"];
             $email    = $user["email"];
@@ -75,12 +72,12 @@ class UserBulkActionNotificationService extends BaseService
             $surname  = $user["surname"];
 
             // Build the email content
-            $body     = require ROOT . 'EmailTemplates' . DS . 'change_role_notification_email.php';
+            $body     = require ROOT . 'EmailTemplates' . DS . 'drop_down_user_notification_email.php';
 
             // Plain text alternative body
-            $altBody =
+            $altBody  =
                 "Hello {$name} {$surname},\n" .
-                "Your user role is changed to " . USER_ROLES[$roleId] . "\n" .
+                "{$messages['altBody']}\n" .
                 "You can view your profile here: {$linkUrl} \n\n" .
                 "Best regards,\n" .
                 "The Ticketing System Team";
@@ -90,8 +87,41 @@ class UserBulkActionNotificationService extends BaseService
         }
     }
 
+    /**
+     * Creates a notification for users whose role has been changed.
+     *
+     * @param array $usersDetails An array containing details of the affected users.
+     * @param int $roleId The ID of the new role.
+     * @return void
+     *
+     * @throws Exception If a problem occurs during sending the email.
+     * @see UserBulkActionNotificationService::sendActionPerformerNotification()
+     */
+    public function sendChangeRoleNotification(array $usersDetails, int $roleId): void
+    {
+        $roleName             = array_flip(USER_ROLES)[$roleId];
+        $subject              = "Your role has been changed";
+        $messages["altBody"]  = "Your role has been changed to: " . $roleName;
+        $messages["template"] = "Your role has been changed to: <span style='font-style: italic; font-weight:bold;'>{$roleName}</span>.";
+        $this->sendUserNotification($usersDetails, $subject, $messages);
+    }
+
+    /**
+     * Sends a notification to users when their department is changed.
+     *
+     * @param array $usersDetails An array containing details of the affected users.
+     * @param int $departmentId The ID of the new department.
+     * @return void
+     *
+     * @throws Exception If a problem occurs during sending the email.
+     * @see UserBulkActionNotificationService::sendActionPerformerNotification()
+     */
     public function sendChangeDepartmentNotification(array $usersDetails, int $departmentId): void
     {
-        dd("Not implemented yet.");
+        $departmentName       = array_flip(DEPARTMENTS)[$departmentId];
+        $subject              = "Your department has been changed";
+        $messages["altBody"]  = "Your department has been changed to: " . $departmentName;
+        $messages["template"] = "Your department has been changed to: <span style='font-style: italic; font-weight:bold;'>{$departmentName}</span>.";
+        $this->sendUserNotification($usersDetails, $subject, $messages);
     }
 }
