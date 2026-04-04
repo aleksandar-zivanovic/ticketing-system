@@ -116,6 +116,16 @@ return [
     "/email-verification.php"        => [
         "handler" => [VerificationController::class, "verifyUser"]
     ],
+    // form that sends email address to reset_password_action.php route
+    "/forgot-password.php"              => [
+        "handler" => [PasswordForgotController::class, "show"]
+    ],
+    "/reset-password.php"              => [
+        "handler" => [PasswordResetController::class, "show"]
+    ],
+    "/reset_password_action.php"              => [
+        "handler" => [PasswordResetController::class, "resetPassword"]
+    ],
     "/search_action.php"           => [
         "handler" => [SearchController::class, "showResults"]
     ],

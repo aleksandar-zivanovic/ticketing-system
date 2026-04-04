@@ -10,6 +10,9 @@ class AuthMiddleware
         "/logout.php",
         "/resend-code.php",
         "/resend_code_action.php",
+        "/forgot-password.php",
+        "/reset-password.php",
+        "/reset_password_action.php",
         "/email-verification.php",
         "/tests/"
     ];

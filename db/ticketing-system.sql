@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Aug 18, 2025 at 01:58 PM
+-- Generation Time: Apr 04, 2026 at 06:39 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -27,10 +27,12 @@ SET time_zone = "+00:00";
 -- Table structure for table `departments`
 --
 
-CREATE TABLE `departments` (
-  `id` tinyint(4) NOT NULL,
-  `name` varchar(255) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+DROP TABLE IF EXISTS `departments`;
+CREATE TABLE IF NOT EXISTS `departments` (
+  `id` tinyint(4) NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `departments`
@@ -50,10 +52,13 @@ INSERT INTO `departments` (`id`, `name`) VALUES
 -- Table structure for table `favorite_tickets`
 --
 
-CREATE TABLE `favorite_tickets` (
+DROP TABLE IF EXISTS `favorite_tickets`;
+CREATE TABLE IF NOT EXISTS `favorite_tickets` (
   `id` int(11) NOT NULL,
   `user` int(11) NOT NULL,
-  `ticket` int(11) NOT NULL
+  `ticket` int(11) NOT NULL,
+  KEY `fk_favorite_tickets_user_users_id` (`user`),
+  KEY `favorite_tickets_ticket_tickets_id` (`ticket`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -62,13 +67,18 @@ CREATE TABLE `favorite_tickets` (
 -- Table structure for table `messages`
 --
 
-CREATE TABLE `messages` (
-  `id` int(11) NOT NULL,
+DROP TABLE IF EXISTS `messages`;
+CREATE TABLE IF NOT EXISTS `messages` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
   `ticket` int(11) NOT NULL,
   `user` int(11) NOT NULL,
   `body` text NOT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `email_sent` tinyint(1) NOT NULL DEFAULT 0,
+  PRIMARY KEY (`id`),
+  KEY `fk_messages_ticket_tickets_id` (`ticket`),
+  KEY `fk_messages_user_users_id` (`user`)
+) ENGINE=InnoDB AUTO_INCREMENT=128 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -76,10 +86,30 @@ CREATE TABLE `messages` (
 -- Table structure for table `message_attachments`
 --
 
-CREATE TABLE `message_attachments` (
-  `id` int(11) NOT NULL,
+DROP TABLE IF EXISTS `message_attachments`;
+CREATE TABLE IF NOT EXISTS `message_attachments` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
   `file_name` varchar(255) NOT NULL,
-  `message` int(11) NOT NULL
+  `message` int(11) NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `fk_messageattachments_message_messages_id` (`message`)
+) ENGINE=InnoDB AUTO_INCREMENT=182 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `password_resets`
+--
+
+DROP TABLE IF EXISTS `password_resets`;
+CREATE TABLE IF NOT EXISTS `password_resets` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `user_id` int(11) NOT NULL,
+  `token_hash` varchar(255) NOT NULL,
+  `expires_at` datetime DEFAULT NULL,
+  `used` tinyint(4) NOT NULL DEFAULT 0,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -88,10 +118,12 @@ CREATE TABLE `message_attachments` (
 -- Table structure for table `priorities`
 --
 
-CREATE TABLE `priorities` (
-  `id` tinyint(4) NOT NULL,
-  `name` varchar(6) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+DROP TABLE IF EXISTS `priorities`;
+CREATE TABLE IF NOT EXISTS `priorities` (
+  `id` tinyint(4) NOT NULL AUTO_INCREMENT,
+  `name` varchar(6) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `priorities`
@@ -109,10 +141,12 @@ INSERT INTO `priorities` (`id`, `name`) VALUES
 -- Table structure for table `roles`
 --
 
-CREATE TABLE `roles` (
-  `id` tinyint(4) NOT NULL,
-  `role_name` varchar(10) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+DROP TABLE IF EXISTS `roles`;
+CREATE TABLE IF NOT EXISTS `roles` (
+  `id` tinyint(4) NOT NULL AUTO_INCREMENT,
+  `role_name` varchar(10) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `roles`
@@ -131,10 +165,12 @@ INSERT INTO `roles` (`id`, `role_name`) VALUES
 -- Table structure for table `statuses`
 --
 
-CREATE TABLE `statuses` (
-  `id` tinyint(4) NOT NULL,
-  `name` varchar(12) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+DROP TABLE IF EXISTS `statuses`;
+CREATE TABLE IF NOT EXISTS `statuses` (
+  `id` tinyint(4) NOT NULL AUTO_INCREMENT,
+  `name` varchar(12) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `statuses`
@@ -151,8 +187,9 @@ INSERT INTO `statuses` (`id`, `name`) VALUES
 -- Table structure for table `tickets`
 --
 
-CREATE TABLE `tickets` (
-  `id` int(11) NOT NULL,
+DROP TABLE IF EXISTS `tickets`;
+CREATE TABLE IF NOT EXISTS `tickets` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
   `created_date` timestamp NOT NULL DEFAULT current_timestamp(),
   `closed_date` timestamp NULL DEFAULT NULL,
   `department` tinyint(4) NOT NULL,
@@ -165,8 +202,15 @@ CREATE TABLE `tickets` (
   `title` varchar(255) NOT NULL,
   `body` text NOT NULL,
   `url` varchar(255) NOT NULL,
-  `parent_ticket` int(11) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+  `parent_ticket` int(11) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `fk_tickets_createdby_users_id` (`created_by`),
+  KEY `fk_tickets_department_departments_id` (`department`),
+  KEY `fk_tickets_handledby_users_id` (`handled_by`),
+  KEY `fk_tickets_priority_priorities_id` (`priority`),
+  KEY `fk_tickets_statusId_statuses_id` (`statusId`) USING BTREE,
+  KEY `fk_tickets_parent_ticket_tikcets_id` (`parent_ticket`)
+) ENGINE=InnoDB AUTO_INCREMENT=485 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -174,11 +218,14 @@ CREATE TABLE `tickets` (
 -- Table structure for table `ticket_attachments`
 --
 
-CREATE TABLE `ticket_attachments` (
-  `id` int(11) NOT NULL,
+DROP TABLE IF EXISTS `ticket_attachments`;
+CREATE TABLE IF NOT EXISTS `ticket_attachments` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
   `file_name` varchar(255) NOT NULL,
-  `ticket` int(11) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+  `ticket` int(11) NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `fk_ticketattachments_ticket_tickets_id` (`ticket`)
+) ENGINE=InnoDB AUTO_INCREMENT=257 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -186,18 +233,68 @@ CREATE TABLE `ticket_attachments` (
 -- Table structure for table `users`
 --
 
-CREATE TABLE `users` (
-  `id` int(11) NOT NULL,
+DROP TABLE IF EXISTS `users`;
+CREATE TABLE IF NOT EXISTS `users` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
   `email` varchar(255) NOT NULL,
   `password` varchar(255) NOT NULL,
   `name` varchar(255) NOT NULL,
   `surname` varchar(255) NOT NULL,
   `role_id` tinyint(4) NOT NULL,
-  `phone` varchar(10) NOT NULL,
+  `phone` varchar(15) NOT NULL,
   `department_id` tinyint(4) DEFAULT NULL,
   `verification_code` varchar(40) DEFAULT NULL,
   `verified` tinyint(1) NOT NULL DEFAULT 0,
-  `session_version` int(11) NOT NULL DEFAULT 1
+  `session_version` int(11) NOT NULL DEFAULT 1,
+  PRIMARY KEY (`id`),
+  KEY `fk_users_roleid_roles_id` (`role_id`),
+  KEY `fk_users_departmentid_departments_id` (`department_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=79 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `user_management_audit`
+--
+
+DROP TABLE IF EXISTS `user_management_audit`;
+CREATE TABLE IF NOT EXISTS `user_management_audit` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `performed_by` int(11) NOT NULL,
+  `action_type` varchar(20) NOT NULL,
+  `old_value` varchar(20) NOT NULL,
+  `new_value` varchar(20) NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `fk_uma_performed_by_users_id` (`performed_by`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `user_management_audit_targets`
+--
+
+DROP TABLE IF EXISTS `user_management_audit_targets`;
+CREATE TABLE IF NOT EXISTS `user_management_audit_targets` (
+  `audit_id` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  PRIMARY KEY (`audit_id`,`user_id`),
+  KEY `fk_umat_user_id _users_id` (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `user_password_history`
+--
+
+DROP TABLE IF EXISTS `user_password_history`;
+CREATE TABLE IF NOT EXISTS `user_password_history` (
+  `id` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `old_password` varchar(255) NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -206,158 +303,13 @@ CREATE TABLE `users` (
 -- Table structure for table `years`
 --
 
-CREATE TABLE `years` (
-  `id` smallint(6) NOT NULL,
-  `year` year(4) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Indexes for dumped tables
---
-
---
--- Indexes for table `departments`
---
-ALTER TABLE `departments`
-  ADD PRIMARY KEY (`id`);
-
---
--- Indexes for table `favorite_tickets`
---
-ALTER TABLE `favorite_tickets`
-  ADD KEY `fk_favorite_tickets_user_users_id` (`user`),
-  ADD KEY `favorite_tickets_ticket_tickets_id` (`ticket`);
-
---
--- Indexes for table `messages`
---
-ALTER TABLE `messages`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `fk_messages_ticket_tickets_id` (`ticket`),
-  ADD KEY `fk_messages_user_users_id` (`user`);
-
---
--- Indexes for table `message_attachments`
---
-ALTER TABLE `message_attachments`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `fk_messageattachments_message_messages_id` (`message`);
-
---
--- Indexes for table `priorities`
---
-ALTER TABLE `priorities`
-  ADD PRIMARY KEY (`id`);
-
---
--- Indexes for table `roles`
---
-ALTER TABLE `roles`
-  ADD PRIMARY KEY (`id`);
-
---
--- Indexes for table `statuses`
---
-ALTER TABLE `statuses`
-  ADD PRIMARY KEY (`id`);
-
---
--- Indexes for table `tickets`
---
-ALTER TABLE `tickets`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `fk_tickets_createdby_users_id` (`created_by`),
-  ADD KEY `fk_tickets_department_departments_id` (`department`),
-  ADD KEY `fk_tickets_handledby_users_id` (`handled_by`),
-  ADD KEY `fk_tickets_priority_priorities_id` (`priority`),
-  ADD KEY `fk_tickets_statusId_statuses_id` (`statusId`) USING BTREE,
-  ADD KEY `fk_tickets_parent_ticket_tikcets_id` (`parent_ticket`);
-
---
--- Indexes for table `ticket_attachments`
---
-ALTER TABLE `ticket_attachments`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `fk_ticketattachments_ticket_tickets_id` (`ticket`);
-
---
--- Indexes for table `users`
---
-ALTER TABLE `users`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `fk_users_roleid_roles_id` (`role_id`),
-  ADD KEY `fk_users_departmentid_departments_id` (`department_id`);
-
---
--- Indexes for table `years`
---
-ALTER TABLE `years`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `year` (`year`);
-
---
--- AUTO_INCREMENT for dumped tables
---
-
---
--- AUTO_INCREMENT for table `departments`
---
-ALTER TABLE `departments`
-  MODIFY `id` tinyint(4) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
-
---
--- AUTO_INCREMENT for table `messages`
---
-ALTER TABLE `messages`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `message_attachments`
---
-ALTER TABLE `message_attachments`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `priorities`
---
-ALTER TABLE `priorities`
-  MODIFY `id` tinyint(4) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
-
---
--- AUTO_INCREMENT for table `roles`
---
-ALTER TABLE `roles`
-  MODIFY `id` tinyint(4) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
-
---
--- AUTO_INCREMENT for table `statuses`
---
-ALTER TABLE `statuses`
-  MODIFY `id` tinyint(4) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
-
---
--- AUTO_INCREMENT for table `tickets`
---
-ALTER TABLE `tickets`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `ticket_attachments`
---
-ALTER TABLE `ticket_attachments`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `users`
---
-ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `years`
---
-ALTER TABLE `years`
-  MODIFY `id` smallint(6) NOT NULL AUTO_INCREMENT;
+DROP TABLE IF EXISTS `years`;
+CREATE TABLE IF NOT EXISTS `years` (
+  `id` smallint(6) NOT NULL AUTO_INCREMENT,
+  `year` year(4) NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `year` (`year`)
+) ENGINE=InnoDB AUTO_INCREMENT=2025 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Constraints for dumped tables
@@ -406,6 +358,19 @@ ALTER TABLE `ticket_attachments`
 ALTER TABLE `users`
   ADD CONSTRAINT `fk_users_departmentid_departments_id` FOREIGN KEY (`department_id`) REFERENCES `departments` (`id`),
   ADD CONSTRAINT `fk_users_roleid_roles_id` FOREIGN KEY (`role_id`) REFERENCES `roles` (`id`);
+
+--
+-- Constraints for table `user_management_audit`
+--
+ALTER TABLE `user_management_audit`
+  ADD CONSTRAINT `fk_uma_performed_by_users_id` FOREIGN KEY (`performed_by`) REFERENCES `users` (`id`);
+
+--
+-- Constraints for table `user_management_audit_targets`
+--
+ALTER TABLE `user_management_audit_targets`
+  ADD CONSTRAINT `fk_umat_audit_id_uma_id` FOREIGN KEY (`audit_id`) REFERENCES `user_management_audit` (`id`),
+  ADD CONSTRAINT `fk_umat_user_id _users_id` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`);
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

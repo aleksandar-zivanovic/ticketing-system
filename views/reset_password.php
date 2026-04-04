@@ -27,7 +27,7 @@ if (isLoggedIn()) {
         <div class="text-center mb-16">
             <a href="javascript:void(0)"><img src="https://readymadeui.com/readymadeui.svg" alt="logo" class='w-52 inline-block' />
             </a>
-            <h4 class="text-gray-800 text-base font-semibold mt-6">Login to your account</h4>
+            <h4 class="text-gray-800 text-base font-semibold mt-6">Enter new password</h4>
         </div>
 
         <?php
@@ -35,20 +35,23 @@ if (isLoggedIn()) {
         include_once ROOT . 'views' . DS . 'partials' . DS . '_session_messages.php';
         ?>
 
-        <form action="<?= BASE_URL ?>login_action.php" method="POST">
+        <form action="<?= BASE_URL ?>reset_password_action.php" method="POST">
             <div class="grid gap-8">
                 <?php
                 // email field
-                renderingInputField("Email:", "email", "email", "Enter your email address");
-
-                // password field
                 renderingInputField("Password:", "password", "password", "Enter your password");
+                ?>
+            </div>
+            <div class="grid gap-8">
+                <?php
+                // email field
+                renderingInputField("Re-enter Password:", "re_password", "password", "Re-enter your password");
                 ?>
             </div>
             <div class="!mt-12">
                 <?php
                 // submit button
-                renderingButton('user_action', 'Login');
+                renderingButton('user_action', 'Send Reset Link');
                 ?>
             </div>
 
