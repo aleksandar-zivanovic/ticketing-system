@@ -60,14 +60,15 @@ class BaseService
     /**
      * Validates the existence of a user by ID.
      *
-     * @param array $data The data containing the user ID to validate.
+     * @param array $userId The user ID to validate.
+     * @param User $userModel An instance of the User model.
      * @return array An associative array with 'success' (bool), 'message' (string), and 'data' (array) keys.
      * @throws \RuntimeException If a request to the database fails.
      * @see User::getAllWhere()
      */
-    protected function validateUserExistence(array $data, User $userModel): array
+    protected function validateUserExistence(int $userId, User $userModel): array
     {
-        $theUser = $userModel->getAllWhere("users", "id = {$data['id']}")[0];
+        $theUser = $userModel->getAllWhere("users", "id = {$userId}")[0];
         if (empty($theUser)) {
             return ["success" => false, "message" => "User not found.", "url" => "error"];
         }
@@ -76,6 +77,30 @@ class BaseService
             "success" => true,
             "data" => [
                 "theUser" => $theUser,
+            ]
+        ];
+    }
+
+    /**
+     * Validates the existence of multiple users by their IDs.
+     *
+     * @param array $ids An array of user IDs to validate.
+     * @param User $userModel An instance of the User model.
+     * @return array An associative array with 'success' (bool), 'message' (string), and 'data' (array) keys.
+     * @throws \RuntimeException If a request to the database fails.
+     * @see User::getAllWhere()
+     */
+    public function validateMultipleUsersExistence(array $ids, User $userModel): array
+    {
+        $users = $userModel->getAllWhere("users", "id IN (" . implode(",", $ids) . ")");
+        if (count($users) !== count($ids)) {
+            return ["success" => false, "message" => "One or more users not found.", "url" => "error"];
+        }
+
+        return [
+            "success" => true,
+            "data" => [
+                "users" => $users,
             ]
         ];
     }

@@ -43,7 +43,7 @@ class ProfileService extends BaseService
     public function validateShow($data): array
     {
         // Validates user existence in the database
-        $validateUserExistence = $this->validateUserExistence($data, $this->user);
+        $validateUserExistence = $this->validateUserExistence($data["id"], $this->user);
         if ($validateUserExistence["success"] === false) {
             return $validateUserExistence;
         }
@@ -98,7 +98,7 @@ class ProfileService extends BaseService
     public function validate(array $data): array
     {
         // Validates user existence in the database
-        $vaildateCommon = $this->validateUserExistence($data, $this->user);
+        $vaildateCommon = $this->validateUserExistence($data["id"], $this->user);
         if ($vaildateCommon["success"] === false) {
             return $vaildateCommon;
         }

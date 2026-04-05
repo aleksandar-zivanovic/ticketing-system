@@ -63,35 +63,6 @@ class UserBulkActionController extends BaseController
         ];
     }
 
-    // /**
-    //  * Create a success message based on the action performed.
-    //  *
-    //  * @param array $ids An array of user IDs.
-    //  * @param string $action The action performed.
-    //  * @return string The success message.
-    //  */
-    // private function createSuccessMessage(array $ids, string $action): string
-    // {
-    //     $message = "";
-
-    //     switch ($action) {
-    //         case "changeRole":
-    //             $message = "Successfully changed role status for users: " . implode(", ", $ids);
-    //             break;
-    //         case "changeDepartment":
-    //             $message = "Successfully changed department status for users: " . implode(", ", $ids);
-    //             break;
-    //         case "sendBulkEmail":
-    //             # code...
-    //             break;
-    //         case "passwordReset":
-    //             # code...
-    //             break;
-    //     }
-
-    //     return $message;
-    // }
-
     public function execute(): void
     {
         $this->redirectUrl = BASE_URL . "admin" . DS . "users-listing";

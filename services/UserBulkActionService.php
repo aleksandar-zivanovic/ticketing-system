@@ -1,6 +1,7 @@
 <?php
 require_once ROOT . 'services' . DS . 'BaseService.php';
 require_once ROOT . 'services' . DS . 'UserBulkActionNotificationService.php';
+require_once ROOT . 'classes' . DS . 'User.php';
 
 class UserBulkActionService extends BaseService
 {
@@ -22,7 +23,12 @@ class UserBulkActionService extends BaseService
      */
     public function verify($data): array
     {
-        // TODO: Add affected users' ids verification
+        // Affected users' ids verification
+        $idVerificationResult = $this->validateMultipleUsersExistence($data["userIds"], $this->user);
+        if (!$idVerificationResult["success"]) {
+            return $idVerificationResult;
+        }
+
         // Verify change an user role
         if (str_starts_with($data["userActionValue"], "ur_")) {
             $value = substr($data["userActionValue"], 3);

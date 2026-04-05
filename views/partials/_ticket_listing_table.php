@@ -117,7 +117,7 @@
                                 }
 
                                 if ($ticket['status_name'] === "closed") {
-                                    $statusValue = date("Y/m/d", strtotime($ticket['closed_date']));
+                                    $statusValue = $ticket['closed_date'] ? date("Y/m/d", strtotime($ticket['closed_date'])) : "N/A";
                                     $statusStyle = $statusStyle = "style='color:green; font-style: italic;'";
                                 }
                                 ?>
